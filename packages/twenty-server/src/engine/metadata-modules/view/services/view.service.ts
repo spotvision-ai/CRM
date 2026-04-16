@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { APP_LOCALES, SOURCE_LOCALE } from 'twenty-shared/translations';
-import { ViewType, ViewVisibility } from 'twenty-shared/types';
+import { FeatureFlagKey, ViewType, ViewVisibility } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
 
 import { ApplicationService } from 'src/engine/core-modules/application/application.service';
+import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
 import { I18nService } from 'src/engine/core-modules/i18n/i18n.service';
 import { generateMessageId } from 'src/engine/core-modules/i18n/utils/generateMessageId';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
@@ -31,6 +32,10 @@ import { DestroyViewInput } from 'src/engine/metadata-modules/view/dtos/inputs/d
 import { UpdateViewInput } from 'src/engine/metadata-modules/view/dtos/inputs/update-view.input';
 import { ViewDTO } from 'src/engine/metadata-modules/view/dtos/view.dto';
 import { ViewEntity } from 'src/engine/metadata-modules/view/entities/view.entity';
+import {
+  ViewException,
+  ViewExceptionCode,
+} from 'src/engine/metadata-modules/view/exceptions/view.exception';
 import { computeFieldsWidgetViewFieldsAndGroupsToCreate } from 'src/engine/metadata-modules/view/utils/compute-fields-widget-view-fields-and-groups-to-create.util';
 import { fromFlatViewToViewDto } from 'src/engine/metadata-modules/view/utils/from-flat-view-to-view-dto.util';
 import { WorkspaceMigrationBuilderException } from 'src/engine/workspace-manager/workspace-migration/exceptions/workspace-migration-builder-exception';
@@ -46,8 +51,33 @@ export class ViewService {
     private readonly workspaceMigrationValidateBuildAndRunService: WorkspaceMigrationValidateBuildAndRunService,
     private readonly flatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService,
     private readonly applicationService: ApplicationService,
+    private readonly featureFlagService: FeatureFlagService,
     private readonly i18nService: I18nService,
   ) {}
+
+  private async assertRoadmapFeatureFlagEnabledIfNeeded({
+    type,
+    workspaceId,
+  }: {
+    type?: ViewType | null;
+    workspaceId: string;
+  }): Promise<void> {
+    if (type !== ViewType.ROADMAP) {
+      return;
+    }
+
+    const isEnabled = await this.featureFlagService.isFeatureEnabled(
+      FeatureFlagKey.IS_ROADMAP_VIEW_ENABLED,
+      workspaceId,
+    );
+
+    if (!isEnabled) {
+      throw new ViewException(
+        'Roadmap views are not enabled for this workspace',
+        ViewExceptionCode.INVALID_VIEW_DATA,
+      );
+    }
+  }
 
   async createOne({
     createViewInput,
@@ -58,6 +88,11 @@ export class ViewService {
     workspaceId: string;
     createdByUserWorkspaceId?: string;
   }): Promise<ViewDTO> {
+    await this.assertRoadmapFeatureFlagEnabledIfNeeded({
+      type: createViewInput.type,
+      workspaceId,
+    });
+
     const { workspaceCustomFlatApplication } =
       await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
         {
@@ -185,6 +220,11 @@ export class ViewService {
     workspaceId: string;
     userWorkspaceId?: string;
   }): Promise<ViewDTO> {
+    await this.assertRoadmapFeatureFlagEnabledIfNeeded({
+      type: updateViewInput.type,
+      workspaceId,
+    });
+
     const { workspaceCustomFlatApplication } =
       await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
         {
