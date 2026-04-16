@@ -33,6 +33,11 @@ export const getRelationTargetFlatFieldMetadataMock = ({
 
   return {
     calendarViewIds: [],
+    roadmapStartViewIds: [],
+    roadmapEndViewIds: [],
+    roadmapGroupViewIds: [],
+    roadmapColorViewIds: [],
+    roadmapLabelViewIds: [],
     mainGroupByFieldMetadataViewIds: [],
     viewFilterIds: [],
     viewFieldIds: [],
@@ -74,6 +79,11 @@ export const getRelationTargetFlatFieldMetadataMock = ({
     viewFieldUniversalIdentifiers: [],
     kanbanAggregateOperationViewUniversalIdentifiers: [],
     calendarViewUniversalIdentifiers: [],
+    roadmapStartViewUniversalIdentifiers: [],
+    roadmapEndViewUniversalIdentifiers: [],
+    roadmapGroupViewUniversalIdentifiers: [],
+    roadmapColorViewUniversalIdentifiers: [],
+    roadmapLabelViewUniversalIdentifiers: [],
     mainGroupByFieldMetadataViewUniversalIdentifiers: [],
     viewSortIds: [],
     viewSortUniversalIdentifiers: [],

@@ -17,6 +17,11 @@ export const getFlatFieldMetadataMock = <T extends FieldMetadataType>(
 
   return {
     calendarViewIds: [],
+    roadmapStartViewIds: [],
+    roadmapEndViewIds: [],
+    roadmapGroupViewIds: [],
+    roadmapColorViewIds: [],
+    roadmapLabelViewIds: [],
     viewFilterIds: [],
     kanbanAggregateOperationViewIds: [],
     viewFieldIds: [],
@@ -54,6 +59,11 @@ export const getFlatFieldMetadataMock = <T extends FieldMetadataType>(
     fieldPermissionUniversalIdentifiers: [],
     kanbanAggregateOperationViewUniversalIdentifiers: [],
     calendarViewUniversalIdentifiers: [],
+    roadmapStartViewUniversalIdentifiers: [],
+    roadmapEndViewUniversalIdentifiers: [],
+    roadmapGroupViewUniversalIdentifiers: [],
+    roadmapColorViewUniversalIdentifiers: [],
+    roadmapLabelViewUniversalIdentifiers: [],
     mainGroupByFieldMetadataViewUniversalIdentifiers: [],
     viewSortIds: [],
     viewSortUniversalIdentifiers: [],

@@ -101,6 +101,16 @@ export const fromFieldMetadataEntityToFlatFieldMetadata = ({
     kanbanAggregateOperationViewIds:
       fieldMetadataEntity.kanbanAggregateOperationViews.map(({ id }) => id),
     calendarViewIds: fieldMetadataEntity.calendarViews.map(({ id }) => id),
+    roadmapStartViewIds:
+      fieldMetadataEntity.roadmapStartViews?.map(({ id }) => id) ?? [],
+    roadmapEndViewIds:
+      fieldMetadataEntity.roadmapEndViews?.map(({ id }) => id) ?? [],
+    roadmapGroupViewIds:
+      fieldMetadataEntity.roadmapGroupViews?.map(({ id }) => id) ?? [],
+    roadmapColorViewIds:
+      fieldMetadataEntity.roadmapColorViews?.map(({ id }) => id) ?? [],
+    roadmapLabelViewIds:
+      fieldMetadataEntity.roadmapLabelViews?.map(({ id }) => id) ?? [],
     mainGroupByFieldMetadataViewIds:
       fieldMetadataEntity.mainGroupByFieldMetadataViews?.map(({ id }) => id) ??
       [],
@@ -125,6 +135,26 @@ export const fromFieldMetadataEntityToFlatFieldMetadata = ({
     calendarViewUniversalIdentifiers: fieldMetadataEntity.calendarViews.map(
       ({ universalIdentifier }) => universalIdentifier,
     ),
+    roadmapStartViewUniversalIdentifiers:
+      fieldMetadataEntity.roadmapStartViews?.map(
+        ({ universalIdentifier }) => universalIdentifier,
+      ) ?? [],
+    roadmapEndViewUniversalIdentifiers:
+      fieldMetadataEntity.roadmapEndViews?.map(
+        ({ universalIdentifier }) => universalIdentifier,
+      ) ?? [],
+    roadmapGroupViewUniversalIdentifiers:
+      fieldMetadataEntity.roadmapGroupViews?.map(
+        ({ universalIdentifier }) => universalIdentifier,
+      ) ?? [],
+    roadmapColorViewUniversalIdentifiers:
+      fieldMetadataEntity.roadmapColorViews?.map(
+        ({ universalIdentifier }) => universalIdentifier,
+      ) ?? [],
+    roadmapLabelViewUniversalIdentifiers:
+      fieldMetadataEntity.roadmapLabelViews?.map(
+        ({ universalIdentifier }) => universalIdentifier,
+      ) ?? [],
     mainGroupByFieldMetadataViewUniversalIdentifiers:
       fieldMetadataEntity.mainGroupByFieldMetadataViews?.map(
         ({ universalIdentifier }) => universalIdentifier,

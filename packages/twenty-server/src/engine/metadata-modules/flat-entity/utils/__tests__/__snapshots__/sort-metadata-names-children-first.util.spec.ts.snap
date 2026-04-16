@@ -4,6 +4,7 @@ exports[`sortMetadataNamesChildrenFirst should return metadata names sorted with
 [
   "rowLevelPermissionPredicate",
   "navigationMenuItem",
+  "view",
   "fieldPermission",
   "viewField",
   "viewFilter",
@@ -25,9 +26,8 @@ exports[`sortMetadataNamesChildrenFirst should return metadata names sorted with
   "viewFieldGroup",
   "viewFilterGroup",
   "webhook",
-  "view",
-  "fieldMetadata",
   "objectMetadata",
   "role",
+  "fieldMetadata",
 ]
 `;
