@@ -71,6 +71,11 @@ describe('getFieldMetadataIdToColumnNamesMap', () => {
       viewFilterIds: [],
       kanbanAggregateOperationViewIds: [],
       calendarViewIds: [],
+      roadmapStartViewIds: [],
+      roadmapEndViewIds: [],
+      roadmapGroupViewIds: [],
+      roadmapColorViewIds: [],
+      roadmapLabelViewIds: [],
       mainGroupByFieldMetadataViewIds: [],
       applicationId: null,
     }) as unknown as FlatFieldMetadata;

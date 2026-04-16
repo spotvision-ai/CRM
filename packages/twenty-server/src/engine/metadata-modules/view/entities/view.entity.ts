@@ -30,6 +30,7 @@ import { ViewFilterEntity } from 'src/engine/metadata-modules/view-filter/entiti
 import { ViewGroupEntity } from 'src/engine/metadata-modules/view-group/entities/view-group.entity';
 import { ViewSortEntity } from 'src/engine/metadata-modules/view-sort/entities/view-sort.entity';
 import { ViewCalendarLayout } from 'src/engine/metadata-modules/view/enums/view-calendar-layout.enum';
+import { ViewRoadmapZoom } from 'src/engine/metadata-modules/view/enums/view-roadmap-zoom.enum';
 import { SyncableEntity } from 'src/engine/workspace-manager/types/syncable-entity.interface';
 
 // We could refactor this type to be dynamic to view type
@@ -45,9 +46,15 @@ import { SyncableEntity } from 'src/engine/workspace-manager/types/syncable-enti
 ])
 @Index('IDX_VIEW_MAIN_GROUP_BY_FIELD_METADATA', ['mainGroupByFieldMetadataId'])
 @Index('IDX_VIEW_CREATED_BY_USER_WORKSPACE', ['createdByUserWorkspaceId'])
+@Index('IDX_VIEW_ROADMAP_FIELD_START', ['roadmapFieldStartId'])
+@Index('IDX_VIEW_ROADMAP_FIELD_END', ['roadmapFieldEndId'])
 @Check(
   'CHK_VIEW_CALENDAR_INTEGRITY',
   `("type" != 'CALENDAR' OR ("calendarLayout" IS NOT NULL AND "calendarFieldMetadataId" IS NOT NULL))`,
+)
+@Check(
+  'CHK_VIEW_ROADMAP_INTEGRITY',
+  `("type" != 'ROADMAP' OR ("roadmapFieldStartId" IS NOT NULL AND "roadmapFieldEndId" IS NOT NULL AND "roadmapFieldStartId" != "roadmapFieldEndId"))`,
 )
 export class ViewEntity extends SyncableEntity implements Required<ViewEntity> {
   @PrimaryGeneratedColumn('uuid')
@@ -144,6 +151,90 @@ export class ViewEntity extends SyncableEntity implements Required<ViewEntity> {
   )
   @JoinColumn({ name: 'calendarFieldMetadataId' })
   calendarFieldMetadata: Relation<FieldMetadataEntity> | null;
+
+  @Column({
+    type: 'enum',
+    enum: Object.values(ViewRoadmapZoom),
+    nullable: true,
+    default: null,
+  })
+  roadmapDefaultZoom: ViewRoadmapZoom | null;
+
+  @Column({ nullable: false, default: true, type: 'boolean' })
+  roadmapShowToday: boolean;
+
+  @Column({ nullable: false, default: true, type: 'boolean' })
+  roadmapShowWeekends: boolean;
+
+  @Column({ nullable: true, type: 'uuid' })
+  roadmapFieldStartId: string | null;
+
+  @ManyToOne(
+    () => FieldMetadataEntity,
+    (fieldMetadata) => fieldMetadata.roadmapStartViews,
+    {
+      onDelete: 'CASCADE',
+      nullable: true,
+    },
+  )
+  @JoinColumn({ name: 'roadmapFieldStartId' })
+  roadmapFieldStart: Relation<FieldMetadataEntity> | null;
+
+  @Column({ nullable: true, type: 'uuid' })
+  roadmapFieldEndId: string | null;
+
+  @ManyToOne(
+    () => FieldMetadataEntity,
+    (fieldMetadata) => fieldMetadata.roadmapEndViews,
+    {
+      onDelete: 'CASCADE',
+      nullable: true,
+    },
+  )
+  @JoinColumn({ name: 'roadmapFieldEndId' })
+  roadmapFieldEnd: Relation<FieldMetadataEntity> | null;
+
+  @Column({ nullable: true, type: 'uuid' })
+  roadmapFieldGroupId: string | null;
+
+  @ManyToOne(
+    () => FieldMetadataEntity,
+    (fieldMetadata) => fieldMetadata.roadmapGroupViews,
+    {
+      onDelete: 'SET NULL',
+      nullable: true,
+    },
+  )
+  @JoinColumn({ name: 'roadmapFieldGroupId' })
+  roadmapFieldGroup: Relation<FieldMetadataEntity> | null;
+
+  @Column({ nullable: true, type: 'uuid' })
+  roadmapFieldColorId: string | null;
+
+  @ManyToOne(
+    () => FieldMetadataEntity,
+    (fieldMetadata) => fieldMetadata.roadmapColorViews,
+    {
+      onDelete: 'SET NULL',
+      nullable: true,
+    },
+  )
+  @JoinColumn({ name: 'roadmapFieldColorId' })
+  roadmapFieldColor: Relation<FieldMetadataEntity> | null;
+
+  @Column({ nullable: true, type: 'uuid' })
+  roadmapFieldLabelId: string | null;
+
+  @ManyToOne(
+    () => FieldMetadataEntity,
+    (fieldMetadata) => fieldMetadata.roadmapLabelViews,
+    {
+      onDelete: 'SET NULL',
+      nullable: true,
+    },
+  )
+  @JoinColumn({ name: 'roadmapFieldLabelId' })
+  roadmapFieldLabel: Relation<FieldMetadataEntity> | null;
 
   @Column({ nullable: true, type: 'uuid' })
   mainGroupByFieldMetadataId: string | null;

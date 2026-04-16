@@ -88,6 +88,50 @@ export const fromViewEntityToFlatView = ({
     }
   }
 
+  const resolveRoadmapFieldUniversalIdentifier = (
+    fieldMetadataId: string | null,
+    fieldLabel: string,
+  ): string | null => {
+    if (!isDefined(fieldMetadataId)) {
+      return null;
+    }
+    const universalIdentifier =
+      fieldMetadataIdToUniversalIdentifierMap.get(fieldMetadataId) ?? null;
+    if (!isDefined(universalIdentifier)) {
+      throw new FlatEntityMapsException(
+        `FieldMetadata with id ${fieldMetadataId} not found for view ${viewEntity.id} (${fieldLabel})`,
+        FlatEntityMapsExceptionCode.ENTITY_NOT_FOUND,
+      );
+    }
+    return universalIdentifier;
+  };
+
+  const roadmapFieldStartUniversalIdentifier =
+    resolveRoadmapFieldUniversalIdentifier(
+      viewEntity.roadmapFieldStartId,
+      'roadmapFieldStart',
+    );
+  const roadmapFieldEndUniversalIdentifier =
+    resolveRoadmapFieldUniversalIdentifier(
+      viewEntity.roadmapFieldEndId,
+      'roadmapFieldEnd',
+    );
+  const roadmapFieldGroupUniversalIdentifier =
+    resolveRoadmapFieldUniversalIdentifier(
+      viewEntity.roadmapFieldGroupId,
+      'roadmapFieldGroup',
+    );
+  const roadmapFieldColorUniversalIdentifier =
+    resolveRoadmapFieldUniversalIdentifier(
+      viewEntity.roadmapFieldColorId,
+      'roadmapFieldColor',
+    );
+  const roadmapFieldLabelUniversalIdentifier =
+    resolveRoadmapFieldUniversalIdentifier(
+      viewEntity.roadmapFieldLabelId,
+      'roadmapFieldLabel',
+    );
+
   return {
     ...viewEntityWithoutRelations,
     createdAt: viewEntity.createdAt.toISOString(),
@@ -104,6 +148,11 @@ export const fromViewEntityToFlatView = ({
     kanbanAggregateOperationFieldMetadataUniversalIdentifier,
     calendarFieldMetadataUniversalIdentifier,
     mainGroupByFieldMetadataUniversalIdentifier,
+    roadmapFieldStartUniversalIdentifier,
+    roadmapFieldEndUniversalIdentifier,
+    roadmapFieldGroupUniversalIdentifier,
+    roadmapFieldColorUniversalIdentifier,
+    roadmapFieldLabelUniversalIdentifier,
     viewFieldUniversalIdentifiers: viewEntity.viewFields.map(
       ({ universalIdentifier }) => universalIdentifier,
     ),

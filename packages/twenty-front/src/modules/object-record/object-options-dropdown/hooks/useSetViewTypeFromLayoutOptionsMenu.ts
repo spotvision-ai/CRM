@@ -115,6 +115,12 @@ export const useSetViewTypeFromLayoutOptionsMenu = () => {
         case ViewType.FIELDS_WIDGET: {
           return;
         }
+        case ViewType.ROADMAP: {
+          // Fase 4 will wire the Roadmap field picker here. For now, switching
+          // to ROADMAP from the layout options menu is a no-op — the creation
+          // flow goes through ViewPicker with explicit start/end selection.
+          return;
+        }
         default: {
           return assertUnreachable(viewType);
         }

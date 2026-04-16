@@ -182,6 +182,41 @@ export const ALL_MANY_TO_ONE_METADATA_RELATIONS = {
       isNullable: true,
       universalForeignKey: 'mainGroupByFieldMetadataUniversalIdentifier',
     },
+    roadmapFieldStart: {
+      metadataName: 'fieldMetadata',
+      foreignKey: 'roadmapFieldStartId',
+      inverseOneToManyProperty: 'roadmapStartViews',
+      isNullable: true,
+      universalForeignKey: 'roadmapFieldStartUniversalIdentifier',
+    },
+    roadmapFieldEnd: {
+      metadataName: 'fieldMetadata',
+      foreignKey: 'roadmapFieldEndId',
+      inverseOneToManyProperty: 'roadmapEndViews',
+      isNullable: true,
+      universalForeignKey: 'roadmapFieldEndUniversalIdentifier',
+    },
+    roadmapFieldGroup: {
+      metadataName: 'fieldMetadata',
+      foreignKey: 'roadmapFieldGroupId',
+      inverseOneToManyProperty: 'roadmapGroupViews',
+      isNullable: true,
+      universalForeignKey: 'roadmapFieldGroupUniversalIdentifier',
+    },
+    roadmapFieldColor: {
+      metadataName: 'fieldMetadata',
+      foreignKey: 'roadmapFieldColorId',
+      inverseOneToManyProperty: 'roadmapColorViews',
+      isNullable: true,
+      universalForeignKey: 'roadmapFieldColorUniversalIdentifier',
+    },
+    roadmapFieldLabel: {
+      metadataName: 'fieldMetadata',
+      foreignKey: 'roadmapFieldLabelId',
+      inverseOneToManyProperty: 'roadmapLabelViews',
+      isNullable: true,
+      universalForeignKey: 'roadmapFieldLabelUniversalIdentifier',
+    },
   },
   viewField: {
     fieldMetadata: {

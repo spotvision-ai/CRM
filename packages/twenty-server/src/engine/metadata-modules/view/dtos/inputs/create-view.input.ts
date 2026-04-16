@@ -20,6 +20,7 @@ import {
 import { UUIDScalarType } from 'src/engine/api/graphql/workspace-schema-builder/graphql-types/scalars';
 import { IsValidMetadataName } from 'src/engine/decorators/metadata/is-valid-metadata-name.decorator';
 import { ViewCalendarLayout } from 'src/engine/metadata-modules/view/enums/view-calendar-layout.enum';
+import { ViewRoadmapZoom } from 'src/engine/metadata-modules/view/enums/view-roadmap-zoom.enum';
 
 @InputType()
 export class CreateViewInput {
@@ -103,6 +104,46 @@ export class CreateViewInput {
   @IsUUID()
   @Field(() => UUIDScalarType, { nullable: true })
   mainGroupByFieldMetadataId?: string;
+
+  @IsOptional()
+  @IsEnum(ViewRoadmapZoom)
+  @Field(() => ViewRoadmapZoom, { nullable: true })
+  roadmapDefaultZoom?: ViewRoadmapZoom;
+
+  @IsOptional()
+  @IsBoolean()
+  @Field({ nullable: true, defaultValue: true })
+  roadmapShowToday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Field({ nullable: true, defaultValue: true })
+  roadmapShowWeekends?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldStartId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldEndId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldGroupId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldColorId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldLabelId?: string;
 
   @IsOptional()
   @IsEnum(ViewVisibility)

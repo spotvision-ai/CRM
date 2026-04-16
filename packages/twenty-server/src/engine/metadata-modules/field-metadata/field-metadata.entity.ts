@@ -205,6 +205,21 @@ export class FieldMetadataEntity<
   @OneToMany(() => ViewEntity, (view) => view.calendarFieldMetadata)
   calendarViews: Relation<ViewEntity[]>;
 
+  @OneToMany(() => ViewEntity, (view) => view.roadmapFieldStart)
+  roadmapStartViews: Relation<ViewEntity[]>;
+
+  @OneToMany(() => ViewEntity, (view) => view.roadmapFieldEnd)
+  roadmapEndViews: Relation<ViewEntity[]>;
+
+  @OneToMany(() => ViewEntity, (view) => view.roadmapFieldGroup)
+  roadmapGroupViews: Relation<ViewEntity[]>;
+
+  @OneToMany(() => ViewEntity, (view) => view.roadmapFieldColor)
+  roadmapColorViews: Relation<ViewEntity[]>;
+
+  @OneToMany(() => ViewEntity, (view) => view.roadmapFieldLabel)
+  roadmapLabelViews: Relation<ViewEntity[]>;
+
   @OneToMany(() => ViewEntity, (view) => view.mainGroupByFieldMetadata)
   mainGroupByFieldMetadataViews: Relation<ViewEntity[]>;
 

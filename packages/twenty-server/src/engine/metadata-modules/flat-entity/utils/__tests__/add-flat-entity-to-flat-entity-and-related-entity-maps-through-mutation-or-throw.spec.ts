@@ -42,6 +42,11 @@ describe('addFlatEntityToFlatEntityAndRelatedEntityMapsThroughMutationOrThrow', 
       viewFieldIds: [],
       viewFilterIds: [],
       calendarViewIds: [],
+      roadmapStartViewIds: [],
+      roadmapEndViewIds: [],
+      roadmapGroupViewIds: [],
+      roadmapColorViewIds: [],
+      roadmapLabelViewIds: [],
       mainGroupByFieldMetadataViewIds: [],
     });
 

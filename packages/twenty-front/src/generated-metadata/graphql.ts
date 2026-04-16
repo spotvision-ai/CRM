@@ -1407,6 +1407,14 @@ export type CreateViewInput = {
   objectMetadataId: Scalars['UUID'];
   openRecordIn?: InputMaybe<ViewOpenRecordIn>;
   position?: InputMaybe<Scalars['Float']>;
+  roadmapDefaultZoom?: InputMaybe<ViewRoadmapZoom>;
+  roadmapFieldColorId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldEndId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldGroupId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldLabelId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldStartId?: InputMaybe<Scalars['UUID']>;
+  roadmapShowToday?: InputMaybe<Scalars['Boolean']>;
+  roadmapShowWeekends?: InputMaybe<Scalars['Boolean']>;
   shouldHideEmptyGroups?: InputMaybe<Scalars['Boolean']>;
   type?: InputMaybe<ViewType>;
   visibility?: InputMaybe<ViewVisibility>;
@@ -1826,6 +1834,7 @@ export enum FeatureFlagKey {
   IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED = 'IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED',
   IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED = 'IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED',
   IS_RICH_TEXT_V1_MIGRATED = 'IS_RICH_TEXT_V1_MIGRATED',
+  IS_ROADMAP_VIEW_ENABLED = 'IS_ROADMAP_VIEW_ENABLED',
   IS_UNIQUE_INDEXES_ENABLED = 'IS_UNIQUE_INDEXES_ENABLED'
 }
 
@@ -5778,6 +5787,14 @@ export type UpdateViewInput = {
   name?: InputMaybe<Scalars['String']>;
   openRecordIn?: InputMaybe<ViewOpenRecordIn>;
   position?: InputMaybe<Scalars['Float']>;
+  roadmapDefaultZoom?: InputMaybe<ViewRoadmapZoom>;
+  roadmapFieldColorId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldEndId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldGroupId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldLabelId?: InputMaybe<Scalars['UUID']>;
+  roadmapFieldStartId?: InputMaybe<Scalars['UUID']>;
+  roadmapShowToday?: InputMaybe<Scalars['Boolean']>;
+  roadmapShowWeekends?: InputMaybe<Scalars['Boolean']>;
   shouldHideEmptyGroups?: InputMaybe<Scalars['Boolean']>;
   type?: InputMaybe<ViewType>;
   visibility?: InputMaybe<ViewVisibility>;
@@ -6060,6 +6077,14 @@ export type View = {
   objectMetadataId: Scalars['UUID'];
   openRecordIn: ViewOpenRecordIn;
   position: Scalars['Float'];
+  roadmapDefaultZoom?: Maybe<ViewRoadmapZoom>;
+  roadmapFieldColorId?: Maybe<Scalars['UUID']>;
+  roadmapFieldEndId?: Maybe<Scalars['UUID']>;
+  roadmapFieldGroupId?: Maybe<Scalars['UUID']>;
+  roadmapFieldLabelId?: Maybe<Scalars['UUID']>;
+  roadmapFieldStartId?: Maybe<Scalars['UUID']>;
+  roadmapShowToday: Scalars['Boolean'];
+  roadmapShowWeekends: Scalars['Boolean'];
   shouldHideEmptyGroups: Scalars['Boolean'];
   type: ViewType;
   updatedAt: Scalars['DateTime'];
@@ -6196,6 +6221,13 @@ export enum ViewOpenRecordIn {
   SIDE_PANEL = 'SIDE_PANEL'
 }
 
+export enum ViewRoadmapZoom {
+  DAY = 'DAY',
+  MONTH = 'MONTH',
+  QUARTER = 'QUARTER',
+  WEEK = 'WEEK'
+}
+
 export type ViewSort = {
   __typename?: 'ViewSort';
   createdAt: Scalars['DateTime'];
@@ -6217,6 +6249,7 @@ export enum ViewType {
   CALENDAR = 'CALENDAR',
   FIELDS_WIDGET = 'FIELDS_WIDGET',
   KANBAN = 'KANBAN',
+  ROADMAP = 'ROADMAP',
   TABLE = 'TABLE'
 }
 

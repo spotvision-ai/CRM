@@ -18,6 +18,7 @@ import {
 import { UUIDScalarType } from 'src/engine/api/graphql/workspace-schema-builder/graphql-types/scalars';
 import { IsValidMetadataName } from 'src/engine/decorators/metadata/is-valid-metadata-name.decorator';
 import { ViewCalendarLayout } from 'src/engine/metadata-modules/view/enums/view-calendar-layout.enum';
+import { ViewRoadmapZoom } from 'src/engine/metadata-modules/view/enums/view-roadmap-zoom.enum';
 
 // TODO: this should be refactored like for view-field.input.ts
 // This is a temporary fix as we were extending the CreateViewInput class which was adding default values for the non filled fields
@@ -99,4 +100,44 @@ export class UpdateViewInput {
   @IsBoolean()
   @Field({ nullable: true })
   shouldHideEmptyGroups?: boolean;
+
+  @IsOptional()
+  @IsEnum(ViewRoadmapZoom)
+  @Field(() => ViewRoadmapZoom, { nullable: true })
+  roadmapDefaultZoom?: ViewRoadmapZoom;
+
+  @IsOptional()
+  @IsBoolean()
+  @Field({ nullable: true })
+  roadmapShowToday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Field({ nullable: true })
+  roadmapShowWeekends?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldStartId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldEndId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldGroupId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldColorId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldLabelId?: string | null;
 }
