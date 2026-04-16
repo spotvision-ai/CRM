@@ -21,11 +21,13 @@ The Roadmap viewType renders records as draggable horizontal bars on a zoomable 
 ## Evaluated options
 
 ### 1. `gantt-task-react`
+
 - **License**: MIT
 - **Maintenance**: Last release Jul 2022 — **inactive**
 - **Verdict**: ❌ Rejected. Violates PRD §7.1 guardrail "mantenimiento activo".
 
 ### 2. `@svar-ui/react-gantt`
+
 - **License**: MIT for core; commercial PRO edition
 - **Maintenance**: Active, new repo (~138 stars, 13 commits at evaluation)
 - **React 18/19**: Yes
@@ -35,6 +37,7 @@ The Roadmap viewType renders records as draggable horizontal bars on a zoomable 
 - **Verdict**: ❌ Rejected. **The PRO feature list is exactly what PRD §2.3 declares "Fuera de alcance".** If scope ever expands in v2, we would be pushed toward a commercial license. Repo is also very young (138 stars) — immaturity risk. Core-edition virtualization claim is unverified.
 
 ### 3. `vis-timeline`
+
 - **License**: Apache-2.0 / MIT dual
 - **Maintenance**: Active (release Dec 2025, 2.5k stars, 8 releases/year)
 - **Virtualization**: Built-in, battle-tested with 10k+ items
@@ -44,6 +47,7 @@ The Roadmap viewType renders records as draggable horizontal bars on a zoomable 
 - **Verdict**: ❌ Rejected. Maturity and features are excellent, but the library brings its own rendering pipeline that fights with Linaria + the repo's `themeCssVariables` dark-mode tokens. The bundle cost (+~250 KB) is steep for a single viewType.
 
 ### 4. `@dnd-kit/react` + custom HTML/SVG rendering (**chosen**)
+
 - **License**: MIT (headless)
 - **Maintenance**: Production-grade, already a dependency of twenty-front (`0.3.2`)
 - **Drag/resize/zoom**: Achieved by composing dnd-kit sensors + our own grid math
@@ -68,17 +72,20 @@ Use **`@dnd-kit/react` + custom HTML/SVG rendering** for the timeline.
 ## Consequences
 
 ### Positive
+
 - Zero bundle cost
 - Full control over styling, accessibility, keyboard nav
 - No vendor roadmap risk
 - Aligns with the repo's architectural conventions
 
 ### Negative / Costs
+
 - Additional ~3–5 days of Fase 3 work to build the temporal scale and bar positioning primitives from scratch
 - We own the bug surface on the rendering layer
 - Virtualization must be implemented and tested (PRD §3.5 budget)
 
 ### Rollback plan
+
 If during Fase 3 the PoC cannot hit 60 fps with 500 bars or initial render p95 ≤ 2 s, we stop and reassess. The fallback is `vis-timeline` (mature, covers the budget), accepted with the +250 KB bundle and theming trade-off. SVAR remains rejected for the vendor-lock-in reason above.
 
 ## References

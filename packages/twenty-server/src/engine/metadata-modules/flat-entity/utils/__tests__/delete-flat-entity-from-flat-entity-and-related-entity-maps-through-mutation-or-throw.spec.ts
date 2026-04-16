@@ -113,7 +113,17 @@ describe('deleteFlatEntityFromFlatEntityAndRelatedEntityMapsThroughMutationOrThr
       }),
     ).toMatchObject<Partial<FlatFieldMetadata>>({
       calendarViewIds: [],
+      roadmapStartViewIds: [],
+      roadmapEndViewIds: [],
+      roadmapGroupViewIds: [],
+      roadmapColorViewIds: [],
+      roadmapLabelViewIds: [],
       calendarViewUniversalIdentifiers: [],
+      roadmapStartViewUniversalIdentifiers: [],
+      roadmapEndViewUniversalIdentifiers: [],
+      roadmapGroupViewUniversalIdentifiers: [],
+      roadmapColorViewUniversalIdentifiers: [],
+      roadmapLabelViewUniversalIdentifiers: [],
     });
   });
 });

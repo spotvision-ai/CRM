@@ -17,11 +17,13 @@ import { ViewFilterDTO } from 'src/engine/metadata-modules/view-filter/dtos/view
 import { ViewGroupDTO } from 'src/engine/metadata-modules/view-group/dtos/view-group.dto';
 import { ViewSortDTO } from 'src/engine/metadata-modules/view-sort/dtos/view-sort.dto';
 import { ViewCalendarLayout } from 'src/engine/metadata-modules/view/enums/view-calendar-layout.enum';
+import { ViewRoadmapZoom } from 'src/engine/metadata-modules/view/enums/view-roadmap-zoom.enum';
 
 registerEnumType(ViewOpenRecordIn, { name: 'ViewOpenRecordIn' });
 registerEnumType(ViewType, { name: 'ViewType' });
 registerEnumType(ViewKey, { name: 'ViewKey' });
 registerEnumType(ViewCalendarLayout, { name: 'ViewCalendarLayout' });
+registerEnumType(ViewRoadmapZoom, { name: 'ViewRoadmapZoom' });
 registerEnumType(ViewVisibility, { name: 'ViewVisibility' });
 
 @ObjectType('View')
@@ -82,6 +84,30 @@ export class ViewDTO {
 
   @Field(() => ViewCalendarLayout, { nullable: true })
   calendarLayout: ViewCalendarLayout | null;
+
+  @Field(() => ViewRoadmapZoom, { nullable: true })
+  roadmapDefaultZoom: ViewRoadmapZoom | null;
+
+  @Field({ nullable: false, defaultValue: true })
+  roadmapShowToday: boolean;
+
+  @Field({ nullable: false, defaultValue: true })
+  roadmapShowWeekends: boolean;
+
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldStartId?: string | null;
+
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldEndId?: string | null;
+
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldGroupId?: string | null;
+
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldColorId?: string | null;
+
+  @Field(() => UUIDScalarType, { nullable: true })
+  roadmapFieldLabelId?: string | null;
 
   @Field()
   createdAt: Date;

@@ -11,6 +11,7 @@ Stack (verified in repo, not what the PRD says): React 18 + Jotai 2.17 + Linaria
 IMPORTANT: The original PRD mentions Recoil and Emotion — those are wrong. Use Jotai (`createAtomComponentState` helper) and Linaria (`styled` from `@linaria/react`, colors via `themeCssVariables` from `twenty-ui/theme-constants`).
 
 Non-negotiable principles:
+
 1. The Calendar view at `packages/twenty-front/src/modules/object-record/record-calendar/` is your architectural reference. Mirror its structure (components/, states/, hooks/, contexts/, constants/).
 2. Strict types: no `any`, no `@ts-ignore` without a written justification.
 3. Small testable components. Put logic in custom hooks.
@@ -21,6 +22,7 @@ Non-negotiable principles:
 8. Feature flag IS_ROADMAP_VIEW_ENABLED gates the ROADMAP option in `VIEW_PICKER_TYPE_SELECT_OPTIONS`.
 
 Before writing code, ALWAYS read the corresponding Calendar file as your template:
+
 - Root: `record-calendar/components/RecordCalendar.tsx`
 - Container: `record-index/components/RecordIndexCalendarContainer.tsx`
 - Data loader: `record-calendar/components/RecordIndexCalendarDataLoaderEffect.tsx`
@@ -32,6 +34,7 @@ Before writing code, ALWAYS read the corresponding Calendar file as your templat
 When you modify an upstream file (anything that exists in `twentyhq/twenty` main), append an entry to /MERGE_NOTES.md.
 
 After changes, ALWAYS run:
+
 - `npx nx lint:diff-with-main twenty-front`
 - `npx nx typecheck twenty-front`
 - Single-file Jest runs with `npx jest <pattern> --config=packages/twenty-front/jest.config.mjs` for faster feedback.

@@ -101,6 +101,21 @@ export const ALL_MANY_TO_ONE_METADATA_FOREIGN_KEY = {
     mainGroupByFieldMetadata: {
       foreignKey: 'mainGroupByFieldMetadataId',
     },
+    roadmapFieldStart: {
+      foreignKey: 'roadmapFieldStartId',
+    },
+    roadmapFieldEnd: {
+      foreignKey: 'roadmapFieldEndId',
+    },
+    roadmapFieldGroup: {
+      foreignKey: 'roadmapFieldGroupId',
+    },
+    roadmapFieldColor: {
+      foreignKey: 'roadmapFieldColorId',
+    },
+    roadmapFieldLabel: {
+      foreignKey: 'roadmapFieldLabelId',
+    },
   },
   viewField: {
     fieldMetadata: {

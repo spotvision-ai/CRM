@@ -318,6 +318,46 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toStringify: false,
       universalProperty: 'calendarFieldMetadataUniversalIdentifier',
     },
+    roadmapDefaultZoom: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: undefined,
+    },
+    roadmapShowToday: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: undefined,
+    },
+    roadmapShowWeekends: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: undefined,
+    },
+    roadmapFieldStartId: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: 'roadmapFieldStartUniversalIdentifier',
+    },
+    roadmapFieldEndId: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: 'roadmapFieldEndUniversalIdentifier',
+    },
+    roadmapFieldGroupId: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: 'roadmapFieldGroupUniversalIdentifier',
+    },
+    roadmapFieldColorId: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: 'roadmapFieldColorUniversalIdentifier',
+    },
+    roadmapFieldLabelId: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: 'roadmapFieldLabelUniversalIdentifier',
+    },
     visibility: {
       toCompare: true,
       toStringify: false,

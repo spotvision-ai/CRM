@@ -47,6 +47,11 @@ export const fromCreateViewInputToFlatViewToCreate = ({
     calendarFieldMetadataUniversalIdentifier,
     kanbanAggregateOperationFieldMetadataUniversalIdentifier,
     mainGroupByFieldMetadataUniversalIdentifier,
+    roadmapFieldStartUniversalIdentifier,
+    roadmapFieldEndUniversalIdentifier,
+    roadmapFieldGroupUniversalIdentifier,
+    roadmapFieldColorUniversalIdentifier,
+    roadmapFieldLabelUniversalIdentifier,
   } = resolveEntityRelationUniversalIdentifiers({
     metadataName: 'view',
     foreignKeyValues: {
@@ -55,6 +60,11 @@ export const fromCreateViewInputToFlatViewToCreate = ({
       kanbanAggregateOperationFieldMetadataId:
         createViewInput.kanbanAggregateOperationFieldMetadataId,
       mainGroupByFieldMetadataId: createViewInput.mainGroupByFieldMetadataId,
+      roadmapFieldStartId: createViewInput.roadmapFieldStartId,
+      roadmapFieldEndId: createViewInput.roadmapFieldEndId,
+      roadmapFieldGroupId: createViewInput.roadmapFieldGroupId,
+      roadmapFieldColorId: createViewInput.roadmapFieldColorId,
+      roadmapFieldLabelId: createViewInput.roadmapFieldLabelId,
     },
     flatEntityMaps: { flatObjectMetadataMaps, flatFieldMetadataMaps },
   });
@@ -73,6 +83,14 @@ export const fromCreateViewInputToFlatViewToCreate = ({
     anyFieldFilterValue: createViewInput.anyFieldFilterValue ?? null,
     calendarFieldMetadataUniversalIdentifier,
     calendarLayout: createViewInput.calendarLayout ?? null,
+    roadmapDefaultZoom: createViewInput.roadmapDefaultZoom ?? null,
+    roadmapShowToday: createViewInput.roadmapShowToday ?? true,
+    roadmapShowWeekends: createViewInput.roadmapShowWeekends ?? true,
+    roadmapFieldStartUniversalIdentifier,
+    roadmapFieldEndUniversalIdentifier,
+    roadmapFieldGroupUniversalIdentifier,
+    roadmapFieldColorUniversalIdentifier,
+    roadmapFieldLabelUniversalIdentifier,
     icon: createViewInput.icon,
     isCompact: createViewInput.isCompact ?? false,
     shouldHideEmptyGroups: createViewInput.shouldHideEmptyGroups ?? false,
