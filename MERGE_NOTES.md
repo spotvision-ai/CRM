@@ -156,7 +156,53 @@ Fase 2 wires the server-side rules that make a `ROADMAP` view safe to create: fi
 
 **Note**: these integration specs rely on the workspace-seeded test environment provided by CI (the reference `calendar-field-deactivation-deletes-views` spec fails in the same local env with the same "Standard target object metadata id undefined" error, confirming the limitation is environmental rather than code-related).
 
+### Fase 3 — Frontend: static render
+
+Fase 3 registers the `ROADMAP` viewType in the frontend and wires a minimum viable timeline: the TopBar (zoom switch + Today button + hidden-records counter), a two-tier TimeHeader (month band + day cell), records rendered as absolute-positioned bars on a zoomable timeline, a "Today" vertical line, and a weekends overlay. Drag/resize interactions are intentionally deferred to Fase 4. All rendering uses Linaria + `themeCssVariables` so dark mode works without extra code.
+
+#### ViewType registry & index state
+
+| #   | Path                                                                                                    | Reason for divergence                                                                                                                                           | Rebase strategy                                                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 66  | `packages/twenty-front/src/modules/views/types/ViewType.ts`                                             | Registered `{ icon: IconTimelineEvent, value: ViewType.ROADMAP }` in `VIEW_TYPE_ICON_MAPPING` so the ROADMAP option surfaces with the right icon.               | Keep the entry adjacent to the CALENDAR entry. If upstream renames `IconTimelineEvent`, pick the closest replacement. |
+| 67  | `packages/twenty-front/src/modules/views/types/View.ts`                                                 | Added 8 `roadmap*` optional properties to the `View` shape so `useLoadRecordIndexStates` can read them and ViewPicker / OptionsDropdown (Fase 4) can edit them. | Preserve the block adjacent to the `calendarLayout` property.                                                         |
+| 68  | `packages/twenty-front/src/modules/object-record/record-index/hooks/useLoadRecordIndexStates.ts`        | Load the 8 roadmap properties from the current view into the `recordIndexRoadmap*` atoms.                                                                       | Block lives next to the `recordIndexCalendarFieldMetadataIdState` assignment.                                         |
+| 69  | `packages/twenty-front/src/modules/object-record/components/RecordComponentInstanceContextsWrapper.tsx` | Wrap children in `RecordRoadmapComponentInstanceContext.Provider` so roadmap component-scoped Jotai atoms resolve the correct `instanceId`.                     | Keep the provider nested inside the CALENDAR provider. Mirror the KANBAN/CALENDAR nesting pattern.                    |
+| 70  | `packages/twenty-front/src/modules/object-record/record-index/components/RecordIndexContainer.tsx`      | Added the `ViewType.ROADMAP` branch that renders `RecordIndexRoadmapContainer` inside `StyledContainerWithPadding`.                                             | Block lives immediately after the `ViewType.CALENDAR` branch — same indentation, same wrapper.                        |
+
+#### New files (net-new, not tracked in upstream rebases)
+
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapFieldStartIdState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapFieldEndIdState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapFieldGroupIdState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapFieldColorIdState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapFieldLabelIdState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapDefaultZoomState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapShowTodayState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/states/recordIndexRoadmapShowWeekendsState.ts`
+- `packages/twenty-front/src/modules/object-record/record-index/components/RecordIndexRoadmapContainer.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/constants/RoadmapZoomLevels.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/constants/RoadmapDimensions.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/contexts/RecordRoadmapContext.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/states/contexts/RecordRoadmapComponentInstanceContext.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/states/recordRoadmapZoomComponentState.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/states/recordRoadmapViewportStartComponentState.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/states/recordRoadmapRecordIdsComponentState.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/states/recordRoadmapHiddenRecordCountComponentState.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/utils/computeRoadmapBarPosition.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/utils/computeRoadmapViewportDays.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/hooks/useRecordRoadmapFetchRecords.ts`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmap.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapTopBar.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapTimeHeader.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapTimeline.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapRow.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapBar.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapTodayLine.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapWeekendsOverlay.tsx`
+- `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordIndexRoadmapDataLoaderEffect.tsx`
+
 ## Upcoming phases (expected upstream touch-points — anticipated for planning, will be populated as work lands)
 
-- Fase 3: `packages/twenty-front/src/modules/views/types/ViewType.ts` (icon mapping), `RecordIndexContainer.tsx`, `useLoadRecordIndexStates.ts`.
-- Fase 4: `ViewPickerTypeSelectOptions.ts`, `ViewPickerContentCreateMode.tsx`, `ObjectOptionsDropdownContent*.tsx`.
+- Fase 4: `ViewPickerTypeSelectOptions.ts`, `ViewPickerContentCreateMode.tsx`, `ObjectOptionsDropdownContent*.tsx`, drag/resize hooks under `record-roadmap/hooks/`.
+- Fase 5: Playwright e2e coverage + performance measurement.

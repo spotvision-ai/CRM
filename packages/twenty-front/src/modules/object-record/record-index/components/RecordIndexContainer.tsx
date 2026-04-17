@@ -12,6 +12,7 @@ import { useRecordIndexContextOrThrow } from '@/object-record/record-index/conte
 import { SpreadsheetImportProvider } from '@/spreadsheet-import/provider/components/SpreadsheetImportProvider';
 
 import { RecordIndexCalendarContainer } from '@/object-record/record-index/components/RecordIndexCalendarContainer';
+import { RecordIndexRoadmapContainer } from '@/object-record/record-index/components/RecordIndexRoadmapContainer';
 import { RecordIndexEmptyStateNotShared } from '@/object-record/record-index/components/RecordIndexEmptyStateNotShared';
 import { RecordIndexFiltersToContextStoreEffect } from '@/object-record/record-index/components/RecordIndexFiltersToContextStoreEffect';
 import { useHasCurrentViewNonReadableFields } from '@/object-record/record-index/hooks/useHasCurrentViewNonReadableFields';
@@ -92,6 +93,14 @@ export const RecordIndexContainer = () => {
               <StyledContainerWithPadding>
                 <RecordIndexCalendarContainer
                   recordCalendarInstanceId={recordIndexId}
+                  viewBarInstanceId={recordIndexId}
+                />
+              </StyledContainerWithPadding>
+            )}
+            {recordIndexViewType === ViewType.ROADMAP && (
+              <StyledContainerWithPadding>
+                <RecordIndexRoadmapContainer
+                  recordRoadmapInstanceId={recordIndexId}
                   viewBarInstanceId={recordIndexId}
                 />
               </StyledContainerWithPadding>

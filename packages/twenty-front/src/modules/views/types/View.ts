@@ -9,6 +9,7 @@ import { type ViewType } from '@/views/types/ViewType';
 import {
   type ViewCalendarLayout,
   type ViewOpenRecordIn,
+  type ViewRoadmapZoom,
   type ViewVisibility,
 } from '~/generated-metadata/graphql';
 import { type ViewSort } from '@/views/types/ViewSort';
@@ -32,6 +33,14 @@ export type View = {
   shouldHideEmptyGroups: boolean;
   calendarFieldMetadataId?: string | null;
   calendarLayout?: ViewCalendarLayout | null;
+  roadmapFieldStartId?: string | null;
+  roadmapFieldEndId?: string | null;
+  roadmapFieldGroupId?: string | null;
+  roadmapFieldColorId?: string | null;
+  roadmapFieldLabelId?: string | null;
+  roadmapDefaultZoom?: ViewRoadmapZoom | null;
+  roadmapShowToday?: boolean | null;
+  roadmapShowWeekends?: boolean | null;
   position: number;
   icon: string;
   openRecordIn: ViewOpenRecordIn;

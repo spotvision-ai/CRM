@@ -15,6 +15,14 @@ import { currentRecordSortsComponentState } from '@/object-record/record-sort/st
 
 import { recordIndexCalendarFieldMetadataIdState } from '@/object-record/record-index/states/recordIndexCalendarFieldMetadataIdState';
 import { recordIndexFieldDefinitionsState } from '@/object-record/record-index/states/recordIndexFieldDefinitionsState';
+import { recordIndexRoadmapDefaultZoomState } from '@/object-record/record-index/states/recordIndexRoadmapDefaultZoomState';
+import { recordIndexRoadmapFieldColorIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldColorIdState';
+import { recordIndexRoadmapFieldEndIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldEndIdState';
+import { recordIndexRoadmapFieldGroupIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldGroupIdState';
+import { recordIndexRoadmapFieldLabelIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldLabelIdState';
+import { recordIndexRoadmapFieldStartIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldStartIdState';
+import { recordIndexRoadmapShowTodayState } from '@/object-record/record-index/states/recordIndexRoadmapShowTodayState';
+import { recordIndexRoadmapShowWeekendsState } from '@/object-record/record-index/states/recordIndexRoadmapShowWeekendsState';
 import { recordIndexGroupAggregateFieldMetadataItemComponentState } from '@/object-record/record-index/states/recordIndexGroupAggregateFieldMetadataItemComponentState';
 import { recordIndexGroupAggregateOperationComponentState } from '@/object-record/record-index/states/recordIndexGroupAggregateOperationComponentState';
 import { recordIndexOpenRecordInState } from '@/object-record/record-index/states/recordIndexOpenRecordInState';
@@ -265,6 +273,39 @@ export const useLoadRecordIndexStates = () => {
           batchSet(
             recordIndexCalendarFieldMetadataIdState.atom,
             view.calendarFieldMetadataId ?? null,
+          );
+
+          batchSet(
+            recordIndexRoadmapFieldStartIdState.atom,
+            view.roadmapFieldStartId ?? null,
+          );
+          batchSet(
+            recordIndexRoadmapFieldEndIdState.atom,
+            view.roadmapFieldEndId ?? null,
+          );
+          batchSet(
+            recordIndexRoadmapFieldGroupIdState.atom,
+            view.roadmapFieldGroupId ?? null,
+          );
+          batchSet(
+            recordIndexRoadmapFieldColorIdState.atom,
+            view.roadmapFieldColorId ?? null,
+          );
+          batchSet(
+            recordIndexRoadmapFieldLabelIdState.atom,
+            view.roadmapFieldLabelId ?? null,
+          );
+          batchSet(
+            recordIndexRoadmapDefaultZoomState.atom,
+            view.roadmapDefaultZoom ?? null,
+          );
+          batchSet(
+            recordIndexRoadmapShowTodayState.atom,
+            view.roadmapShowToday ?? true,
+          );
+          batchSet(
+            recordIndexRoadmapShowWeekendsState.atom,
+            view.roadmapShowWeekends ?? true,
           );
 
           batchSet(

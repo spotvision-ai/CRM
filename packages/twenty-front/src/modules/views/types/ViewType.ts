@@ -3,6 +3,7 @@ import {
   type IconComponent,
   IconLayoutKanban,
   IconTable,
+  IconTimelineEvent,
 } from 'twenty-ui/display';
 
 export { ViewType } from '~/generated-metadata/graphql';
@@ -12,6 +13,7 @@ const VIEW_TYPE_ICON_MAPPING = [
   { icon: IconLayoutKanban, value: ViewType.KANBAN },
   { icon: IconTable, value: ViewType.TABLE },
   { icon: IconCalendar, value: ViewType.CALENDAR },
+  { icon: IconTimelineEvent, value: ViewType.ROADMAP },
 ] as const satisfies {
   icon: IconComponent;
   value: ViewType;
