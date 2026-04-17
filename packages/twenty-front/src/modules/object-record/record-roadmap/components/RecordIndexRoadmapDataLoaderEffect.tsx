@@ -12,10 +12,10 @@ import { parseRoadmapDateValue } from '@/object-record/record-roadmap/utils/comp
 // directly through its own hook, but the TopBar reads the hidden-count from
 // this effect so both stay in sync without re-fetching.
 export const RecordIndexRoadmapDataLoaderEffect = () => {
-  const [, setRecordIds] = useAtomComponentState(
+  const [, setRecordRoadmapRecordIds] = useAtomComponentState(
     recordRoadmapRecordIdsComponentState,
   );
-  const [, setHiddenCount] = useAtomComponentState(
+  const [, setRecordRoadmapHiddenRecordCount] = useAtomComponentState(
     recordRoadmapHiddenRecordCountComponentState,
   );
 
@@ -23,13 +23,13 @@ export const RecordIndexRoadmapDataLoaderEffect = () => {
     useRecordRoadmapFetchRecords();
 
   useEffect(() => {
-    setRecordIds(records.map((record) => record.id));
+    setRecordRoadmapRecordIds(records.map((record) => record.id));
 
     if (
       !isDefined(startFieldMetadataItem) ||
       !isDefined(endFieldMetadataItem)
     ) {
-      setHiddenCount(0);
+      setRecordRoadmapHiddenRecordCount(0);
       return;
     }
 
@@ -42,13 +42,13 @@ export const RecordIndexRoadmapDataLoaderEffect = () => {
       return hasBothDates ? count : count + 1;
     }, 0);
 
-    setHiddenCount(hidden);
+    setRecordRoadmapHiddenRecordCount(hidden);
   }, [
     records,
     startFieldMetadataItem,
     endFieldMetadataItem,
-    setRecordIds,
-    setHiddenCount,
+    setRecordRoadmapRecordIds,
+    setRecordRoadmapHiddenRecordCount,
   ]);
 
   return null;

@@ -12,12 +12,14 @@ type UpdateDatesArgs = {
   endFieldName?: string;
   startDate?: Temporal.PlainDate;
   endDate?: Temporal.PlainDate;
+  groupFieldName?: string;
+  groupValue?: string | null;
 };
 
-// Persists a roadmap bar's start / end change via the standard update-record
-// mutation. useUpdateOneRecord already rolls the Apollo cache back on failure
-// so the bar snaps to its pre-drag position; we only need to surface the
-// error with a snackbar.
+// Persists a roadmap bar's start / end (and optional swimlane group) via the
+// standard update-record mutation. useUpdateOneRecord already rolls the
+// Apollo cache back on failure so the bar snaps to its pre-drag position; we
+// only need to surface the error with a snackbar.
 export const useRecordRoadmapUpdateDates = () => {
   const { t } = useLingui();
   const { objectNameSingular } = useRecordRoadmapContextOrThrow();
@@ -31,8 +33,10 @@ export const useRecordRoadmapUpdateDates = () => {
       endFieldName,
       startDate,
       endDate,
+      groupFieldName,
+      groupValue,
     }: UpdateDatesArgs) => {
-      const input: Record<string, string> = {};
+      const input: Record<string, string | null> = {};
       if (startFieldName !== undefined && startDate !== undefined) {
         // Preserve any time-of-day from the source by dropping to pure
         // date string; backend DATE_TIME columns accept date-only ISO.
@@ -40,6 +44,9 @@ export const useRecordRoadmapUpdateDates = () => {
       }
       if (endFieldName !== undefined && endDate !== undefined) {
         input[endFieldName] = endDate.toString();
+      }
+      if (groupFieldName !== undefined && groupValue !== undefined) {
+        input[groupFieldName] = groupValue;
       }
       if (Object.keys(input).length === 0) {
         return;
@@ -53,7 +60,7 @@ export const useRecordRoadmapUpdateDates = () => {
         });
       } catch {
         enqueueErrorSnackBar({
-          message: t`Could not update roadmap dates`,
+          message: t`Could not update roadmap record`,
         });
       }
     },

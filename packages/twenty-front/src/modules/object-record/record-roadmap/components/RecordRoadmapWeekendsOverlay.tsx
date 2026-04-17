@@ -1,5 +1,6 @@
 import { styled } from '@linaria/react';
 import { type Temporal } from 'temporal-polyfill';
+import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 type RecordRoadmapWeekendsOverlayProps = {
   days: Temporal.PlainDate[];
@@ -8,11 +9,11 @@ type RecordRoadmapWeekendsOverlayProps = {
 };
 
 const StyledWeekendColumn = styled.div`
+  background-color: ${themeCssVariables.background.transparent.light};
+  bottom: 0;
+  pointer-events: none;
   position: absolute;
   top: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.05);
-  pointer-events: none;
   z-index: 0;
 `;
 

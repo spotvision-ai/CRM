@@ -11,37 +11,37 @@ type RecordRoadmapTimeHeaderProps = {
 };
 
 const StyledHeader = styled.div`
-  position: relative;
-  height: ${ROADMAP_HEADER_HEIGHT}px;
+  background-color: ${themeCssVariables.background.primary};
   border-bottom: 1px solid ${themeCssVariables.border.color.light};
   display: flex;
-  background-color: ${themeCssVariables.background.primary};
   flex-shrink: 0;
+  height: ${ROADMAP_HEADER_HEIGHT}px;
+  position: relative;
 `;
 
 const StyledMonthBand = styled.div`
-  position: absolute;
-  top: 0;
-  height: 24px;
-  display: flex;
   align-items: center;
-  padding: 0 ${themeCssVariables.spacing[2]};
-  font-size: ${themeCssVariables.font.size.sm};
-  font-weight: ${themeCssVariables.font.weight.medium};
   border-right: 1px solid ${themeCssVariables.border.color.light};
   color: ${themeCssVariables.font.color.secondary};
+  display: flex;
+  font-size: ${themeCssVariables.font.size.sm};
+  font-weight: ${themeCssVariables.font.weight.medium};
+  height: 24px;
+  padding: 0 ${themeCssVariables.spacing[2]};
+  position: absolute;
+  top: 0;
 `;
 
 const StyledDayCell = styled.div`
+  align-items: center;
+  border-right: 1px solid ${themeCssVariables.border.color.light};
+  color: ${themeCssVariables.font.color.tertiary};
+  display: flex;
+  font-size: ${themeCssVariables.font.size.xs};
+  height: 24px;
+  justify-content: center;
   position: absolute;
   top: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: ${themeCssVariables.font.size.xs};
-  color: ${themeCssVariables.font.color.tertiary};
-  border-right: 1px solid ${themeCssVariables.border.color.light};
 `;
 
 type MonthBand = {

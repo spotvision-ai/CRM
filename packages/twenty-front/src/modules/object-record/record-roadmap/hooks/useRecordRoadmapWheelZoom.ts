@@ -18,7 +18,7 @@ const ZOOM_ORDER: ViewRoadmapZoom[] = [
 export const useRecordRoadmapWheelZoom = (
   targetRef: React.RefObject<HTMLElement | null>,
 ) => {
-  const [zoom, setZoom] = useAtomComponentState(
+  const [recordRoadmapZoom, setRecordRoadmapZoom] = useAtomComponentState(
     recordRoadmapZoomComponentState,
   );
 
@@ -34,7 +34,7 @@ export const useRecordRoadmapWheelZoom = (
       }
       event.preventDefault();
 
-      const currentIndex = ZOOM_ORDER.indexOf(zoom);
+      const currentIndex = ZOOM_ORDER.indexOf(recordRoadmapZoom);
       if (currentIndex === -1) {
         return;
       }
@@ -49,8 +49,8 @@ export const useRecordRoadmapWheelZoom = (
       );
       const nextZoom = ZOOM_ORDER[nextIndex];
 
-      if (nextZoom !== zoom) {
-        setZoom(nextZoom);
+      if (nextZoom !== recordRoadmapZoom) {
+        setRecordRoadmapZoom(nextZoom);
       }
     };
 
@@ -58,5 +58,5 @@ export const useRecordRoadmapWheelZoom = (
     return () => {
       node.removeEventListener('wheel', handleWheel);
     };
-  }, [targetRef, zoom, setZoom]);
+  }, [targetRef, recordRoadmapZoom, setRecordRoadmapZoom]);
 };

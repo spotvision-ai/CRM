@@ -12,17 +12,19 @@ type RecordRoadmapRowProps = {
   endDate: Temporal.PlainDate;
   viewportStart: Temporal.PlainDate;
   dayWidthPx: number;
+  currentSwimlaneKey?: string | null;
   onCommit: (args: {
     recordId: string;
     startDate: Temporal.PlainDate;
     endDate: Temporal.PlainDate;
+    targetSwimlaneKey?: string | null;
   }) => void;
 };
 
 const StyledRow = styled.div`
-  position: relative;
-  height: ${ROADMAP_ROW_HEIGHT}px;
   border-bottom: 1px solid ${themeCssVariables.border.color.light};
+  height: ${ROADMAP_ROW_HEIGHT}px;
+  position: relative;
 `;
 
 export const RecordRoadmapRow = ({
@@ -32,6 +34,7 @@ export const RecordRoadmapRow = ({
   endDate,
   viewportStart,
   dayWidthPx,
+  currentSwimlaneKey,
   onCommit,
 }: RecordRoadmapRowProps) => (
   <StyledRow>
@@ -42,6 +45,7 @@ export const RecordRoadmapRow = ({
       endDate={endDate}
       viewportStart={viewportStart}
       dayWidthPx={dayWidthPx}
+      currentSwimlaneKey={currentSwimlaneKey}
       onCommit={onCommit}
     />
   </StyledRow>

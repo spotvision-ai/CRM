@@ -10,4 +10,5 @@ export const ROADMAP_DAY_WIDTH_BY_ZOOM: Record<ViewRoadmapZoom, number> = {
   [ViewRoadmapZoom.QUARTER]: 4,
 };
 
+// oxlint-disable-next-line twenty/max-consts-per-file
 export const ROADMAP_DEFAULT_ZOOM: ViewRoadmapZoom = ViewRoadmapZoom.MONTH;

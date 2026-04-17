@@ -1,4 +1,4 @@
-import { Temporal } from 'temporal-polyfill';
+import { type Temporal } from 'temporal-polyfill';
 
 import { ROADMAP_VIEWPORT_BUFFER_RATIO } from '@/object-record/record-roadmap/constants/RoadmapDimensions';
 

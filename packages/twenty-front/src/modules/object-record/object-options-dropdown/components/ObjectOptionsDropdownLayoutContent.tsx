@@ -19,12 +19,15 @@ import { useUpdateCurrentView } from '@/views/hooks/useUpdateCurrentView';
 import { type GraphQLView } from '@/views/types/GraphQLView';
 import { ViewType, viewTypeIconMapping } from '@/views/types/ViewType';
 import { useGetAvailableFieldsForCalendar } from '@/views/view-picker/hooks/useGetAvailableFieldsForCalendar';
+import { useGetAvailableFieldsForRoadmap } from '@/views/view-picker/hooks/useGetAvailableFieldsForRoadmap';
 import { useGetAvailableFieldsToGroupRecordsBy } from '@/views/view-picker/hooks/useGetAvailableFieldsToGroupRecordsBy';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useLingui } from '@lingui/react/macro';
 import { useCallback } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 import {
+  IconArrowLeft,
+  IconArrowRight,
   IconBaselineDensitySmall,
   IconCalendar,
   IconCalendarWeek,
@@ -78,11 +81,24 @@ export const ObjectOptionsDropdownLayoutContent = () => {
       )
     : undefined;
 
+  const roadmapStartFieldMetadata = currentView?.roadmapFieldStartId
+    ? objectMetadataItem.fields.find(
+        (field) => field.id === currentView.roadmapFieldStartId,
+      )
+    : undefined;
+
+  const roadmapEndFieldMetadata = currentView?.roadmapFieldEndId
+    ? objectMetadataItem.fields.find(
+        (field) => field.id === currentView.roadmapFieldEndId,
+      )
+    : undefined;
+
   const { setAndPersistViewType } = useSetViewTypeFromLayoutOptionsMenu();
   const { availableFieldsForGrouping, navigateToSelectSettings } =
     useGetAvailableFieldsToGroupRecordsBy();
   const { availableFieldsForCalendar, navigateToDateFieldSettings } =
     useGetAvailableFieldsForCalendar();
+  const { availableFieldsForRoadmap } = useGetAvailableFieldsForRoadmap();
   const { closeDropdown } = useCloseDropdown();
 
   const handleSelectKanbanViewType = async () => {
@@ -113,6 +129,20 @@ export const ObjectOptionsDropdownLayoutContent = () => {
     }
   };
 
+  const handleSelectRoadmapViewType = async () => {
+    if (isDefaultView) {
+      return;
+    }
+    if (availableFieldsForRoadmap.length < 2) {
+      navigateToDateFieldSettings();
+      closeDropdown(dropdownId);
+      return;
+    }
+    if (currentView?.type !== ViewType.ROADMAP) {
+      await setAndPersistViewType(ViewType.ROADMAP);
+    }
+  };
+
   const isDefaultView = currentView?.key === 'INDEX';
   const nbsp = '\u00A0';
 
@@ -120,10 +150,14 @@ export const ObjectOptionsDropdownLayoutContent = () => {
     ViewType.TABLE,
     ...(isDefaultView ? [] : [ViewType.KANBAN]),
     ...(!isDefaultView ? [ViewType.CALENDAR] : []),
+    ...(!isDefaultView ? [ViewType.ROADMAP] : []),
     ViewOpenRecordIn.SIDE_PANEL,
     ...(currentView?.type === ViewType.KANBAN ? ['Group'] : []),
     ...(currentView?.type === ViewType.CALENDAR
       ? ['CalendarView', 'CalendarDateField']
+      : []),
+    ...(currentView?.type === ViewType.ROADMAP
+      ? ['RoadmapStartField', 'RoadmapEndField']
       : []),
     ...(currentView?.type !== ViewType.TABLE ? ['Compact view'] : []),
   ];
@@ -213,6 +247,34 @@ export const ObjectOptionsDropdownLayoutContent = () => {
                 onClick={handleSelectKanbanViewType}
               />
             </SelectableListItem>
+            <SelectableListItem
+              itemId={ViewType.ROADMAP}
+              onEnter={() => {
+                setAndPersistViewType(ViewType.ROADMAP);
+              }}
+            >
+              <MenuItemSelect
+                LeftIcon={viewTypeIconMapping(ViewType.ROADMAP)}
+                text={t`Roadmap`}
+                disabled={isDefaultView}
+                focused={selectedItemId === ViewType.ROADMAP}
+                contextualText={
+                  isDefaultView ? (
+                    <>
+                      {nbsp}·{nbsp}
+                      <OverflowingTextWithTooltip
+                        text={t`Not available for default view`}
+                      />
+                    </>
+                  ) : availableFieldsForRoadmap.length < 2 ? (
+                    t`Needs 2 date fields...`
+                  ) : undefined
+                }
+                contextualTextPosition="right"
+                selected={currentView?.type === ViewType.ROADMAP}
+                onClick={handleSelectRoadmapViewType}
+              />
+            </SelectableListItem>
           </DropdownMenuItemsContainer>
           <DropdownMenuSeparator />
           <DropdownMenuItemsContainer scrollable={false}>
@@ -248,6 +310,38 @@ export const ObjectOptionsDropdownLayoutContent = () => {
                           ? t`Week`
                           : t`Day`
                     }
+                    contextualTextPosition="right"
+                    hasSubMenu
+                  />
+                </SelectableListItem>
+              </>
+            )}
+            {currentView?.type === ViewType.ROADMAP && (
+              <>
+                <SelectableListItem
+                  itemId="RoadmapStartField"
+                  onEnter={() => onContentChange('roadmapStartField')}
+                >
+                  <MenuItem
+                    focused={selectedItemId === 'RoadmapStartField'}
+                    onClick={() => onContentChange('roadmapStartField')}
+                    LeftIcon={IconArrowRight}
+                    text={t`Start date field`}
+                    contextualText={roadmapStartFieldMetadata?.label}
+                    contextualTextPosition="right"
+                    hasSubMenu
+                  />
+                </SelectableListItem>
+                <SelectableListItem
+                  itemId="RoadmapEndField"
+                  onEnter={() => onContentChange('roadmapEndField')}
+                >
+                  <MenuItem
+                    focused={selectedItemId === 'RoadmapEndField'}
+                    onClick={() => onContentChange('roadmapEndField')}
+                    LeftIcon={IconArrowLeft}
+                    text={t`End date field`}
+                    contextualText={roadmapEndFieldMetadata?.label}
                     contextualTextPosition="right"
                     hasSubMenu
                   />

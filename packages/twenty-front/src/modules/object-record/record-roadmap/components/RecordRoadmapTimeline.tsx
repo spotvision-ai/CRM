@@ -5,12 +5,18 @@ import { isDefined } from 'twenty-shared/utils';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 import { RecordRoadmapRow } from '@/object-record/record-roadmap/components/RecordRoadmapRow';
+import { RecordRoadmapSwimlane } from '@/object-record/record-roadmap/components/RecordRoadmapSwimlane';
 import { RecordRoadmapTimeHeader } from '@/object-record/record-roadmap/components/RecordRoadmapTimeHeader';
 import { RecordRoadmapTodayLine } from '@/object-record/record-roadmap/components/RecordRoadmapTodayLine';
 import { RecordRoadmapWeekendsOverlay } from '@/object-record/record-roadmap/components/RecordRoadmapWeekendsOverlay';
 import { ROADMAP_DAY_WIDTH_BY_ZOOM } from '@/object-record/record-roadmap/constants/RoadmapZoomLevels';
 import { useRecordRoadmapContextOrThrow } from '@/object-record/record-roadmap/contexts/RecordRoadmapContext';
+import { useRecordRoadmapCreateOnDoubleClick } from '@/object-record/record-roadmap/hooks/useRecordRoadmapCreateOnDoubleClick';
 import { useRecordRoadmapFetchRecords } from '@/object-record/record-roadmap/hooks/useRecordRoadmapFetchRecords';
+import {
+  ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
+  useRecordRoadmapSwimlanes,
+} from '@/object-record/record-roadmap/hooks/useRecordRoadmapSwimlanes';
 import { useRecordRoadmapUpdateDates } from '@/object-record/record-roadmap/hooks/useRecordRoadmapUpdateDates';
 import { useRecordRoadmapWheelZoom } from '@/object-record/record-roadmap/hooks/useRecordRoadmapWheelZoom';
 import { recordIndexRoadmapFieldLabelIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldLabelIdState';
@@ -24,18 +30,18 @@ import { computeRoadmapViewportDays } from '@/object-record/record-roadmap/utils
 import { parseRoadmapDateValue } from '@/object-record/record-roadmap/utils/computeRoadmapBarPosition';
 
 const StyledTimelineContainer = styled.div`
+  background-color: ${themeCssVariables.background.primary};
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  background-color: ${themeCssVariables.background.primary};
 `;
 
 const StyledTimelineCanvas = styled.div`
-  position: relative;
+  flex: 1;
   overflow-x: auto;
   overflow-y: auto;
-  flex: 1;
+  position: relative;
 `;
 
 const StyledTimelineInner = styled.div`
@@ -43,30 +49,37 @@ const StyledTimelineInner = styled.div`
 `;
 
 const StyledEmpty = styled.div`
-  padding: ${themeCssVariables.spacing[4]};
   color: ${themeCssVariables.font.color.tertiary};
-  text-align: center;
   font-size: ${themeCssVariables.font.size.sm};
+  padding: ${themeCssVariables.spacing[4]};
+  text-align: center;
 `;
 
 const MIN_VIEWPORT_WIDTH_PX = 1200;
 
 export const RecordRoadmapTimeline = () => {
   const { objectMetadataItem } = useRecordRoadmapContextOrThrow();
+  // oxlint-disable-next-line twenty/no-state-useref
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
-  const viewportStart = useAtomComponentStateValue(
+  const recordRoadmapViewportStart = useAtomComponentStateValue(
     recordRoadmapViewportStartComponentState,
   );
-  const zoom = useAtomComponentStateValue(recordRoadmapZoomComponentState);
+  const recordRoadmapZoom = useAtomComponentStateValue(
+    recordRoadmapZoomComponentState,
+  );
 
-  const showToday = useAtomStateValue(recordIndexRoadmapShowTodayState);
-  const showWeekends = useAtomStateValue(recordIndexRoadmapShowWeekendsState);
-  const labelFieldMetadataId = useAtomStateValue(
+  const recordIndexRoadmapShowToday = useAtomStateValue(
+    recordIndexRoadmapShowTodayState,
+  );
+  const recordIndexRoadmapShowWeekends = useAtomStateValue(
+    recordIndexRoadmapShowWeekendsState,
+  );
+  const recordIndexRoadmapFieldLabelId = useAtomStateValue(
     recordIndexRoadmapFieldLabelIdState,
   );
 
-  const dayWidthPx = ROADMAP_DAY_WIDTH_BY_ZOOM[zoom];
+  const dayWidthPx = ROADMAP_DAY_WIDTH_BY_ZOOM[recordRoadmapZoom];
 
   const viewportWidthPx = Math.max(
     canvasRef.current?.clientWidth ?? MIN_VIEWPORT_WIDTH_PX,
@@ -74,7 +87,7 @@ export const RecordRoadmapTimeline = () => {
   );
 
   const { days } = computeRoadmapViewportDays({
-    viewportStart,
+    viewportStart: recordRoadmapViewportStart,
     viewportWidthPx,
     dayWidthPx,
   });
@@ -85,40 +98,20 @@ export const RecordRoadmapTimeline = () => {
     useRecordRoadmapFetchRecords();
 
   const { updateDates } = useRecordRoadmapUpdateDates();
+  const { createAtDay } = useRecordRoadmapCreateOnDoubleClick();
 
   useRecordRoadmapWheelZoom(canvasRef);
 
-  const handleBarCommit = useCallback(
-    ({
-      recordId,
-      startDate,
-      endDate,
-    }: {
-      recordId: string;
-      startDate: Temporal.PlainDate;
-      endDate: Temporal.PlainDate;
-    }) => {
-      void updateDates({
-        recordId,
-        startFieldName: startFieldMetadataItem?.name,
-        endFieldName: endFieldMetadataItem?.name,
-        startDate,
-        endDate,
-      });
-    },
-    [updateDates, startFieldMetadataItem, endFieldMetadataItem],
-  );
-
   const labelFieldMetadataItem = useMemo(() => {
-    if (isDefined(labelFieldMetadataId)) {
+    if (isDefined(recordIndexRoadmapFieldLabelId)) {
       return objectMetadataItem.fields.find(
-        (field) => field.id === labelFieldMetadataId,
+        (field) => field.id === recordIndexRoadmapFieldLabelId,
       );
     }
     return objectMetadataItem.fields.find(
       (field) => field.id === objectMetadataItem.labelIdentifierFieldMetadataId,
     );
-  }, [labelFieldMetadataId, objectMetadataItem]);
+  }, [recordIndexRoadmapFieldLabelId, objectMetadataItem]);
 
   const placedRecords = useMemo(() => {
     if (
@@ -150,6 +143,79 @@ export const RecordRoadmapTimeline = () => {
     labelFieldMetadataItem,
   ]);
 
+  const { swimlanes, groupFieldName, supportsCrossSwimlaneDrop } =
+    useRecordRoadmapSwimlanes({ placedRecords });
+
+  const handleDoubleClickEmptyArea = useCallback(
+    ({ swimlaneKey, clientX }: { swimlaneKey: string; clientX: number }) => {
+      const canvas = canvasRef.current;
+      if (canvas === null) return;
+      const canvasRect = canvas.getBoundingClientRect();
+      const offsetX = clientX - canvasRect.left + canvas.scrollLeft;
+      const dayIndex = Math.max(0, Math.floor(offsetX / dayWidthPx));
+      const startDate = recordRoadmapViewportStart.add({ days: dayIndex });
+      const endDate = startDate.add({ days: 3 });
+
+      void createAtDay({
+        startDate,
+        endDate,
+        startFieldName: startFieldMetadataItem?.name,
+        endFieldName: endFieldMetadataItem?.name,
+        groupFieldName: supportsCrossSwimlaneDrop ? groupFieldName : null,
+        swimlaneKey,
+      });
+    },
+    [
+      dayWidthPx,
+      recordRoadmapViewportStart,
+      createAtDay,
+      startFieldMetadataItem,
+      endFieldMetadataItem,
+      supportsCrossSwimlaneDrop,
+      groupFieldName,
+    ],
+  );
+
+  const handleBarCommit = useCallback(
+    ({
+      recordId,
+      startDate,
+      endDate,
+      targetSwimlaneKey,
+    }: {
+      recordId: string;
+      startDate: Temporal.PlainDate;
+      endDate: Temporal.PlainDate;
+      targetSwimlaneKey?: string | null;
+    }) => {
+      const canUpdateGroup =
+        supportsCrossSwimlaneDrop &&
+        isDefined(groupFieldName) &&
+        targetSwimlaneKey !== undefined;
+
+      void updateDates({
+        recordId,
+        startFieldName: startFieldMetadataItem?.name,
+        endFieldName: endFieldMetadataItem?.name,
+        startDate,
+        endDate,
+        groupFieldName: canUpdateGroup ? groupFieldName : undefined,
+        groupValue: canUpdateGroup
+          ? targetSwimlaneKey === ROADMAP_UNCATEGORIZED_SWIMLANE_KEY
+            ? null
+            : (targetSwimlaneKey ?? null)
+          : undefined,
+      });
+    },
+    [
+      updateDates,
+      startFieldMetadataItem,
+      endFieldMetadataItem,
+      supportsCrossSwimlaneDrop,
+      groupFieldName,
+    ],
+  );
+
   if (!isDefined(startFieldMetadataItem) || !isDefined(endFieldMetadataItem)) {
     return (
       <StyledEmpty>
@@ -165,31 +231,42 @@ export const RecordRoadmapTimeline = () => {
         <StyledTimelineInner style={{ width: canvasWidthPx }}>
           <RecordRoadmapTimeHeader
             days={days}
-            viewportStart={viewportStart}
+            viewportStart={recordRoadmapViewportStart}
             dayWidthPx={dayWidthPx}
           />
-          {showWeekends && (
+          {recordIndexRoadmapShowWeekends && (
             <RecordRoadmapWeekendsOverlay
               days={days}
-              viewportStart={viewportStart}
+              viewportStart={recordRoadmapViewportStart}
               dayWidthPx={dayWidthPx}
             />
           )}
-          {placedRecords.map(({ record, startDate, endDate, label }) => (
-            <RecordRoadmapRow
-              key={record.id}
-              recordId={record.id}
-              label={label}
-              startDate={startDate}
-              endDate={endDate}
-              viewportStart={viewportStart}
-              dayWidthPx={dayWidthPx}
-              onCommit={handleBarCommit}
-            />
+          {swimlanes.map((swimlane) => (
+            <RecordRoadmapSwimlane
+              key={swimlane.key}
+              swimlaneKey={swimlane.key}
+              label={swimlane.label}
+              color={swimlane.color}
+              onDoubleClickEmptyArea={handleDoubleClickEmptyArea}
+            >
+              {swimlane.records.map(({ record, startDate, endDate, label }) => (
+                <RecordRoadmapRow
+                  key={record.id}
+                  recordId={record.id}
+                  label={label}
+                  startDate={startDate}
+                  endDate={endDate}
+                  viewportStart={recordRoadmapViewportStart}
+                  dayWidthPx={dayWidthPx}
+                  currentSwimlaneKey={swimlane.key}
+                  onCommit={handleBarCommit}
+                />
+              ))}
+            </RecordRoadmapSwimlane>
           ))}
-          {showToday && (
+          {recordIndexRoadmapShowToday && (
             <RecordRoadmapTodayLine
-              viewportStart={viewportStart}
+              viewportStart={recordRoadmapViewportStart}
               dayWidthPx={dayWidthPx}
             />
           )}

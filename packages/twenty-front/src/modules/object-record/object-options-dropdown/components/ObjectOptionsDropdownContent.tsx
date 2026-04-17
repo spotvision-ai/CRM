@@ -9,6 +9,7 @@ import { ObjectOptionsDropdownMenuContent } from '@/object-record/object-options
 import { ObjectOptionsDropdownRecordGroupFieldsContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownRecordGroupFieldsContent';
 import { ObjectOptionsDropdownRecordGroupsContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownRecordGroupsContent';
 import { ObjectOptionsDropdownRecordGroupSortContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownRecordGroupSortContent';
+import { ObjectOptionsDropdownRoadmapFieldPickerContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent';
 import { ObjectOptionsDropdownVisibilityContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownVisibilityContent';
 import { useObjectOptionsDropdown } from '@/object-record/object-options-dropdown/hooks/useObjectOptionsDropdown';
 
@@ -36,6 +37,10 @@ export const ObjectOptionsDropdownContent = () => {
       return <ObjectOptionsDropdownCalendarViewContent />;
     case 'calendarFields':
       return <ObjectOptionsDropdownCalendarFieldsContent />;
+    case 'roadmapStartField':
+      return <ObjectOptionsDropdownRoadmapFieldPickerContent role="start" />;
+    case 'roadmapEndField':
+      return <ObjectOptionsDropdownRoadmapFieldPickerContent role="end" />;
     case 'visibility':
       return <ObjectOptionsDropdownVisibilityContent />;
     default:

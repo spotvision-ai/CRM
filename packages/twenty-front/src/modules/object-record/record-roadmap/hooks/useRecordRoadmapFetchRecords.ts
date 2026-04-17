@@ -12,29 +12,29 @@ import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomState
 export const useRecordRoadmapFetchRecords = () => {
   const { objectMetadataItem } = useRecordRoadmapContextOrThrow();
 
-  const startFieldMetadataId = useAtomStateValue(
+  const recordIndexRoadmapFieldStartId = useAtomStateValue(
     recordIndexRoadmapFieldStartIdState,
   );
-  const endFieldMetadataId = useAtomStateValue(
+  const recordIndexRoadmapFieldEndId = useAtomStateValue(
     recordIndexRoadmapFieldEndIdState,
   );
 
   const recordGqlFields = useRelevantRecordsGqlFields({
     objectMetadataItem,
-    additionalFieldMetadataId: startFieldMetadataId,
+    additionalFieldMetadataId: recordIndexRoadmapFieldStartId,
   });
 
   const { records, loading, error } = useFindManyRecords<ObjectRecord>({
     objectNameSingular: objectMetadataItem.nameSingular,
     recordGqlFields,
-    skip: !startFieldMetadataId || !endFieldMetadataId,
+    skip: !recordIndexRoadmapFieldStartId || !recordIndexRoadmapFieldEndId,
   });
 
   const startFieldMetadataItem = objectMetadataItem.fields.find(
-    (field) => field.id === startFieldMetadataId,
+    (field) => field.id === recordIndexRoadmapFieldStartId,
   );
   const endFieldMetadataItem = objectMetadataItem.fields.find(
-    (field) => field.id === endFieldMetadataId,
+    (field) => field.id === recordIndexRoadmapFieldEndId,
   );
 
   return {

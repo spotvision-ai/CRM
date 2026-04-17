@@ -11,35 +11,35 @@ import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/use
 import { ViewRoadmapZoom } from '~/generated-metadata/graphql';
 
 const StyledTopBar = styled.div`
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid ${themeCssVariables.border.color.light};
+  display: flex;
+  flex-shrink: 0;
+  gap: ${themeCssVariables.spacing[2]};
   justify-content: space-between;
   padding: ${themeCssVariables.spacing[2]};
-  gap: ${themeCssVariables.spacing[2]};
-  border-bottom: 1px solid ${themeCssVariables.border.color.light};
-  flex-shrink: 0;
 `;
 
 const StyledGroup = styled.div`
+  align-items: center;
   display: flex;
   gap: ${themeCssVariables.spacing[1]};
-  align-items: center;
 `;
 
 const StyledButton = styled.button<{ isActive?: boolean }>`
-  display: inline-flex;
   align-items: center;
-  height: 28px;
-  padding: 0 ${themeCssVariables.spacing[2]};
   background-color: ${(props) =>
     props.isActive
       ? themeCssVariables.background.tertiary
       : themeCssVariables.background.primary};
-  color: ${themeCssVariables.font.color.primary};
   border: 1px solid ${themeCssVariables.border.color.medium};
   border-radius: 4px;
-  font-size: ${themeCssVariables.font.size.sm};
+  color: ${themeCssVariables.font.color.primary};
   cursor: pointer;
+  display: inline-flex;
+  font-size: ${themeCssVariables.font.size.sm};
+  height: 28px;
+  padding: 0 ${themeCssVariables.spacing[2]};
 
   &:hover {
     background-color: ${themeCssVariables.background.tertiary};
@@ -61,14 +61,14 @@ const ZOOM_OPTIONS: { value: ViewRoadmapZoom; label: string }[] = [
 export const RecordRoadmapTopBar = () => {
   const { t } = useLingui();
 
-  const [zoom, setZoom] = useAtomComponentState(
+  const [recordRoadmapZoom, setRecordRoadmapZoom] = useAtomComponentState(
     recordRoadmapZoomComponentState,
   );
-  const [, setViewportStart] = useAtomComponentState(
+  const [, setRecordRoadmapViewportStart] = useAtomComponentState(
     recordRoadmapViewportStartComponentState,
   );
 
-  const hiddenRecordCount = useAtomComponentStateValue(
+  const recordRoadmapHiddenRecordCount = useAtomComponentStateValue(
     recordRoadmapHiddenRecordCountComponentState,
   );
 
@@ -76,7 +76,9 @@ export const RecordRoadmapTopBar = () => {
     // Align today to roughly one-third from the left — keeps some past
     // context visible and leaves more future runway where most planning
     // happens.
-    setViewportStart(Temporal.Now.plainDateISO().subtract({ months: 1 }));
+    setRecordRoadmapViewportStart(
+      Temporal.Now.plainDateISO().subtract({ months: 1 }),
+    );
   };
 
   return (
@@ -85,17 +87,17 @@ export const RecordRoadmapTopBar = () => {
         {ZOOM_OPTIONS.map((option) => (
           <StyledButton
             key={option.value}
-            isActive={zoom === option.value}
-            onClick={() => setZoom(option.value)}
+            isActive={recordRoadmapZoom === option.value}
+            onClick={() => setRecordRoadmapZoom(option.value)}
           >
             {option.label}
           </StyledButton>
         ))}
         <StyledButton onClick={handleTodayClick}>{t`Today`}</StyledButton>
       </StyledGroup>
-      {hiddenRecordCount > 0 && (
+      {recordRoadmapHiddenRecordCount > 0 && (
         <StyledHiddenCounter>
-          {t`${hiddenRecordCount} records hidden (missing dates)`}
+          {t`${recordRoadmapHiddenRecordCount} records hidden (missing dates)`}
         </StyledHiddenCounter>
       )}
     </StyledTopBar>

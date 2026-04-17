@@ -12,13 +12,7 @@ import { computeRoadmapBarPosition } from '@/object-record/record-roadmap/utils/
 const RESIZE_HANDLE_WIDTH = 6;
 
 const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
-  position: absolute;
-  top: ${ROADMAP_BAR_VERTICAL_PADDING}px;
-  height: ${ROADMAP_BAR_HEIGHT}px;
-  display: flex;
   align-items: center;
-  padding: 0 ${themeCssVariables.spacing[2]};
-  border-radius: 4px;
   background-color: ${(props) =>
     props.isDragging
       ? themeCssVariables.background.tertiary
@@ -28,15 +22,21 @@ const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
       props.hasError
         ? themeCssVariables.border.color.danger
         : themeCssVariables.border.color.medium};
+  border-radius: 4px;
   color: ${themeCssVariables.font.color.primary};
+  cursor: grab;
+  display: flex;
   font-size: ${themeCssVariables.font.size.sm};
+  height: ${ROADMAP_BAR_HEIGHT}px;
   opacity: ${(props) => (props.isDragging ? 0.85 : 1)};
   overflow: hidden;
-  white-space: nowrap;
+  padding: 0 ${themeCssVariables.spacing[2]};
+  position: absolute;
   text-overflow: ellipsis;
-  cursor: grab;
-  user-select: none;
+  top: ${ROADMAP_BAR_VERTICAL_PADDING}px;
   touch-action: none;
+  user-select: none;
+  white-space: nowrap;
 
   &:hover {
     background-color: ${themeCssVariables.background.tertiary};
@@ -51,12 +51,12 @@ const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
 // `left: 0;` vs `right: 0;` declaration from a prop. Two siblings — shared
 // styling, different edge — keep each handle anchored reliably.
 const StyledResizeHandleBase = styled.div`
+  cursor: ew-resize;
+  height: 100%;
   position: absolute;
   top: 0;
-  height: 100%;
-  width: ${RESIZE_HANDLE_WIDTH}px;
-  cursor: ew-resize;
   touch-action: none;
+  width: ${RESIZE_HANDLE_WIDTH}px;
   /* Sits above the draggable body so pointer-down reaches the handle first. */
   z-index: 1;
 `;
@@ -76,10 +76,12 @@ type RecordRoadmapBarProps = {
   endDate: Temporal.PlainDate;
   viewportStart: Temporal.PlainDate;
   dayWidthPx: number;
+  currentSwimlaneKey?: string | null;
   onCommit: (args: {
     recordId: string;
     startDate: Temporal.PlainDate;
     endDate: Temporal.PlainDate;
+    targetSwimlaneKey?: string | null;
   }) => void;
 };
 
@@ -90,6 +92,7 @@ export const RecordRoadmapBar = ({
   endDate,
   viewportStart,
   dayWidthPx,
+  currentSwimlaneKey,
   onCommit,
 }: RecordRoadmapBarProps) => {
   const {
@@ -103,6 +106,7 @@ export const RecordRoadmapBar = ({
     startDate,
     endDate,
     dayWidthPx,
+    currentSwimlaneKey,
     onCommit,
   });
 
@@ -131,6 +135,7 @@ export const RecordRoadmapBar = ({
     <StyledBar
       hasError={hasError}
       isDragging={mode !== null}
+      data-roadmap-bar
       style={{ left: leftPx, width: widthPx }}
       onPointerDown={onPointerDownMove}
       title={

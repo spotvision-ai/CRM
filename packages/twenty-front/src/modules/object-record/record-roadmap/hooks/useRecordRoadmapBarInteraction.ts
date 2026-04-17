@@ -8,11 +8,31 @@ type UseRecordRoadmapBarInteractionArgs = {
   startDate: Temporal.PlainDate;
   endDate: Temporal.PlainDate;
   dayWidthPx: number;
+  /** Swimlane key the record currently lives in. Used to detect a cross-
+      swimlane drop only when the target differs from the source. */
+  currentSwimlaneKey?: string | null;
   onCommit: (args: {
     recordId: string;
     startDate: Temporal.PlainDate;
     endDate: Temporal.PlainDate;
+    targetSwimlaneKey?: string | null;
   }) => void;
+};
+
+// Swimlane containers tag their own wrapper with this data attribute so
+// pointer-up resolves the target swimlane via elementFromPoint rather than
+// maintaining row-to-swimlane maps in React state.
+const SWIMLANE_DATA_ATTR = 'data-roadmap-swimlane-key';
+
+const findSwimlaneKeyAtPoint = (
+  clientX: number,
+  clientY: number,
+): string | null => {
+  const element = document.elementFromPoint(clientX, clientY);
+  if (element === null) return null;
+  const swimlane = element.closest(`[${SWIMLANE_DATA_ATTR}]`);
+  if (swimlane === null) return null;
+  return swimlane.getAttribute(SWIMLANE_DATA_ATTR);
 };
 
 type InProgressDrag = {
@@ -31,10 +51,12 @@ export const useRecordRoadmapBarInteraction = ({
   startDate,
   endDate,
   dayWidthPx,
+  currentSwimlaneKey,
   onCommit,
 }: UseRecordRoadmapBarInteractionArgs) => {
   const [deltaDays, setDeltaDays] = useState(0);
   const [mode, setMode] = useState<BarInteractionMode | null>(null);
+  // oxlint-disable-next-line twenty/no-state-useref
   const dragRef = useRef<InProgressDrag | null>(null);
 
   const resolveDeltaDays = (currentClientX: number): number => {
@@ -77,7 +99,18 @@ export const useRecordRoadmapBarInteraction = ({
       target?.removeEventListener('pointerup', handlePointerUp);
       target?.removeEventListener('pointercancel', handlePointerUp);
 
-      if (finalDelta !== 0) {
+      const droppedSwimlaneKey = findSwimlaneKeyAtPoint(
+        event.clientX,
+        event.clientY,
+      );
+      const targetSwimlaneKey =
+        drag.mode === 'move' &&
+        droppedSwimlaneKey !== null &&
+        droppedSwimlaneKey !== currentSwimlaneKey
+          ? droppedSwimlaneKey
+          : undefined;
+
+      if (finalDelta !== 0 || targetSwimlaneKey !== undefined) {
         let newStart = startDate;
         let newEnd = endDate;
         if (drag.mode === 'move') {
@@ -88,13 +121,26 @@ export const useRecordRoadmapBarInteraction = ({
         } else if (drag.mode === 'resize-end') {
           newEnd = endDate.add({ days: finalDelta });
         }
-        onCommit({ recordId, startDate: newStart, endDate: newEnd });
+        onCommit({
+          recordId,
+          startDate: newStart,
+          endDate: newEnd,
+          targetSwimlaneKey,
+        });
       }
 
       reset();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [startDate, endDate, recordId, onCommit, handlePointerMove, reset],
+    [
+      startDate,
+      endDate,
+      recordId,
+      currentSwimlaneKey,
+      onCommit,
+      handlePointerMove,
+      reset,
+    ],
   );
 
   const startInteraction = useCallback(

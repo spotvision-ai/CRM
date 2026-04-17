@@ -8,24 +8,24 @@ type RecordRoadmapTodayLineProps = {
 };
 
 const StyledLine = styled.div`
+  background-color: ${themeCssVariables.accent.secondary};
+  bottom: 0;
+  pointer-events: none;
   position: absolute;
   top: 0;
-  bottom: 0;
   width: 1px;
-  background-color: ${themeCssVariables.accent.secondary};
-  pointer-events: none;
   z-index: 2;
 `;
 
 const StyledLabel = styled.div`
+  background-color: ${themeCssVariables.accent.secondary};
+  border-radius: 2px;
+  color: ${themeCssVariables.font.color.inverted};
+  font-size: ${themeCssVariables.font.size.xs};
+  padding: 0 ${themeCssVariables.spacing[1]};
   position: absolute;
   top: -18px;
   transform: translateX(-50%);
-  padding: 0 ${themeCssVariables.spacing[1]};
-  background-color: ${themeCssVariables.accent.secondary};
-  color: ${themeCssVariables.font.color.inverted};
-  border-radius: 2px;
-  font-size: ${themeCssVariables.font.size.xs};
 `;
 
 export const RecordRoadmapTodayLine = ({

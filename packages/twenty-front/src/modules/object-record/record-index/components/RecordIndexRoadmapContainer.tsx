@@ -6,6 +6,7 @@ import { useObjectPermissionsForObject } from '@/object-record/hooks/useObjectPe
 import { useRecordIndexContextOrThrow } from '@/object-record/record-index/contexts/RecordIndexContext';
 import { RecordIndexRoadmapDataLoaderEffect } from '@/object-record/record-roadmap/components/RecordIndexRoadmapDataLoaderEffect';
 import { RecordRoadmap } from '@/object-record/record-roadmap/components/RecordRoadmap';
+import { RecordRoadmapSSESubscribeEffect } from '@/object-record/record-roadmap/components/RecordRoadmapSSESubscribeEffect';
 import { RecordRoadmapContextProvider } from '@/object-record/record-roadmap/contexts/RecordRoadmapContext';
 import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
 
@@ -52,6 +53,7 @@ export const RecordIndexRoadmapContainer = ({
         }}
       >
         <RecordRoadmap />
+        <RecordRoadmapSSESubscribeEffect />
         <RecordIndexRoadmapDataLoaderEffect />
       </RecordRoadmapContextProvider>
     </RecordComponentInstanceContextsWrapper>
