@@ -1,15 +1,18 @@
 import { styled } from '@linaria/react';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import { type Temporal } from 'temporal-polyfill';
 import { isDefined } from 'twenty-shared/utils';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
-import { ROADMAP_DAY_WIDTH_BY_ZOOM } from '@/object-record/record-roadmap/constants/RoadmapZoomLevels';
 import { RecordRoadmapRow } from '@/object-record/record-roadmap/components/RecordRoadmapRow';
 import { RecordRoadmapTimeHeader } from '@/object-record/record-roadmap/components/RecordRoadmapTimeHeader';
 import { RecordRoadmapTodayLine } from '@/object-record/record-roadmap/components/RecordRoadmapTodayLine';
 import { RecordRoadmapWeekendsOverlay } from '@/object-record/record-roadmap/components/RecordRoadmapWeekendsOverlay';
+import { ROADMAP_DAY_WIDTH_BY_ZOOM } from '@/object-record/record-roadmap/constants/RoadmapZoomLevels';
 import { useRecordRoadmapContextOrThrow } from '@/object-record/record-roadmap/contexts/RecordRoadmapContext';
 import { useRecordRoadmapFetchRecords } from '@/object-record/record-roadmap/hooks/useRecordRoadmapFetchRecords';
+import { useRecordRoadmapUpdateDates } from '@/object-record/record-roadmap/hooks/useRecordRoadmapUpdateDates';
+import { useRecordRoadmapWheelZoom } from '@/object-record/record-roadmap/hooks/useRecordRoadmapWheelZoom';
 import { recordIndexRoadmapFieldLabelIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldLabelIdState';
 import { recordIndexRoadmapShowTodayState } from '@/object-record/record-index/states/recordIndexRoadmapShowTodayState';
 import { recordIndexRoadmapShowWeekendsState } from '@/object-record/record-index/states/recordIndexRoadmapShowWeekendsState';
@@ -81,6 +84,31 @@ export const RecordRoadmapTimeline = () => {
   const { records, startFieldMetadataItem, endFieldMetadataItem } =
     useRecordRoadmapFetchRecords();
 
+  const { updateDates } = useRecordRoadmapUpdateDates();
+
+  useRecordRoadmapWheelZoom(canvasRef);
+
+  const handleBarCommit = useCallback(
+    ({
+      recordId,
+      startDate,
+      endDate,
+    }: {
+      recordId: string;
+      startDate: Temporal.PlainDate;
+      endDate: Temporal.PlainDate;
+    }) => {
+      void updateDates({
+        recordId,
+        startFieldName: startFieldMetadataItem?.name,
+        endFieldName: endFieldMetadataItem?.name,
+        startDate,
+        endDate,
+      });
+    },
+    [updateDates, startFieldMetadataItem, endFieldMetadataItem],
+  );
+
   const labelFieldMetadataItem = useMemo(() => {
     if (isDefined(labelFieldMetadataId)) {
       return objectMetadataItem.fields.find(
@@ -150,11 +178,13 @@ export const RecordRoadmapTimeline = () => {
           {placedRecords.map(({ record, startDate, endDate, label }) => (
             <RecordRoadmapRow
               key={record.id}
+              recordId={record.id}
               label={label}
               startDate={startDate}
               endDate={endDate}
               viewportStart={viewportStart}
               dayWidthPx={dayWidthPx}
+              onCommit={handleBarCommit}
             />
           ))}
           {showToday && (

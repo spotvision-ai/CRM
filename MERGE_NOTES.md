@@ -202,7 +202,24 @@ Fase 3 registers the `ROADMAP` viewType in the frontend and wires a minimum viab
 - `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordRoadmapWeekendsOverlay.tsx`
 - `packages/twenty-front/src/modules/object-record/record-roadmap/components/RecordIndexRoadmapDataLoaderEffect.tsx`
 
+### Fase 4 — Frontend: interactions
+
+Fase 4a turns the static Fase 3 timeline into a draggable/resizable Gantt. Records respond to pointer drag (move the bar body to shift both dates, grab a 6px side handle to resize a single edge), optimistic updates hit the Apollo cache immediately and roll back on mutation failure with a snackbar, and `Ctrl/Cmd + wheel` steps through the zoom levels without interfering with regular scroll. Swimlanes (drag vertical between SELECT groups), keyboard navigation, and the double-click-to-create flow are scoped to Fase 4b alongside the options dropdown.
+
+#### New files (not tracked here — listed for context)
+
+- `packages/twenty-front/src/modules/object-record/record-roadmap/hooks/useRecordRoadmapUpdateDates.ts` — thin wrapper around `useUpdateOneRecord` that maps a `(recordId, startDate, endDate)` payload to the correct field names and surfaces a snackbar on failure.
+- `packages/twenty-front/src/modules/object-record/record-roadmap/hooks/useRecordRoadmapBarInteraction.ts` — native-pointer-capture drag/resize state machine with transient `deltaDays` for the live preview and a single commit on pointerup.
+- `packages/twenty-front/src/modules/object-record/record-roadmap/hooks/useRecordRoadmapWheelZoom.ts` — attaches a non-passive `wheel` listener that steps `recordRoadmapZoomComponentState` on Ctrl/Cmd + scroll.
+
+#### Updated files (still local to `record-roadmap/`)
+
+- `components/RecordRoadmapBar.tsx` — three pointer entry points (body drag, left/right resize handles); preview re-positions using the transient delta; calls `onCommit` only when the delta is non-zero.
+- `components/RecordRoadmapRow.tsx` / `components/RecordRoadmapTimeline.tsx` — prop-drill `recordId` and a shared `handleBarCommit` that calls `updateDates`; Timeline now subscribes to `useRecordRoadmapWheelZoom`.
+
+No upstream files touched in Fase 4a (all changes are scoped to the `record-roadmap/` module introduced in Fase 3).
+
 ## Upcoming phases (expected upstream touch-points — anticipated for planning, will be populated as work lands)
 
-- Fase 4: `ViewPickerTypeSelectOptions.ts`, `ViewPickerContentCreateMode.tsx`, `ObjectOptionsDropdownContent*.tsx`, drag/resize hooks under `record-roadmap/hooks/`.
+- Fase 4b: `ObjectOptionsDropdownContent*.tsx` (reconfigure an existing ROADMAP view), swimlanes (SELECT grouping + drag vertical), keyboard navigation, double-click-to-create, read-only mode.
 - Fase 5: Playwright e2e coverage + performance measurement.
