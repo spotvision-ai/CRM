@@ -270,6 +270,15 @@ Layered on top of the swimlane/options work after dog-fooding the view: a Jira-s
 
 No upstream files outside of those three chains were touched in the refinement pass.
 
+### Fase 4b follow-up — Read-only mode
+
+Honors `objectPermissions.canUpdateObjectRecords` from the roadmap context. When the caller lacks update permission, the Timeline flips a `readOnly` flag that:
+- Drops drag/resize pointer handlers on `RecordRoadmapBar`, hides the resize handles, and switches `cursor` to `pointer`. The bar falls back to a plain `onClick` that still opens the record detail.
+- Stops passing `onDoubleClickEmptyArea` to `RecordRoadmapSwimlane`, so dbl-click-to-create is silently disabled.
+- Leaves the sticky name-column click-to-open intact — read-only users keep the detail panel UX.
+
+All scoped to `record-roadmap/` — no upstream files touched.
+
 ## Upcoming phases (expected upstream touch-points — anticipated for planning, will be populated as work lands)
 
 - Fase 4b follow-up: read-only mode driven by `objectPermissions.canUpdateObjectRecords` + keyboard navigation.

@@ -81,6 +81,7 @@ type RecordRoadmapBarProps = {
       color field or the record's value doesn't match an option. */
   color: string | null;
   currentSwimlaneKey?: string | null;
+  readOnly?: boolean;
   onCommit: (args: {
     recordId: string;
     startDate: Temporal.PlainDate;
@@ -118,6 +119,7 @@ export const RecordRoadmapBar = ({
   dayWidthPx,
   color,
   currentSwimlaneKey,
+  readOnly = false,
   onCommit,
   onClick,
 }: RecordRoadmapBarProps) => {
@@ -177,16 +179,28 @@ export const RecordRoadmapBar = ({
       hasError={hasError}
       isDragging={mode !== null}
       data-roadmap-bar
-      style={{ left: leftPx, width: widthPx, ...colorStyle }}
-      onPointerDown={onPointerDownMove}
+      style={{
+        left: leftPx,
+        width: widthPx,
+        ...colorStyle,
+        // Read-only mode: behave like a link (pointer cursor, no grabbing)
+        // since drag/resize are disabled.
+        ...(readOnly ? { cursor: 'pointer' } : {}),
+      }}
+      onPointerDown={readOnly ? undefined : onPointerDownMove}
+      onClick={readOnly ? () => onClick?.(recordId) : undefined}
       title={
         hasError
           ? `End date is before start date (${previewStart.toString()} → ${previewEnd.toString()})`
           : `${label} (${previewStart.toString()} → ${previewEnd.toString()})`
       }
     >
-      <StyledResizeHandleLeft onPointerDown={onPointerDownResizeStart} />
-      <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
+      {!readOnly && (
+        <>
+          <StyledResizeHandleLeft onPointerDown={onPointerDownResizeStart} />
+          <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
+        </>
+      )}
     </StyledBar>
   );
 };

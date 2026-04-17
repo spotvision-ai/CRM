@@ -98,7 +98,9 @@ const BUFFER_EXTENSION_DAYS = 180;
 const EDGE_EXTEND_THRESHOLD_PX = 400;
 
 export const RecordRoadmapTimeline = () => {
-  const { objectMetadataItem } = useRecordRoadmapContextOrThrow();
+  const { objectMetadataItem, objectPermissions } =
+    useRecordRoadmapContextOrThrow();
+  const readOnly = !objectPermissions.canUpdateObjectRecords;
   // oxlint-disable-next-line twenty/no-state-useref
   const canvasRef = useRef<HTMLDivElement | null>(null);
   // oxlint-disable-next-line twenty/no-state-useref
@@ -455,7 +457,9 @@ export const RecordRoadmapTimeline = () => {
               <RecordRoadmapSwimlane
                 key={swimlane.key}
                 swimlaneKey={swimlane.key}
-                onDoubleClickEmptyArea={handleDoubleClickEmptyArea}
+                onDoubleClickEmptyArea={
+                  readOnly ? undefined : handleDoubleClickEmptyArea
+                }
               >
                 {swimlane.records.map(
                   ({ record, startDate, endDate, label, color }) => (
@@ -469,6 +473,7 @@ export const RecordRoadmapTimeline = () => {
                       dayWidthPx={dayWidthPx}
                       color={color}
                       currentSwimlaneKey={swimlane.key}
+                      readOnly={readOnly}
                       onCommit={handleBarCommit}
                       onOpenRecord={handleOpenRecord}
                     />
