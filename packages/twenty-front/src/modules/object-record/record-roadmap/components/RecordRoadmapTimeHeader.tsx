@@ -10,13 +10,19 @@ type RecordRoadmapTimeHeaderProps = {
   dayWidthPx: number;
 };
 
+// Sticky to the scroll container's top so the date scale stays on-screen
+// while the user scrolls swimlanes vertically. `z-index: 3` keeps it above
+// weekend columns, today line, and the swimlane headers (which use z:2).
 const StyledHeader = styled.div`
   background-color: ${themeCssVariables.background.primary};
   border-bottom: 1px solid ${themeCssVariables.border.color.light};
+  box-sizing: border-box;
   display: flex;
   flex-shrink: 0;
   height: ${ROADMAP_HEADER_HEIGHT}px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 3;
 `;
 
 const StyledMonthBand = styled.div`

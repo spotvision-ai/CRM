@@ -41,6 +41,8 @@ export const ObjectOptionsDropdownContent = () => {
       return <ObjectOptionsDropdownRoadmapFieldPickerContent role="start" />;
     case 'roadmapEndField':
       return <ObjectOptionsDropdownRoadmapFieldPickerContent role="end" />;
+    case 'roadmapColorField':
+      return <ObjectOptionsDropdownRoadmapFieldPickerContent role="color" />;
     case 'visibility':
       return <ObjectOptionsDropdownVisibilityContent />;
     default:

@@ -2,38 +2,26 @@ import { styled } from '@linaria/react';
 import { type MouseEvent, type ReactNode } from 'react';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
+import { ROADMAP_SWIMLANE_HEADER_HEIGHT } from '@/object-record/record-roadmap/constants/RoadmapDimensions';
+
 const StyledSwimlane = styled.div`
   position: relative;
 `;
 
-const StyledSwimlaneHeader = styled.div`
-  position: sticky;
-  left: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: ${themeCssVariables.spacing[1]};
-  padding: ${themeCssVariables.spacing[1]} ${themeCssVariables.spacing[2]};
+// Empty strip on the timeline side that matches the name-column header's
+// height so the rows below line up one-for-one between the two panes.
+// `box-sizing: border-box` is critical — it mirrors the name-column header
+// so both count the 1px bottom border inside the 28 px height and don't
+// drift row-for-row on vertical scroll.
+const StyledSwimlaneHeaderStrip = styled.div`
   background-color: ${themeCssVariables.background.tertiary};
   border-bottom: 1px solid ${themeCssVariables.border.color.medium};
-  font-size: ${themeCssVariables.font.size.xs};
-  font-weight: ${themeCssVariables.font.weight.medium};
-  color: ${themeCssVariables.font.color.secondary};
-  z-index: 2;
-  /* The header sits on the scroll container's left edge so it stays readable
-     while the user scrolls the timeline horizontally. */
-`;
-
-const StyledColorDot = styled.span`
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  box-sizing: border-box;
+  height: ${ROADMAP_SWIMLANE_HEADER_HEIGHT}px;
 `;
 
 type RecordRoadmapSwimlaneProps = {
   swimlaneKey: string;
-  label: string;
-  color?: string | null;
   children: ReactNode;
   onDoubleClickEmptyArea?: (args: {
     swimlaneKey: string;
@@ -45,10 +33,10 @@ type RecordRoadmapSwimlaneProps = {
 // the view (or a synthetic `__uncategorized__` bucket when the field is
 // unset). The `data-roadmap-swimlane-key` attribute is what the bar drag hook
 // reads via document.elementFromPoint to detect a cross-swimlane drop.
+// The label/color used to render inline here; they now live in the sticky
+// left-side name column so long names stay legible without overlapping bars.
 export const RecordRoadmapSwimlane = ({
   swimlaneKey,
-  label,
-  color,
   children,
   onDoubleClickEmptyArea,
 }: RecordRoadmapSwimlaneProps) => {
@@ -68,12 +56,7 @@ export const RecordRoadmapSwimlane = ({
       data-roadmap-swimlane-key={swimlaneKey}
       onDoubleClick={handleDoubleClick}
     >
-      <StyledSwimlaneHeader>
-        {color !== undefined && color !== null && (
-          <StyledColorDot style={{ backgroundColor: color }} />
-        )}
-        {label}
-      </StyledSwimlaneHeader>
+      <StyledSwimlaneHeaderStrip />
       {children}
     </StyledSwimlane>
   );

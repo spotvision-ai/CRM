@@ -245,6 +245,31 @@ Fase 4b layers the interactive-reconfiguration surface on top of the Fase 4a tim
 
 Also included in this phase: state-variable renames across the Fase 3/4a files to match the `matching-state-variable` oxlint rule, `oxlint-disable` comments on legitimate DOM-ref / constants-file cases, and replacing the hard-coded weekends overlay RGBA with `themeCssVariables.background.transparent.light`. These are cosmetic cleanups that surfaced once `twenty-oxlint-rules` was built locally — no upstream files touched.
 
+### Fase 4b follow-up — UX refinements
+
+Layered on top of the swimlane/options work after dog-fooding the view: a Jira-style left name column, sliding-window "infinite" horizontal scroll, pixel-accurate vertical alignment between the two panes, color-by-SELECT on the bars, click-to-open-record, and a prefetch fix that was silently dropping ROADMAP views from the view bar.
+
+#### Notable module-local additions
+
+- `components/RecordRoadmapNameColumn.tsx` — Sticky-top name column (260 px) with its own independent vertical scroller; `RecordRoadmapTimeline` syncs `scrollTop` onto it inside `handleCanvasScroll` so both panes always agree on which rows are in view.
+- `constants/RoadmapDimensions.ts` — Added `ROADMAP_NAME_COLUMN_WIDTH = 260` and `ROADMAP_SWIMLANE_HEADER_HEIGHT = 28`; both panes now share those constants and carry `box-sizing: border-box` so the 1 px bottom border doesn't drift rows across long scrolls.
+- `utils/computeRoadmapViewportDays.ts` — Rewritten to take explicit `renderedDaysStart` + `totalDays`; the Timeline now owns a sliding window (`INITIAL_BUFFER_DAYS = 365` each side, extended by `BUFFER_EXTENSION_DAYS = 180` whenever `scrollLeft` falls within 400 px of an edge). Scroll offset is preserved via `useLayoutEffect` when the left buffer grows.
+- `components/RecordRoadmapBar.tsx` — Now applies `themeCssVariables.tag.background[color]` / `tag.text[color]` inline based on a `color` prop resolved from `roadmapFieldColorId`; same palette as Chips/Tags elsewhere, dark-mode-safe.
+- `hooks/useRecordRoadmapBarInteraction.ts` — Added `onClick`. Triggered on `pointerup` only when `finalDelta === 0`, no cross-swimlane drop, and `mode === 'move'` — so drags and resize grabs never hijack the detail open.
+- `hooks/useRecordRoadmapFetchRecords.ts` — Extends the GraphQL selection set with `roadmapFieldEndId`/`GroupId`/`ColorId`/`LabelId` (plus the sidebar's generic group field). Without this, `record[groupField.name]` was undefined and every record collapsed into Uncategorized.
+- Auto-fit effect in Timeline: re-anchors viewport to (earliest placed record − 7 days) on first load and on every zoom change. "Go today" button sets it to (today − 7 days).
+- `RecordRoadmapTopBar` — Removed the `DAY` zoom option from the selector and the wheel-zoom cycle; the enum value stays on backend for data compatibility.
+
+#### Updated files (upstream touch-points — extend the Fase 4b table)
+
+| #   | File                                                                                                                                                                                                         | Why                                                                                                                                                     | Merge guidance                                                                                                                           |
+|-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| 80  | `packages/twenty-front/src/modules/metadata-store/hooks/useLoadStaleMetadataEntities.ts`                                                                                                                    | Added `ViewType.ROADMAP` to `INDEX_VIEW_TYPES` so the prefetch on login/refresh actually requests our view type — without this, existing ROADMAP views disappear from the view-bar after reload. | Preserve the addition. Future upstream view types should be added to the same constant.                                                   |
+| 81  | `packages/twenty-front/src/modules/object-record/object-options-dropdown/types/ObjectOptionsContentId.ts` / `components/ObjectOptionsDropdownContent.tsx` / `components/ObjectOptionsDropdownLayoutContent.tsx` | Added `'roadmapColorField'` route + SELECT-field picker sub-page + Layout menu entry (with `IconColorSwatch` and the configured field's label as contextual text). | Preserve. Same pattern as start/end.                                                                                                      |
+| 82  | `packages/twenty-front/src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent.tsx`                                                                      | Extended `role` to `'start' \| 'end' \| 'color'`. For `'color'` the filter switches from DATE-kind to SELECT and a "No color" reset row appears.            | Local to our module.                                                                                                                      |
+
+No upstream files outside of those three chains were touched in the refinement pass.
+
 ## Upcoming phases (expected upstream touch-points — anticipated for planning, will be populated as work lands)
 
 - Fase 4b follow-up: read-only mode driven by `objectPermissions.canUpdateObjectRecords` + keyboard navigation.

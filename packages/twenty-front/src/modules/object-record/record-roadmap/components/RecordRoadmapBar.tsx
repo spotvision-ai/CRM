@@ -1,5 +1,6 @@
 import { styled } from '@linaria/react';
 import { type Temporal } from 'temporal-polyfill';
+import { type ThemeColor } from 'twenty-ui/theme';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 import {
@@ -76,6 +77,9 @@ type RecordRoadmapBarProps = {
   endDate: Temporal.PlainDate;
   viewportStart: Temporal.PlainDate;
   dayWidthPx: number;
+  /** SELECT-option color name (e.g. 'blue'). Null when the view has no
+      color field or the record's value doesn't match an option. */
+  color: string | null;
   currentSwimlaneKey?: string | null;
   onCommit: (args: {
     recordId: string;
@@ -83,6 +87,26 @@ type RecordRoadmapBarProps = {
     endDate: Temporal.PlainDate;
     targetSwimlaneKey?: string | null;
   }) => void;
+  onClick?: (recordId: string) => void;
+};
+
+// Pull both the fill and the stronger accent straight from the existing Tag
+// color tokens. This keeps the palette in lock-step with Chips/Tags elsewhere
+// in the product — no new palette to maintain, dark-mode handled by the
+// CSS variables themselves. The map is intentionally loose (Record with
+// ThemeColor keys) so non-matching values fall back to the neutral bar.
+const getColorTokensFor = (
+  color: string | null,
+): { background: string; accent: string } | null => {
+  if (color === null) return null;
+  const backgrounds = themeCssVariables.tag.background as Record<
+    ThemeColor,
+    string
+  >;
+  const texts = themeCssVariables.tag.text as Record<ThemeColor, string>;
+  const typedColor = color as ThemeColor;
+  if (!(typedColor in backgrounds)) return null;
+  return { background: backgrounds[typedColor], accent: texts[typedColor] };
 };
 
 export const RecordRoadmapBar = ({
@@ -92,8 +116,10 @@ export const RecordRoadmapBar = ({
   endDate,
   viewportStart,
   dayWidthPx,
+  color,
   currentSwimlaneKey,
   onCommit,
+  onClick,
 }: RecordRoadmapBarProps) => {
   const {
     deltaDays,
@@ -108,6 +134,7 @@ export const RecordRoadmapBar = ({
     dayWidthPx,
     currentSwimlaneKey,
     onCommit,
+    onClick,
   });
 
   // Apply the transient drag delta to the rendered position so the bar
@@ -131,12 +158,26 @@ export const RecordRoadmapBar = ({
 
   const hasError = durationDays < 0;
 
+  // Color wins over the default bar tokens unless the bar is in an error
+  // state — red border should stay dominant. Dragging slightly bumps
+  // opacity; the inline override here leaves base CSS untouched for other
+  // states (hover, non-colored bars).
+  const colorTokens = getColorTokensFor(color);
+  const colorStyle =
+    colorTokens !== null && !hasError
+      ? {
+          backgroundColor: colorTokens.background,
+          borderColor: colorTokens.accent,
+          color: colorTokens.accent,
+        }
+      : {};
+
   return (
     <StyledBar
       hasError={hasError}
       isDragging={mode !== null}
       data-roadmap-bar
-      style={{ left: leftPx, width: widthPx }}
+      style={{ left: leftPx, width: widthPx, ...colorStyle }}
       onPointerDown={onPointerDownMove}
       title={
         hasError
@@ -145,7 +186,6 @@ export const RecordRoadmapBar = ({
       }
     >
       <StyledResizeHandleLeft onPointerDown={onPointerDownResizeStart} />
-      {label}
       <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
     </StyledBar>
   );

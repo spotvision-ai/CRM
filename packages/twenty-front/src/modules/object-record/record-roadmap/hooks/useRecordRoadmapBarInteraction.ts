@@ -17,6 +17,9 @@ type UseRecordRoadmapBarInteractionArgs = {
     endDate: Temporal.PlainDate;
     targetSwimlaneKey?: string | null;
   }) => void;
+  /** Fired on pointerup when the user pressed and released without moving
+      the bar — treated as a click and mapped to "open record detail". */
+  onClick?: (recordId: string) => void;
 };
 
 // Swimlane containers tag their own wrapper with this data attribute so
@@ -53,6 +56,7 @@ export const useRecordRoadmapBarInteraction = ({
   dayWidthPx,
   currentSwimlaneKey,
   onCommit,
+  onClick,
 }: UseRecordRoadmapBarInteractionArgs) => {
   const [deltaDays, setDeltaDays] = useState(0);
   const [mode, setMode] = useState<BarInteractionMode | null>(null);
@@ -127,6 +131,12 @@ export const useRecordRoadmapBarInteraction = ({
           endDate: newEnd,
           targetSwimlaneKey,
         });
+      } else if (drag.mode === 'move' && onClick !== undefined) {
+        // No positional change and the pointer started on the bar body (not
+        // on a resize handle) → treat as a click and open the record. We
+        // deliberately skip clicks on resize-start/end so accidentally
+        // grabbing an edge without moving doesn't open the detail panel.
+        onClick(recordId);
       }
 
       reset();
@@ -138,6 +148,7 @@ export const useRecordRoadmapBarInteraction = ({
       recordId,
       currentSwimlaneKey,
       onCommit,
+      onClick,
       handlePointerMove,
       reset,
     ],

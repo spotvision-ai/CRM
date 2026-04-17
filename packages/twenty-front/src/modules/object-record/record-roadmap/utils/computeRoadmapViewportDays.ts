@@ -1,40 +1,31 @@
 import { type Temporal } from 'temporal-polyfill';
 
-import { ROADMAP_VIEWPORT_BUFFER_RATIO } from '@/object-record/record-roadmap/constants/RoadmapDimensions';
-
 type ComputeRoadmapViewportDaysArgs = {
-  viewportStart: Temporal.PlainDate;
-  viewportWidthPx: number;
-  dayWidthPx: number;
+  renderedDaysStart: Temporal.PlainDate;
+  totalDays: number;
 };
 
 type RoadmapViewportDays = {
   days: Temporal.PlainDate[];
-  viewportEnd: Temporal.PlainDate;
+  renderedDaysEnd: Temporal.PlainDate;
 };
 
-// Produces the ordered list of PlainDates covered by the current viewport
-// (viewport width + 2 × buffer). Used by the time header and the weekend
-// overlay so both stay in sync with the bar positioning math.
+// Produces the ordered list of PlainDates starting at `renderedDaysStart`.
+// The caller owns the buffer policy — this util just materializes the range
+// — so the Timeline can grow the window on near-edge scroll to give an
+// effectively infinite pan without re-anchoring the positioning math.
 export const computeRoadmapViewportDays = ({
-  viewportStart,
-  viewportWidthPx,
-  dayWidthPx,
+  renderedDaysStart,
+  totalDays,
 }: ComputeRoadmapViewportDaysArgs): RoadmapViewportDays => {
-  const visibleDays = Math.max(
-    Math.ceil(viewportWidthPx / Math.max(dayWidthPx, 1)),
-    1,
-  );
-  const bufferDays = Math.ceil(visibleDays * ROADMAP_VIEWPORT_BUFFER_RATIO);
-  const totalDays = visibleDays + bufferDays * 2;
-
+  const safeTotal = Math.max(totalDays, 1);
   const days: Temporal.PlainDate[] = [];
-  let cursor = viewportStart.subtract({ days: bufferDays });
-  for (let i = 0; i < totalDays; i++) {
+  let cursor = renderedDaysStart;
+  for (let i = 0; i < safeTotal; i++) {
     days.push(cursor);
     cursor = cursor.add({ days: 1 });
   }
 
-  const viewportEnd = cursor.subtract({ days: 1 });
-  return { days, viewportEnd };
+  const renderedDaysEnd = cursor.subtract({ days: 1 });
+  return { days, renderedDaysEnd };
 };

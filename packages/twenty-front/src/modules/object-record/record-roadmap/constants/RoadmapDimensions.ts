@@ -12,7 +12,12 @@ export const ROADMAP_BAR_VERTICAL_PADDING =
 export const ROADMAP_HEADER_HEIGHT = 48;
 // oxlint-disable-next-line twenty/max-consts-per-file
 export const ROADMAP_MIN_BAR_WIDTH = 8;
-// Buffer used when deriving the viewport date range from the DOM width. Keeps
-// enough spare days off-screen that a user scroll doesn't flash an empty gap.
+// Width of the sticky left-side name column. The value is a compromise
+// between keeping long labels legible and leaving enough horizontal canvas
+// for the bars on a 1280 px laptop screen.
 // oxlint-disable-next-line twenty/max-consts-per-file
-export const ROADMAP_VIEWPORT_BUFFER_RATIO = 0.2;
+export const ROADMAP_NAME_COLUMN_WIDTH = 260;
+// Fixed swimlane header height — both the timeline and the left-side name
+// column honor it so their rows stay row-for-row aligned.
+// oxlint-disable-next-line twenty/max-consts-per-file
+export const ROADMAP_SWIMLANE_HEADER_HEIGHT = 28;

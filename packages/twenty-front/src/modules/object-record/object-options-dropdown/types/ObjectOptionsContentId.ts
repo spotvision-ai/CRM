@@ -11,4 +11,5 @@ export type ObjectOptionsContentId =
   | 'calendarView'
   | 'roadmapStartField'
   | 'roadmapEndField'
+  | 'roadmapColorField'
   | 'visibility';

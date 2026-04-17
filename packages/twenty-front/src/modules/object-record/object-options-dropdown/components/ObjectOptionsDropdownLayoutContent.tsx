@@ -35,6 +35,7 @@ import {
   IconLayoutList,
   IconLayoutNavbar,
   IconLayoutSidebarRight,
+  IconColorSwatch,
   IconTable,
   OverflowingTextWithTooltip,
 } from 'twenty-ui/display';
@@ -90,6 +91,12 @@ export const ObjectOptionsDropdownLayoutContent = () => {
   const roadmapEndFieldMetadata = currentView?.roadmapFieldEndId
     ? objectMetadataItem.fields.find(
         (field) => field.id === currentView.roadmapFieldEndId,
+      )
+    : undefined;
+
+  const roadmapColorFieldMetadata = currentView?.roadmapFieldColorId
+    ? objectMetadataItem.fields.find(
+        (field) => field.id === currentView.roadmapFieldColorId,
       )
     : undefined;
 
@@ -157,7 +164,7 @@ export const ObjectOptionsDropdownLayoutContent = () => {
       ? ['CalendarView', 'CalendarDateField']
       : []),
     ...(currentView?.type === ViewType.ROADMAP
-      ? ['RoadmapStartField', 'RoadmapEndField']
+      ? ['RoadmapStartField', 'RoadmapEndField', 'RoadmapColorField']
       : []),
     ...(currentView?.type !== ViewType.TABLE ? ['Compact view'] : []),
   ];
@@ -342,6 +349,20 @@ export const ObjectOptionsDropdownLayoutContent = () => {
                     LeftIcon={IconArrowLeft}
                     text={t`End date field`}
                     contextualText={roadmapEndFieldMetadata?.label}
+                    contextualTextPosition="right"
+                    hasSubMenu
+                  />
+                </SelectableListItem>
+                <SelectableListItem
+                  itemId="RoadmapColorField"
+                  onEnter={() => onContentChange('roadmapColorField')}
+                >
+                  <MenuItem
+                    focused={selectedItemId === 'RoadmapColorField'}
+                    onClick={() => onContentChange('roadmapColorField')}
+                    LeftIcon={IconColorSwatch}
+                    text={t`Color field`}
+                    contextualText={roadmapColorFieldMetadata?.label}
                     contextualTextPosition="right"
                     hasSubMenu
                   />

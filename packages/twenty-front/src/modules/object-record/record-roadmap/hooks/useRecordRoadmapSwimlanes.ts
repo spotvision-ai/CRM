@@ -5,7 +5,9 @@ import { isDefined } from 'twenty-shared/utils';
 
 import { type ObjectRecord } from '@/object-record/types/ObjectRecord';
 import { useRecordRoadmapContextOrThrow } from '@/object-record/record-roadmap/contexts/RecordRoadmapContext';
+import { recordIndexGroupFieldMetadataItemComponentState } from '@/object-record/record-index/states/recordIndexGroupFieldMetadataComponentState';
 import { recordIndexRoadmapFieldGroupIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldGroupIdState';
+import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 
 export type RoadmapPlacedRecord = {
@@ -13,6 +15,8 @@ export type RoadmapPlacedRecord = {
   startDate: Temporal.PlainDate;
   endDate: Temporal.PlainDate;
   label: string;
+  /** SELECT-option color resolved from the view's `roadmapFieldColorId`. */
+  color: string | null;
 };
 
 export type RoadmapSwimlane = {
@@ -39,26 +43,40 @@ type UseRecordRoadmapSwimlanesResult = {
 };
 
 // Groups roadmap records by the SELECT option configured as
-// `roadmapFieldGroupId` on the current view. If the view has no group field
-// or the field is RELATION, the timeline falls back to a single swimlane.
-// The returned swimlane `key` is either the SELECT option `value` or the
-// sentinel `__uncategorized__` for records whose group field is null.
+// `roadmapFieldGroupId` on the current view — or, as a fallback, by the
+// generic `recordIndexGroupFieldMetadataItem` the user just picked from the
+// shared Group menu. The roadmap-specific column wins when both are set so
+// the view-level configuration survives reloads; the shared atom covers the
+// "set Group = Stage on the sidebar" path users expect from Kanban.
+// If neither is set or the field is RELATION, the timeline falls back to a
+// single swimlane. The returned swimlane `key` is either the SELECT option
+// `value` or the sentinel `__uncategorized__` for records whose group field
+// is null.
 export const useRecordRoadmapSwimlanes = ({
   placedRecords,
 }: UseRecordRoadmapSwimlanesArgs): UseRecordRoadmapSwimlanesResult => {
   const { objectMetadataItem } = useRecordRoadmapContextOrThrow();
-  const groupFieldMetadataId = useAtomStateValue(
+  const recordIndexRoadmapFieldGroupId = useAtomStateValue(
     recordIndexRoadmapFieldGroupIdState,
+  );
+  const recordIndexGroupFieldMetadataItem = useAtomComponentStateValue(
+    recordIndexGroupFieldMetadataItemComponentState,
   );
 
   const groupField = useMemo(() => {
-    if (!isDefined(groupFieldMetadataId)) return null;
-    return (
-      objectMetadataItem.fields.find(
-        (field) => field.id === groupFieldMetadataId,
-      ) ?? null
-    );
-  }, [groupFieldMetadataId, objectMetadataItem]);
+    if (isDefined(recordIndexRoadmapFieldGroupId)) {
+      return (
+        objectMetadataItem.fields.find(
+          (field) => field.id === recordIndexRoadmapFieldGroupId,
+        ) ?? null
+      );
+    }
+    return recordIndexGroupFieldMetadataItem ?? null;
+  }, [
+    recordIndexRoadmapFieldGroupId,
+    recordIndexGroupFieldMetadataItem,
+    objectMetadataItem,
+  ]);
 
   return useMemo<UseRecordRoadmapSwimlanesResult>(() => {
     if (groupField === null) {

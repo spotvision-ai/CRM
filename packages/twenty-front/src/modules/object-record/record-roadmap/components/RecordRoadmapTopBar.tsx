@@ -51,8 +51,10 @@ const StyledHiddenCounter = styled.span`
   font-size: ${themeCssVariables.font.size.sm};
 `;
 
+// DAY zoom exists in the enum for future use but is intentionally hidden:
+// at 72 px/day a full quarter spans ~6 000 px and makes the timeline feel
+// cramped for the planning use cases this view targets.
 const ZOOM_OPTIONS: { value: ViewRoadmapZoom; label: string }[] = [
-  { value: ViewRoadmapZoom.DAY, label: 'Day' },
   { value: ViewRoadmapZoom.WEEK, label: 'Week' },
   { value: ViewRoadmapZoom.MONTH, label: 'Month' },
   { value: ViewRoadmapZoom.QUARTER, label: 'Quarter' },
@@ -73,11 +75,11 @@ export const RecordRoadmapTopBar = () => {
   );
 
   const handleTodayClick = () => {
-    // Align today to roughly one-third from the left — keeps some past
-    // context visible and leaves more future runway where most planning
-    // happens.
+    // Mirror the auto-fit rule (earliest record − 7 days) but anchored on
+    // today instead of the data, so the user lands with a consistent 1-week
+    // runway on the left regardless of where the records sit.
     setRecordRoadmapViewportStart(
-      Temporal.Now.plainDateISO().subtract({ months: 1 }),
+      Temporal.Now.plainDateISO().subtract({ days: 7 }),
     );
   };
 
@@ -93,7 +95,7 @@ export const RecordRoadmapTopBar = () => {
             {option.label}
           </StyledButton>
         ))}
-        <StyledButton onClick={handleTodayClick}>{t`Today`}</StyledButton>
+        <StyledButton onClick={handleTodayClick}>{t`Go today`}</StyledButton>
       </StyledGroup>
       {recordRoadmapHiddenRecordCount > 0 && (
         <StyledHiddenCounter>

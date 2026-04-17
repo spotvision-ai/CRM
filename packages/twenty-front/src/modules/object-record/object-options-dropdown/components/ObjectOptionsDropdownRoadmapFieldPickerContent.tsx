@@ -11,25 +11,28 @@ import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
 import { useUpdateCurrentView } from '@/views/hooks/useUpdateCurrentView';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
+import { FieldMetadataType } from 'twenty-shared/types';
 import { isFieldMetadataDateKind } from 'twenty-shared/utils';
 import { IconChevronLeft, useIcons } from 'twenty-ui/display';
 import { MenuItemSelect } from 'twenty-ui/navigation';
 
+import { recordIndexRoadmapFieldColorIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldColorIdState';
 import { recordIndexRoadmapFieldEndIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldEndIdState';
 import { recordIndexRoadmapFieldStartIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldStartIdState';
 
-type RoadmapFieldRole = 'start' | 'end';
+type RoadmapFieldRole = 'start' | 'end' | 'color';
 
-type Props = {
+type ObjectOptionsDropdownRoadmapFieldPickerContentProps = {
   role: RoadmapFieldRole;
 };
 
-// Generic picker sub-page for the ROADMAP view's start / end DATE field. One
-// instance per role keeps the content narrow and matches the Calendar date-
-// field sub-page pattern.
+// Shared picker sub-page for every per-field ROADMAP setting. The `role` prop
+// decides which field subset is listed (DATE fields for start/end, SELECT
+// fields for color) and which view column is persisted on select. Keeping
+// the three sub-pages in one file avoids duplicating dropdown boilerplate.
 export const ObjectOptionsDropdownRoadmapFieldPickerContent = ({
   role,
-}: Props) => {
+}: ObjectOptionsDropdownRoadmapFieldPickerContentProps) => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
   const [searchInput, setSearchInput] = useState('');
@@ -46,20 +49,31 @@ export const ObjectOptionsDropdownRoadmapFieldPickerContent = ({
   const setRecordIndexRoadmapFieldEndId = useSetAtomState(
     recordIndexRoadmapFieldEndIdState,
   );
-
-  const availableFields = objectMetadataItem.fields.filter((field) =>
-    isFieldMetadataDateKind(field.type),
+  const setRecordIndexRoadmapFieldColorId = useSetAtomState(
+    recordIndexRoadmapFieldColorIdState,
   );
+
+  const availableFields = objectMetadataItem.fields.filter((field) => {
+    if (role === 'color') {
+      return field.type === FieldMetadataType.SELECT;
+    }
+    return isFieldMetadataDateKind(field.type);
+  });
 
   const currentFieldId =
     role === 'start'
       ? currentView?.roadmapFieldStartId
-      : currentView?.roadmapFieldEndId;
+      : role === 'end'
+        ? currentView?.roadmapFieldEndId
+        : currentView?.roadmapFieldColorId;
 
+  // Start/end must differ from each other; color has no conflict constraint.
   const otherFieldId =
     role === 'start'
       ? currentView?.roadmapFieldEndId
-      : currentView?.roadmapFieldStartId;
+      : role === 'end'
+        ? currentView?.roadmapFieldStartId
+        : null;
 
   const currentField = currentFieldId
     ? objectMetadataItem.fields.find((field) => field.id === currentFieldId)
@@ -71,19 +85,36 @@ export const ObjectOptionsDropdownRoadmapFieldPickerContent = ({
 
   const handleSelect = async (field: FieldMetadataItem) => {
     if (field.id === otherFieldId) {
-      // Backend would reject (start === end); nothing to do client-side
+      // Backend would reject start === end; nothing to do client-side
       // beyond keeping the dropdown open so the user can try another field.
       return;
     }
     if (role === 'start') {
       setRecordIndexRoadmapFieldStartId(field.id);
       await updateCurrentView({ roadmapFieldStartId: field.id });
-    } else {
+    } else if (role === 'end') {
       setRecordIndexRoadmapFieldEndId(field.id);
       await updateCurrentView({ roadmapFieldEndId: field.id });
+    } else {
+      setRecordIndexRoadmapFieldColorId(field.id);
+      await updateCurrentView({ roadmapFieldColorId: field.id });
     }
     closeDropdown();
   };
+
+  const handleClear = async () => {
+    if (role !== 'color') return;
+    setRecordIndexRoadmapFieldColorId(null);
+    await updateCurrentView({ roadmapFieldColorId: null });
+    closeDropdown();
+  };
+
+  const headerLabel =
+    role === 'start'
+      ? t`Start date field`
+      : role === 'end'
+        ? t`End date field`
+        : t`Color field`;
 
   return (
     <DropdownContent>
@@ -95,7 +126,7 @@ export const ObjectOptionsDropdownRoadmapFieldPickerContent = ({
           />
         }
       >
-        {role === 'start' ? t`Start date field` : t`End date field`}
+        {headerLabel}
       </DropdownMenuHeader>
       <DropdownMenuSearchInput
         autoFocus
@@ -105,6 +136,13 @@ export const ObjectOptionsDropdownRoadmapFieldPickerContent = ({
       />
       <DropdownMenuSeparator />
       <DropdownMenuItemsContainer>
+        {role === 'color' && currentField !== undefined && (
+          <MenuItemSelect
+            selected={false}
+            onClick={handleClear}
+            text={t`No color`}
+          />
+        )}
         {filteredFields.map((field) => (
           <MenuItemSelect
             key={field.id}
