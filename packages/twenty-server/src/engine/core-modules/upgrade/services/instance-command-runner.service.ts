@@ -7,6 +7,7 @@ import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twent
 import { type FastInstanceCommand } from 'src/engine/core-modules/upgrade/interfaces/fast-instance-command.interface';
 import { type SlowInstanceCommand } from 'src/engine/core-modules/upgrade/interfaces/slow-instance-command.interface';
 import { UpgradeMigrationService } from 'src/engine/core-modules/upgrade/services/upgrade-migration.service';
+import { WorkspaceVersionService } from 'src/engine/workspace-manager/workspace-version/services/workspace-version.service';
 
 type RunSingleMigrationResult =
   | { status: 'success' }
@@ -22,6 +23,7 @@ export class InstanceCommandRunnerService {
     private readonly dataSource: DataSource,
     private readonly twentyConfigService: TwentyConfigService,
     private readonly upgradeMigrationService: UpgradeMigrationService,
+    private readonly workspaceVersionService: WorkspaceVersionService,
   ) {}
 
   async runFastInstanceCommand({
@@ -54,9 +56,16 @@ export class InstanceCommandRunnerService {
 
       await command.up(queryRunner);
 
-      await this.upgradeMigrationService.markAsCompleted({
+      const workspaceIds =
+        await this.workspaceVersionService.getActiveOrSuspendedWorkspaceIds({
+          queryRunner,
+        });
+
+      await this.upgradeMigrationService.recordUpgradeMigration({
         name,
-        workspaceId: null,
+        workspaceIds,
+        isInstance: true,
+        status: 'completed',
         executedByVersion,
         queryRunner,
       });
@@ -67,9 +76,14 @@ export class InstanceCommandRunnerService {
         await queryRunner.rollbackTransaction();
       }
 
-      await this.upgradeMigrationService.markAsFailed({
+      const workspaceIds =
+        await this.workspaceVersionService.getActiveOrSuspendedWorkspaceIds();
+
+      await this.upgradeMigrationService.recordUpgradeMigration({
         name,
-        workspaceId: null,
+        workspaceIds,
+        isInstance: true,
+        status: 'failed',
         executedByVersion,
         error,
       });
@@ -115,11 +129,18 @@ export class InstanceCommandRunnerService {
         this.twentyConfigService.get('APP_VERSION') ?? 'unknown';
 
       try {
+        this.logger.log(`${name} starting data migration...`);
         await command.runDataMigration(this.dataSource);
+        this.logger.log(`${name} data migration completed`);
       } catch (error) {
-        await this.upgradeMigrationService.markAsFailed({
+        const workspaceIds =
+          await this.workspaceVersionService.getActiveOrSuspendedWorkspaceIds();
+
+        await this.upgradeMigrationService.recordUpgradeMigration({
           name,
-          workspaceId: null,
+          workspaceIds,
+          isInstance: true,
+          status: 'failed',
           executedByVersion,
           error,
         });
@@ -133,6 +154,9 @@ export class InstanceCommandRunnerService {
       }
     }
 
-    return this.runFastInstanceCommand({ command, name });
+    return this.runFastInstanceCommand({
+      command,
+      name,
+    });
   }
 }
