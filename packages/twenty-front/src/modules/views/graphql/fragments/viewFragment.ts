@@ -31,6 +31,14 @@ export const VIEW_FRAGMENT = gql`
     anyFieldFilterValue
     calendarFieldMetadataId
     calendarLayout
+    roadmapFieldStartId
+    roadmapFieldEndId
+    roadmapFieldGroupId
+    roadmapFieldColorId
+    roadmapFieldLabelId
+    roadmapDefaultZoom
+    roadmapShowToday
+    roadmapShowWeekends
     visibility
     createdByUserWorkspaceId
     viewFields {

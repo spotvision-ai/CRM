@@ -9,6 +9,8 @@ import { viewPickerIsDirtyComponentState } from '@/views/view-picker/states/view
 import { viewPickerIsPersistingComponentState } from '@/views/view-picker/states/viewPickerIsPersistingComponentState';
 import { viewPickerMainGroupByFieldMetadataIdComponentState } from '@/views/view-picker/states/viewPickerMainGroupByFieldMetadataIdComponentState';
 import { viewPickerModeComponentState } from '@/views/view-picker/states/viewPickerModeComponentState';
+import { viewPickerRoadmapFieldEndIdComponentState } from '@/views/view-picker/states/viewPickerRoadmapFieldEndIdComponentState';
+import { viewPickerRoadmapFieldStartIdComponentState } from '@/views/view-picker/states/viewPickerRoadmapFieldStartIdComponentState';
 import { viewPickerSelectedIconComponentState } from '@/views/view-picker/states/viewPickerSelectedIconComponentState';
 import { viewPickerTypeComponentState } from '@/views/view-picker/states/viewPickerTypeComponentState';
 import { viewPickerVisibilityComponentState } from '@/views/view-picker/states/viewPickerVisibilityComponentState';
@@ -38,6 +40,16 @@ export const useCreateViewFromCurrentState = () => {
   const viewPickerCalendarFieldMetadataIdCallbackState =
     useAtomComponentStateCallbackState(
       viewPickerCalendarFieldMetadataIdComponentState,
+    );
+
+  const viewPickerRoadmapFieldStartIdCallbackState =
+    useAtomComponentStateCallbackState(
+      viewPickerRoadmapFieldStartIdComponentState,
+    );
+
+  const viewPickerRoadmapFieldEndIdCallbackState =
+    useAtomComponentStateCallbackState(
+      viewPickerRoadmapFieldEndIdComponentState,
     );
 
   const viewPickerIsPersistingCallbackState =
@@ -71,6 +83,13 @@ export const useCreateViewFromCurrentState = () => {
       viewPickerCalendarFieldMetadataIdCallbackState,
     );
 
+    const roadmapFieldStartId = store.get(
+      viewPickerRoadmapFieldStartIdCallbackState,
+    );
+    const roadmapFieldEndId = store.get(
+      viewPickerRoadmapFieldEndIdCallbackState,
+    );
+
     const viewPickerMode = store.get(viewPickerModeCallbackState);
     const visibility = store.get(viewPickerVisibilityCallbackState);
 
@@ -80,6 +99,18 @@ export const useCreateViewFromCurrentState = () => {
     store.set(viewPickerIsPersistingCallbackState, true);
     store.set(viewPickerIsDirtyCallbackState, false);
 
+    // The picker state defaults to '' before the user touches the roadmap
+    // field dropdowns. Empty strings trip the backend UUID validation, so
+    // coerce to null when the atom is still at its default.
+    const sanitizedRoadmapFieldStartId =
+      type === ViewType.ROADMAP && roadmapFieldStartId !== ''
+        ? roadmapFieldStartId
+        : null;
+    const sanitizedRoadmapFieldEndId =
+      type === ViewType.ROADMAP && roadmapFieldEndId !== ''
+        ? roadmapFieldEndId
+        : null;
+
     const createdViewId = await createViewFromCurrentView(
       {
         name,
@@ -88,6 +119,8 @@ export const useCreateViewFromCurrentState = () => {
         mainGroupByFieldMetadataId:
           type === ViewType.KANBAN ? mainGroupByFieldMetadataId : null,
         calendarFieldMetadataId,
+        roadmapFieldStartId: sanitizedRoadmapFieldStartId,
+        roadmapFieldEndId: sanitizedRoadmapFieldEndId,
         visibility,
       },
       shouldCopyFiltersAndSortsAndAggregate,
@@ -107,6 +140,8 @@ export const useCreateViewFromCurrentState = () => {
     viewPickerIsPersistingCallbackState,
     viewPickerMainGroupByFieldMetadataIdCallbackState,
     viewPickerCalendarFieldMetadataIdCallbackState,
+    viewPickerRoadmapFieldStartIdCallbackState,
+    viewPickerRoadmapFieldEndIdCallbackState,
     viewPickerSelectedIconCallbackState,
     viewPickerTypeCallbackState,
     viewPickerModeCallbackState,

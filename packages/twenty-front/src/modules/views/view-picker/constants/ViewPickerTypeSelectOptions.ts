@@ -17,4 +17,9 @@ export const VIEW_PICKER_TYPE_SELECT_OPTIONS = [
     label: msg`Calendar`,
     Icon: viewTypeIconMapping(ViewType.CALENDAR),
   },
+  {
+    value: ViewType.ROADMAP,
+    label: msg`Roadmap`,
+    Icon: viewTypeIconMapping(ViewType.ROADMAP),
+  },
 ];
