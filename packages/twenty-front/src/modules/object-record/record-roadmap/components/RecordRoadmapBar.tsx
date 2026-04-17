@@ -47,17 +47,26 @@ const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
   }
 `;
 
-const StyledResizeHandle = styled.div<{ side: 'left' | 'right' }>`
+// Linaria compiles CSS statically so we can't interpolate a whole
+// `left: 0;` vs `right: 0;` declaration from a prop. Two siblings — shared
+// styling, different edge — keep each handle anchored reliably.
+const StyledResizeHandleBase = styled.div`
   position: absolute;
   top: 0;
-  ${(props) => (props.side === 'left' ? 'left: 0;' : 'right: 0;')}
   height: 100%;
   width: ${RESIZE_HANDLE_WIDTH}px;
   cursor: ew-resize;
   touch-action: none;
-  /* The handle sits on top of the draggable body; z-index keeps it clickable
-     without stealing hover from the label content behind it. */
+  /* Sits above the draggable body so pointer-down reaches the handle first. */
   z-index: 1;
+`;
+
+const StyledResizeHandleLeft = styled(StyledResizeHandleBase)`
+  left: 0;
+`;
+
+const StyledResizeHandleRight = styled(StyledResizeHandleBase)`
+  right: 0;
 `;
 
 type RecordRoadmapBarProps = {
@@ -130,12 +139,9 @@ export const RecordRoadmapBar = ({
           : `${label} (${previewStart.toString()} → ${previewEnd.toString()})`
       }
     >
-      <StyledResizeHandle
-        side="left"
-        onPointerDown={onPointerDownResizeStart}
-      />
+      <StyledResizeHandleLeft onPointerDown={onPointerDownResizeStart} />
       {label}
-      <StyledResizeHandle side="right" onPointerDown={onPointerDownResizeEnd} />
+      <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
     </StyledBar>
   );
 };
