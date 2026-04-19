@@ -1,0 +1,124 @@
+name: twenty-spv
+
+# SPOTVISION production compose. Differences vs the upstream template
+# (`docker-compose.yml`):
+#   - Image pulled from our private ECR, not Docker Hub.
+#   - No `db` service — prod uses Amazon RDS. `PG_DATABASE_URL` is supplied
+#     in full via the `.env` on the VM.
+#   - Redis stays as a container; the worker's BullMQ queue state is not
+#     critical enough to warrant ElastiCache for now.
+#   - CloudWatch log driver so `aws logs tail /spotvision/twenty` shows
+#     both server and worker streams.
+#
+# The `${ECR_REGISTRY}` + `${TAG}` variables come from `.env`; the GitHub
+# workflow overrides `TAG` inline on the deploy step so the pulled image
+# matches the version being released.
+
+services:
+  server:
+    image: ${ECR_REGISTRY}/spotvision/twenty:${TAG:-latest}
+    volumes:
+      - server-local-data:/app/packages/twenty-server/.local-storage
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_PORT: 3000
+      PG_DATABASE_URL: ${PG_DATABASE_URL}
+      SERVER_URL: ${SERVER_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DISABLE_DB_MIGRATIONS: ${DISABLE_DB_MIGRATIONS:-false}
+      DISABLE_CRON_JOBS_REGISTRATION: ${DISABLE_CRON_JOBS_REGISTRATION:-false}
+
+      STORAGE_TYPE: ${STORAGE_TYPE:-s3}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION}
+      STORAGE_S3_NAME: ${STORAGE_S3_NAME}
+      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT}
+
+      APP_SECRET: ${APP_SECRET}
+
+      # Optional providers — uncomment + populate in .env as they're wired.
+      # MESSAGING_PROVIDER_GMAIL_ENABLED: ${MESSAGING_PROVIDER_GMAIL_ENABLED}
+      # CALENDAR_PROVIDER_GOOGLE_ENABLED: ${CALENDAR_PROVIDER_GOOGLE_ENABLED}
+      # AUTH_GOOGLE_CLIENT_ID: ${AUTH_GOOGLE_CLIENT_ID}
+      # AUTH_GOOGLE_CLIENT_SECRET: ${AUTH_GOOGLE_CLIENT_SECRET}
+      # AUTH_GOOGLE_CALLBACK_URL: ${AUTH_GOOGLE_CALLBACK_URL}
+      # AUTH_GOOGLE_APIS_CALLBACK_URL: ${AUTH_GOOGLE_APIS_CALLBACK_URL}
+
+      # EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
+      # EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
+      # EMAIL_DRIVER: ${EMAIL_DRIVER:-smtp}
+      # EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST}
+      # EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-465}
+      # EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
+      # EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    # Longer cold-start window than the upstream template: RDS initial
+    # connections + migration runs can take 30-60 s.
+    healthcheck:
+      test: curl --fail http://localhost:3000/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: always
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /spotvision/twenty
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-stream: server
+        awslogs-create-group: "true"
+
+  worker:
+    image: ${ECR_REGISTRY}/spotvision/twenty:${TAG:-latest}
+    volumes:
+      - server-local-data:/app/packages/twenty-server/.local-storage
+    command: ["yarn", "worker:prod"]
+    environment:
+      PG_DATABASE_URL: ${PG_DATABASE_URL}
+      SERVER_URL: ${SERVER_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      # Migrations + cron registration run on the server; skip here.
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+
+      STORAGE_TYPE: ${STORAGE_TYPE:-s3}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION}
+      STORAGE_S3_NAME: ${STORAGE_S3_NAME}
+      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT}
+
+      APP_SECRET: ${APP_SECRET}
+    depends_on:
+      redis:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+    restart: always
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /spotvision/twenty
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-stream: worker
+        awslogs-create-group: "true"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /spotvision/twenty
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-stream: redis
+        awslogs-create-group: "true"
+
+volumes:
+  server-local-data:

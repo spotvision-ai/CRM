@@ -1,0 +1,124 @@
+name: Deploy SPV prod
+
+# SPOTVISION release pipeline. Triggered by pushing a semver tag (v1.2.3)
+# or manually via `workflow_dispatch` (used for rollbacks: pick an older
+# tag that already lives in ECR and redeploy it without rebuilding).
+#
+# Flow:
+#   1. build-push  — compiles the `twenty-aws` target, pushes to ECR as
+#      both `:${TAG}` and `:latest`.
+#   2. deploy      — SSHs into the VM, logs Docker in to ECR, pulls the
+#      new image, and restarts the compose stack.
+#
+# Secrets required (repo → Settings → Secrets):
+#   - AWS_DEPLOY_ROLE_ARN   IAM role assumed via GitHub OIDC.
+#   - AWS_REGION            ECR + VM region, e.g. us-east-1.
+#   - AWS_ECR_REGISTRY      <account>.dkr.ecr.<region>.amazonaws.com
+#   - SPV_VM_HOST           Public DNS or IP of the prod VM.
+#   - SPV_VM_USER           SSH user (ubuntu / ec2-user).
+#   - SPV_VM_SSH_KEY        Private key matching the VM's authorized_keys.
+#   - SPV_SERVER_URL        Public server URL — baked into the frontend
+#                           at build-time via REACT_APP_SERVER_BASE_URL.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag to redeploy (e.g. v1.2.3). Must already exist in ECR.'
+        required: true
+
+permissions:
+  # OIDC token for the aws-actions/configure-aws-credentials action.
+  id-token: write
+  contents: read
+
+jobs:
+  build-push:
+    # workflow_dispatch runs only the deploy job — the image is already in ECR.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: resolve
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./packages/twenty-docker/twenty/Dockerfile
+          target: twenty-aws
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.resolve.outputs.tag }}
+            REACT_APP_SERVER_BASE_URL=${{ secrets.SPV_SERVER_URL }}
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/spotvision/twenty:${{ steps.resolve.outputs.tag }}
+            ${{ steps.ecr.outputs.registry }}/spotvision/twenty:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [build-push]
+    # Run when the build succeeded, or always when dispatched manually.
+    if: |
+      always() &&
+      (needs.build-push.result == 'success' ||
+       (needs.build-push.result == 'skipped' && github.event_name == 'workflow_dispatch'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve deploy tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ needs.build-push.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: SSH deploy on VM
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEPLOY_TAG: ${{ steps.tag.outputs.tag }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+        with:
+          host: ${{ secrets.SPV_VM_HOST }}
+          username: ${{ secrets.SPV_VM_USER }}
+          key: ${{ secrets.SPV_VM_SSH_KEY }}
+          envs: DEPLOY_TAG,AWS_REGION,ECR_REGISTRY
+          script: |
+            set -euo pipefail
+            cd /opt/spotvision/twenty
+
+            # Refresh the ECR auth token (12 h TTL). The VM's IAM role grants
+            # just the pull perms needed — see docs/infra/README.md.
+            aws ecr get-login-password --region "$AWS_REGION" \
+              | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+            export TAG="$DEPLOY_TAG"
+            docker compose -f docker-compose.prod.spv.yaml pull
+            docker compose -f docker-compose.prod.spv.yaml up -d --remove-orphans
+
+            # Keep the VM disk tidy — prune dangling images only, never the
+            # tagged ones so rollbacks stay fast.
+            docker image prune -f

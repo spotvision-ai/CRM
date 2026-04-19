@@ -128,3 +128,46 @@ Entry 4 already lists this file. Fase 1 added the 5 new OneToMany aggregator def
 - Fase 2: `view-tools.factory.ts` (validator for roadmap FKs being DATE/SELECT/RELATION), `flat-view-validator.service.ts` (ROADMAP acceptance rules + `IS_ROADMAP_VIEW_ENABLED` gate), `handle-flat-view-update-side-effect.util.ts`, integration specs.
 - Fase 3: `packages/twenty-front/src/modules/views/types/ViewType.ts` (icon mapping), `RecordIndexContainer.tsx`, `useLoadRecordIndexStates.ts`.
 - Fase 4: `ViewPickerTypeSelectOptions.ts`, `ViewPickerContentCreateMode.tsx`, `ObjectOptionsDropdownContent*.tsx`.
+
+---
+
+## Infra — SPOTVISION production CI/CD
+
+Standalone stream, independent of the Roadmap phases. Adds the pipeline to
+build, push, and deploy our private Twenty image to the AWS VM that serves
+prod.
+
+### New files (all net-new — no upstream conflicts expected)
+
+- `.github/workflows/cd-deploy-spv.yaml` — tag-triggered `build-push` →
+  `deploy` workflow. Pushes to `<account>.dkr.ecr.<region>.amazonaws.com/
+  spotvision/twenty:<semver>` and rolls the compose on the VM via SSH.
+  `workflow_dispatch` is available for rollbacks.
+- `packages/twenty-docker/docker-compose.prod.spv.yaml` — prod compose
+  without a `db` service (RDS replaces it). Logs ship to CloudWatch group
+  `/spotvision/twenty`.
+- `packages/twenty-docker/.env.prod.spv.example` — template for the `.env`
+  that lives on the VM. Never commit the populated version.
+- `docs/infra/README.md` — topology + one-time AWS setup (ECR, IAM roles,
+  RDS, S3) + GitHub secrets inventory.
+- `docs/infra/vm-setup.md` — Ubuntu/EC2 bootstrap checklist, systemd unit,
+  first-deploy smoke.
+- `docs/infra/release.md` — how to cut a release (tag), rollback, hotfix.
+
+### Upstream workflows left intact
+
+- `.github/workflows/cd-deploy-main.yaml` and
+  `.github/workflows/cd-deploy-tag.yaml` are upstream's deploy dispatches
+  to the private `twenty-infra` repo. We don't have `TWENTY_INFRA_TOKEN`,
+  so these fail silently on every tag/main push — the `peter-evans/
+  repository-dispatch` step errors out but doesn't block anything else.
+  Keeping them untouched so future rebases against `twentyhq/twenty`
+  stay conflict-free; if they start interfering, delete the files (they're
+  net-remove only, no conflict risk).
+
+### Dockerfile — no change needed
+
+The `twenty-aws` target at
+`packages/twenty-docker/twenty/Dockerfile:133-137` already extends the
+`twenty` production image with `aws-cli` — it's exactly what the workflow
+builds. Leaving the file upstream-identical keeps rebases trivial.
