@@ -129,6 +129,17 @@ export class MinimalMetadataService {
         type: flatView.type,
         key: flatView.key,
         objectMetadataId: flatView.objectMetadataId,
+        // ROADMAP fields — see MinimalViewDTO for why these must travel
+        // on the minimal endpoint (the views atom is cached with status
+        // 'up-to-date' so the follow-up full fetch may not run).
+        roadmapFieldStartId: flatView.roadmapFieldStartId ?? null,
+        roadmapFieldEndId: flatView.roadmapFieldEndId ?? null,
+        roadmapFieldGroupId: flatView.roadmapFieldGroupId ?? null,
+        roadmapFieldColorId: flatView.roadmapFieldColorId ?? null,
+        roadmapFieldLabelId: flatView.roadmapFieldLabelId ?? null,
+        roadmapDefaultZoom: flatView.roadmapDefaultZoom ?? null,
+        roadmapShowToday: flatView.roadmapShowToday ?? null,
+        roadmapShowWeekends: flatView.roadmapShowWeekends ?? null,
       }));
 
     return {

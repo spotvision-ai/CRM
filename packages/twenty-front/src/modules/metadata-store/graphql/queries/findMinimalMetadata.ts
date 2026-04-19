@@ -20,6 +20,14 @@ export const FIND_MINIMAL_METADATA = gql`
         type
         key
         objectMetadataId
+        roadmapFieldStartId
+        roadmapFieldEndId
+        roadmapFieldGroupId
+        roadmapFieldColorId
+        roadmapFieldLabelId
+        roadmapDefaultZoom
+        roadmapShowToday
+        roadmapShowWeekends
       }
       collectionHashes {
         collectionName

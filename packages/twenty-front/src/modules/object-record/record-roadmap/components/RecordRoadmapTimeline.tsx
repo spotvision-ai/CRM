@@ -316,16 +316,16 @@ export const RecordRoadmapTimeline = () => {
     }
   }, []);
 
-  // Re-anchor the viewport to (earliest placed record - 7 days) on the first
-  // successful load and every time the zoom level changes. Zoom changes the
-  // day width, so re-snapping keeps the earliest bar pinned ~1 week in from
-  // the left edge regardless of whether the user picked Day/Week/Month/Quarter.
+  // Re-anchor the viewport to (earliest placed record - 7 days) only on the
+  // first successful load. Zoom changes no longer re-snap — that used to
+  // feel like an involuntary "Go today" every time the user switched
+  // Day/Week/Quarter. Instead, `useLayoutEffect` below rescales scrollLeft
+  // so the visible date stays put across zoom transitions.
   // oxlint-disable-next-line twenty/no-state-useref
-  const lastAutoFitZoomRef = useRef<typeof recordRoadmapZoom | null>(null);
+  const hasAutoFittedRef = useRef(false);
   useEffect(() => {
-    if (placedRecords.length === 0) return;
-    if (lastAutoFitZoomRef.current === recordRoadmapZoom) return;
-    lastAutoFitZoomRef.current = recordRoadmapZoom;
+    if (hasAutoFittedRef.current || placedRecords.length === 0) return;
+    hasAutoFittedRef.current = true;
     const earliest = placedRecords.reduce<Temporal.PlainDate>(
       (acc, placed) =>
         Temporal.PlainDate.compare(placed.startDate, acc) < 0
@@ -339,12 +339,22 @@ export const RecordRoadmapTimeline = () => {
     ) {
       setRecordRoadmapViewportStart(anchored);
     }
-  }, [
-    placedRecords,
-    recordRoadmapZoom,
-    recordRoadmapViewportStart,
-    setRecordRoadmapViewportStart,
-  ]);
+  }, [placedRecords, recordRoadmapViewportStart, setRecordRoadmapViewportStart]);
+
+  // Preserve the visible date across zoom changes by scaling `scrollLeft`
+  // in lock-step with `dayWidthPx`. Runs as a layout effect so the re-paint
+  // at the new zoom sees the correct scroll position on the same frame
+  // (avoids a visible jump).
+  // oxlint-disable-next-line twenty/no-state-useref
+  const previousDayWidthPxRef = useRef(dayWidthPx);
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    const previous = previousDayWidthPxRef.current;
+    previousDayWidthPxRef.current = dayWidthPx;
+    if (previous === dayWidthPx || previous === 0) return;
+    canvas.scrollLeft = (canvas.scrollLeft * dayWidthPx) / previous;
+  }, [dayWidthPx]);
 
   const handleDoubleClickEmptyArea = useCallback(
     ({ swimlaneKey, clientX }: { swimlaneKey: string; clientX: number }) => {
@@ -445,6 +455,7 @@ export const RecordRoadmapTimeline = () => {
               days={days}
               viewportStart={renderedDaysStart}
               dayWidthPx={dayWidthPx}
+              zoom={recordRoadmapZoom}
             />
             {recordIndexRoadmapShowWeekends && (
               <RecordRoadmapWeekendsOverlay

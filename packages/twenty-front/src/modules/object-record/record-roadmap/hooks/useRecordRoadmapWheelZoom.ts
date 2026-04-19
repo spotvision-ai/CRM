@@ -4,12 +4,12 @@ import { recordRoadmapZoomComponentState } from '@/object-record/record-roadmap/
 import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
 import { ViewRoadmapZoom } from '~/generated-metadata/graphql';
 
-// DAY is intentionally excluded from the cycle — it's hidden from the UI
-// selector because it overflows horizontally for typical planning horizons.
+// Matches the UI selector options. MONTH stays in the enum for back-compat
+// with persisted views, but is intentionally skipped by the wheel cycle.
 const ZOOM_ORDER: ViewRoadmapZoom[] = [
   ViewRoadmapZoom.QUARTER,
-  ViewRoadmapZoom.MONTH,
   ViewRoadmapZoom.WEEK,
+  ViewRoadmapZoom.DAY,
 ];
 
 // Attaches a `wheel` listener to the given ref. Ctrl or Cmd + wheel steps

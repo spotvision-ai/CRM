@@ -70,6 +70,18 @@ const StyledResizeHandleRight = styled(StyledResizeHandleBase)`
   right: 0;
 `;
 
+// Flex:1 so it fills the bar between the two resize handles and truncates
+// with ellipsis when the bar is narrower than the label. `pointer-events:
+// none` lets the parent bar's pointer handlers (drag / click-to-open) keep
+// receiving events instead of the label swallowing them.
+const StyledLabel = styled.span`
+  flex: 1;
+  overflow: hidden;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 type RecordRoadmapBarProps = {
   recordId: string;
   label: string;
@@ -196,10 +208,11 @@ export const RecordRoadmapBar = ({
       }
     >
       {!readOnly && (
-        <>
-          <StyledResizeHandleLeft onPointerDown={onPointerDownResizeStart} />
-          <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
-        </>
+        <StyledResizeHandleLeft onPointerDown={onPointerDownResizeStart} />
+      )}
+      <StyledLabel>{label}</StyledLabel>
+      {!readOnly && (
+        <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
       )}
     </StyledBar>
   );

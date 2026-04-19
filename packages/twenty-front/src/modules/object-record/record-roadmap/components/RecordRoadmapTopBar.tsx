@@ -51,12 +51,13 @@ const StyledHiddenCounter = styled.span`
   font-size: ${themeCssVariables.font.size.sm};
 `;
 
-// DAY zoom exists in the enum for future use but is intentionally hidden:
-// at 72 px/day a full quarter spans ~6 000 px and makes the timeline feel
-// cramped for the planning use cases this view targets.
+// MONTH remains in the enum for back-compat with views persisted with that
+// default zoom, but the UI only exposes the three groupings the PRD calls
+// out: day (individual days), week (7-day buckets), quarter (months under
+// Q1–Q4).
 const ZOOM_OPTIONS: { value: ViewRoadmapZoom; label: string }[] = [
+  { value: ViewRoadmapZoom.DAY, label: 'Day' },
   { value: ViewRoadmapZoom.WEEK, label: 'Week' },
-  { value: ViewRoadmapZoom.MONTH, label: 'Month' },
   { value: ViewRoadmapZoom.QUARTER, label: 'Quarter' },
 ];
 
