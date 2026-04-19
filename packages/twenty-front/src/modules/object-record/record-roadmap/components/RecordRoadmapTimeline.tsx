@@ -258,16 +258,14 @@ export const RecordRoadmapTimeline = () => {
 
   // When the user's anchor changes (Today button, auto-fit), reset the
   // sliding window symmetrically and snap the scroll to the anchor so the
-  // jump feels intentional instead of accidental.
+  // jump feels intentional instead of accidental. Reference (not value)
+  // equality guards re-entry — we want "Go today" to re-snap even when
+  // today-7d happens to match the current anchor's value, because the
+  // user may have scrolled away and expects a jump back.
   // oxlint-disable-next-line twenty/no-state-useref
   const previousAnchorRef = useRef(recordRoadmapViewportStart);
   useLayoutEffect(() => {
-    if (
-      Temporal.PlainDate.compare(
-        previousAnchorRef.current,
-        recordRoadmapViewportStart,
-      ) === 0
-    ) {
+    if (previousAnchorRef.current === recordRoadmapViewportStart) {
       return;
     }
     previousAnchorRef.current = recordRoadmapViewportStart;

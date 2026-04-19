@@ -12,19 +12,24 @@ import { computeRoadmapBarPosition } from '@/object-record/record-roadmap/utils/
 
 const RESIZE_HANDLE_WIDTH = 6;
 
+// Default fill/border use the tag `blue` tokens so unclassified bars still
+// read as interactive controls (the previous `background.secondary` gray
+// was low-contrast against the canvas background, especially in dark mode).
+// When a `color` prop resolves to a specific SELECT option, inline styles
+// override these values with that option's theme color.
 const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
   align-items: center;
   background-color: ${(props) =>
     props.isDragging
-      ? themeCssVariables.background.tertiary
-      : themeCssVariables.background.secondary};
+      ? themeCssVariables.tag.background.sky
+      : themeCssVariables.tag.background.blue};
   border: 1px solid
     ${(props) =>
       props.hasError
         ? themeCssVariables.border.color.danger
-        : themeCssVariables.border.color.medium};
+        : themeCssVariables.tag.text.blue};
   border-radius: 4px;
-  color: ${themeCssVariables.font.color.primary};
+  color: ${themeCssVariables.tag.text.blue};
   cursor: grab;
   display: flex;
   font-size: ${themeCssVariables.font.size.sm};
@@ -40,7 +45,7 @@ const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
   white-space: nowrap;
 
   &:hover {
-    background-color: ${themeCssVariables.background.tertiary};
+    background-color: ${themeCssVariables.tag.background.sky};
   }
 
   &:active {
