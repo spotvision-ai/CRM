@@ -5809,6 +5809,94 @@ msgstr "類型為 \\\"text\\\" 的回應格式不應包含結構描述"
 msgid "Response Status"
 msgstr ""
 
+#. js-lingui-id: 9Fu3Rm
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap color field metadata not found"
+msgstr ""
+
+#. js-lingui-id: Grqgh4
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap color field must be a select field"
+msgstr ""
+
+#. js-lingui-id: dk3ii1
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap color field must be a SELECT field"
+msgstr ""
+
+#. js-lingui-id: 4c34Xm
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap end field metadata not found"
+msgstr ""
+
+#. js-lingui-id: TMggl8
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap end field must be a date field"
+msgstr ""
+
+#. js-lingui-id: YgbW60
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap end field must be a DATE or DATE_TIME field"
+msgstr ""
+
+#. js-lingui-id: 9/hqTE
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap group field metadata not found"
+msgstr ""
+
+#. js-lingui-id: lFdpqp
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap group field must be a select or relation field"
+msgstr ""
+
+#. js-lingui-id: KdRjlw
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap group field must be a SELECT or RELATION field"
+msgstr ""
+
+#. js-lingui-id: mZuphX
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap label field metadata not found"
+msgstr ""
+
+#. js-lingui-id: 8JpRkL
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap start and end fields must be different"
+msgstr ""
+
+#. js-lingui-id: fPoIiZ
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap start field metadata not found"
+msgstr ""
+
+#. js-lingui-id: 5uLgUY
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap start field must be a date field"
+msgstr ""
+
+#. js-lingui-id: Fb+Op0
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap start field must be a DATE or DATE_TIME field"
+msgstr ""
+
+#. js-lingui-id: cq26/U
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap view must have a start date field"
+msgstr ""
+
+#. js-lingui-id: 01A52H
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration/workspace-migration-builder/validators/services/flat-view-validator.service.ts
+msgid "Roadmap view must have an end date field"
+msgstr ""
+
 #. js-lingui-id: GDvlUT
 #: src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/compute-message-participant-standard-flat-field-metadata.util.ts
 #: src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/compute-message-participant-standard-flat-field-metadata.util.ts

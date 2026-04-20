@@ -384,6 +384,11 @@ msgstr "El registre {positionLabel} té prioritat"
 msgid "{recordCount} of {totalCount} records"
 msgstr "{recordCount} de {totalCount} registres"
 
+#. js-lingui-id: ssTINY
+#: src/modules/object-record/record-roadmap/components/RecordRoadmapTopBar.tsx
+msgid "{recordRoadmapHiddenRecordCount} records hidden (missing dates)"
+msgstr ""
+
 #. js-lingui-id: 5d0hY6
 #: src/modules/settings/admin-panel/health-status/hooks/useRetryJobs.ts
 #: src/modules/settings/admin-panel/health-status/hooks/useRetryJobs.ts
@@ -3305,6 +3310,12 @@ msgstr "Color"
 msgid "Color code"
 msgstr "Codi de colors"
 
+#. js-lingui-id: eWfM3B
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent.tsx
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
+msgid "Color field"
+msgstr ""
+
 #. js-lingui-id: 1HfW/F
 #: src/modules/side-panel/pages/page-layout/constants/settings/ChartConfigurationSettingLabels.ts
 msgid "Colors"
@@ -3845,6 +3856,11 @@ msgstr "Cost per milió de tokens (USD)"
 msgid "Cost per million tokens for cached input (USD)"
 msgstr "Cost per milió de tokens per a l'entrada en memòria cau (USD)"
 
+#. js-lingui-id: qGLcxW
+#: src/modules/object-record/record-roadmap/hooks/useRecordRoadmapCreateOnDoubleClick.ts
+msgid "Could not create roadmap record"
+msgstr ""
+
 #. js-lingui-id: VVRHmR
 #: src/modules/settings/security/components/approvedAccessDomains/SettingsSecurityApprovedAccessDomainRowDropdownMenu.tsx
 msgid "Could not delete approved access domain"
@@ -3864,6 +3880,11 @@ msgstr "No s'ha pogut obrir Stripe. Contacteu amb el suport."
 #: src/pages/settings/enterprise/SettingsEnterprise.tsx
 msgid "Could not refresh validity token. Please contact support."
 msgstr "No s'ha pogut actualitzar el testimoni de validesa. Contacteu amb el suport."
+
+#. js-lingui-id: tlIgF/
+#: src/modules/object-record/record-roadmap/hooks/useRecordRoadmapUpdateDates.ts
+msgid "Could not update roadmap record"
+msgstr ""
 
 #. js-lingui-id: s8lFtq
 #: src/hooks/useCopyToClipboard.tsx
@@ -5684,6 +5705,13 @@ msgstr ""
 msgid "End Date"
 msgstr "Data de Finalització"
 
+#. js-lingui-id: DqIce1
+#: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent.tsx
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
+msgid "End date field"
+msgstr ""
+
 #. js-lingui-id: Fqu/aC
 #: src/modules/settings/admin-panel/health-status/maintenance-mode/components/SettingsAdminMaintenanceMode.tsx
 msgid "End date must be after start date."
@@ -7229,9 +7257,15 @@ msgstr "Anar a l'esborrany"
 #: src/modules/views/view-picker/components/ViewPickerEditButton.tsx
 #: src/modules/views/view-picker/components/ViewPickerCreateButton.tsx
 #: src/modules/views/view-picker/components/ViewPickerCreateButton.tsx
+#: src/modules/views/view-picker/components/ViewPickerCreateButton.tsx
 #: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateRemote.tsx
 msgid "Go to Settings"
 msgstr "Anar a Configuració"
+
+#. js-lingui-id: lcV76p
+#: src/modules/object-record/record-roadmap/components/RecordRoadmapTopBar.tsx
+msgid "Go today"
+msgstr ""
 
 #. js-lingui-id: FYlHHU
 #: src/modules/settings/data-model/fields/forms/select/components/SettingsDataModelFieldSelectFormOptionRow.tsx
@@ -9518,6 +9552,11 @@ msgstr ""
 msgid "Navigation tabs"
 msgstr "Pestanyes de navegació"
 
+#. js-lingui-id: v/0vwM
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
+msgid "Needs 2 date fields..."
+msgstr ""
+
 #. js-lingui-id: qqeAJM
 #: src/modules/settings/developers/utils/formatExpiration.ts
 msgid "Never"
@@ -9845,6 +9884,11 @@ msgstr ""
 msgid "No chat threads found."
 msgstr ""
 
+#. js-lingui-id: H/SQFv
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent.tsx
+msgid "No color"
+msgstr ""
+
 #. js-lingui-id: wgUPZ1
 #: src/pages/settings/ai/SettingsAgentTurnDetail.tsx
 msgid "No comment"
@@ -9926,6 +9970,8 @@ msgid "No data found"
 msgstr "No s'han trobat dades"
 
 #. js-lingui-id: 5K0pqs
+#: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
+#: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
 #: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
 msgid "No Date field"
 msgstr "Sense camp de data"
@@ -10339,6 +10385,7 @@ msgid "Not all columns matched"
 msgstr "No totes les columnes coincideixen"
 
 #. js-lingui-id: tqk+dw
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
 msgid "Not available for default view"
 msgstr "No disponible a la vista predeterminada"
@@ -12239,6 +12286,12 @@ msgstr "Revocat per aquest objecte"
 msgid "Rich Text"
 msgstr "Text enriquit"
 
+#. js-lingui-id: /gaSVU
+#: src/modules/views/view-picker/constants/ViewPickerTypeSelectOptions.ts
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
+msgid "Roadmap"
+msgstr ""
+
 #. js-lingui-id: E1BXUR
 #: src/pages/settings/applications/SettingsAvailableApplicationDetails.tsx
 #: src/modules/metadata-error-handler/hooks/useMetadataErrorHandler.ts
@@ -12630,6 +12683,7 @@ msgstr "Cerca moneda"
 #: src/modules/side-panel/pages/page-layout/components/dropdown-content/ChartFieldSelectionForAggregateOperationDropdownContent.tsx
 #: src/modules/object-record/record-table/record-table-header/components/RecordTableHeaderPlusButtonContent.tsx
 #: src/modules/object-record/object-sort-dropdown/components/ObjectSortDropdownButton.tsx
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRecordGroupFieldsContent.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownFieldsContent.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownCalendarFieldsContent.tsx
@@ -13156,6 +13210,11 @@ msgstr "Configura un camp de data a {objectLabel} per crear un calendari"
 msgid "Set up a Select field on {objectLabel} to create a Kanban"
 msgstr "Configura un camp de selecció a {objectLabel} per crear un Kanban"
 
+#. js-lingui-id: Ye8fEG
+#: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
+msgid "Set up two Date fields on {objectLabel} to create a Roadmap"
+msgstr ""
+
 #. js-lingui-id: 9HNKkV
 #: src/pages/settings/applications/tabs/SettingsApplicationDetailEnvironmentVariablesTable.tsx
 msgid "Set your application configuration variables"
@@ -13633,6 +13692,11 @@ msgstr "Inicieu una nova subscripció Enterprise per tornar a habilitar les func
 msgid "Start a new enterprise subscription."
 msgstr "Inicieu una nova subscripció Enterprise."
 
+#. js-lingui-id: 4JbUdc
+#: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
+msgid "Start and end fields must be different"
+msgstr ""
+
 #. js-lingui-id: WAjFYI
 #: src/modules/settings/admin-panel/health-status/maintenance-mode/components/SettingsAdminMaintenanceMode.tsx
 msgid "Start date"
@@ -13642,6 +13706,13 @@ msgstr ""
 #: src/pages/settings/security/event-logs/components/EventLogFilters.tsx
 msgid "Start Date"
 msgstr "Data d'inici"
+
+#. js-lingui-id: AyXrhB
+#: src/modules/views/view-picker/components/ViewPickerContentCreateMode.tsx
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent.tsx
+#: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
+msgid "Start date field"
+msgstr ""
 
 #. js-lingui-id: s+K73L
 #: src/modules/settings/billing/components/SettingsBillingSubscriptionInfo.tsx
