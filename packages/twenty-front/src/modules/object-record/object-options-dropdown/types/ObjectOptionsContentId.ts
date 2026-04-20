@@ -9,4 +9,7 @@ export type ObjectOptionsContentId =
   | 'recordGroupSort'
   | 'calendarFields'
   | 'calendarView'
+  | 'roadmapStartField'
+  | 'roadmapEndField'
+  | 'roadmapColorField'
   | 'visibility';

@@ -23,10 +23,13 @@ import { ViewPickerSelectContainer } from '@/views/view-picker/components/ViewPi
 import { VIEW_PICKER_CALENDAR_FIELD_DROPDOWN_ID } from '@/views/view-picker/constants/ViewPickerCalendarFieldDropdownId';
 import { VIEW_PICKER_DROPDOWN_ID } from '@/views/view-picker/constants/ViewPickerDropdownId';
 import { VIEW_PICKER_KANBAN_FIELD_DROPDOWN_ID } from '@/views/view-picker/constants/ViewPickerKanbanFieldDropdownId';
+import { VIEW_PICKER_ROADMAP_FIELD_END_DROPDOWN_ID } from '@/views/view-picker/constants/ViewPickerRoadmapFieldEndDropdownId';
+import { VIEW_PICKER_ROADMAP_FIELD_START_DROPDOWN_ID } from '@/views/view-picker/constants/ViewPickerRoadmapFieldStartDropdownId';
 import { VIEW_PICKER_TYPE_SELECT_OPTIONS } from '@/views/view-picker/constants/ViewPickerTypeSelectOptions';
 import { VIEW_PICKER_VIEW_TYPE_DROPDOWN_ID } from '@/views/view-picker/constants/ViewPickerViewTypeDropdownId';
 import { useCreateViewFromCurrentState } from '@/views/view-picker/hooks/useCreateViewFromCurrentState';
 import { useGetAvailableFieldsForCalendar } from '@/views/view-picker/hooks/useGetAvailableFieldsForCalendar';
+import { useGetAvailableFieldsForRoadmap } from '@/views/view-picker/hooks/useGetAvailableFieldsForRoadmap';
 import { useGetAvailableFieldsToGroupRecordsBy } from '@/views/view-picker/hooks/useGetAvailableFieldsToGroupRecordsBy';
 import { useViewPickerMode } from '@/views/view-picker/hooks/useViewPickerMode';
 import { viewPickerCalendarFieldMetadataIdComponentState } from '@/views/view-picker/states/viewPickerCalendarFieldMetadataIdComponentState';
@@ -34,6 +37,8 @@ import { viewPickerInputNameComponentState } from '@/views/view-picker/states/vi
 import { viewPickerIsDirtyComponentState } from '@/views/view-picker/states/viewPickerIsDirtyComponentState';
 import { viewPickerIsPersistingComponentState } from '@/views/view-picker/states/viewPickerIsPersistingComponentState';
 import { viewPickerMainGroupByFieldMetadataIdComponentState } from '@/views/view-picker/states/viewPickerMainGroupByFieldMetadataIdComponentState';
+import { viewPickerRoadmapFieldEndIdComponentState } from '@/views/view-picker/states/viewPickerRoadmapFieldEndIdComponentState';
+import { viewPickerRoadmapFieldStartIdComponentState } from '@/views/view-picker/states/viewPickerRoadmapFieldStartIdComponentState';
 import { viewPickerSelectedIconComponentState } from '@/views/view-picker/states/viewPickerSelectedIconComponentState';
 import { viewPickerTypeComponentState } from '@/views/view-picker/states/viewPickerTypeComponentState';
 import { Trans, useLingui } from '@lingui/react/macro';
@@ -85,6 +90,12 @@ export const ViewPickerContentCreateMode = () => {
     setViewPickerCalendarFieldMetadataId,
   ] = useAtomComponentState(viewPickerCalendarFieldMetadataIdComponentState);
 
+  const [viewPickerRoadmapFieldStartId, setViewPickerRoadmapFieldStartId] =
+    useAtomComponentState(viewPickerRoadmapFieldStartIdComponentState);
+
+  const [viewPickerRoadmapFieldEndId, setViewPickerRoadmapFieldEndId] =
+    useAtomComponentState(viewPickerRoadmapFieldEndIdComponentState);
+
   const [viewPickerType, setViewPickerType] = useAtomComponentState(
     viewPickerTypeComponentState,
   );
@@ -95,6 +106,17 @@ export const ViewPickerContentCreateMode = () => {
     useGetAvailableFieldsToGroupRecordsBy();
 
   const { availableFieldsForCalendar } = useGetAvailableFieldsForCalendar();
+
+  const { availableFieldsForRoadmap } = useGetAvailableFieldsForRoadmap();
+
+  // Roadmap needs two distinct DATE fields. Block the Enter hotkey (and make
+  // the backend call fail-loud later) when the object doesn't have at least
+  // two date fields or the picker is still at the default empty selection.
+  const isRoadmapConfigValid =
+    availableFieldsForRoadmap.length >= 2 &&
+    viewPickerRoadmapFieldStartId !== '' &&
+    viewPickerRoadmapFieldEndId !== '' &&
+    viewPickerRoadmapFieldStartId !== viewPickerRoadmapFieldEndId;
 
   useHotkeysOnFocusedElement({
     keys: [Key.Enter],
@@ -110,6 +132,10 @@ export const ViewPickerContentCreateMode = () => {
         return;
       }
 
+      if (viewPickerType === ViewType.ROADMAP && !isRoadmapConfigValid) {
+        return;
+      }
+
       await createViewFromCurrentState();
     },
     focusId: VIEW_PICKER_DROPDOWN_ID,
@@ -119,6 +145,8 @@ export const ViewPickerContentCreateMode = () => {
       viewPickerType,
       availableFieldsForGrouping,
       availableFieldsForCalendar,
+      availableFieldsForRoadmap,
+      isRoadmapConfigValid,
     ],
   });
 
@@ -248,6 +276,64 @@ export const ViewPickerContentCreateMode = () => {
                 </Trans>
               </StyledFieldAvailableContainer>
             )}
+          </>
+        )}
+        {viewPickerType === ViewType.ROADMAP && (
+          <>
+            <ViewPickerSelectContainer>
+              <Select
+                label={t`Start date field`}
+                fullWidth
+                value={viewPickerRoadmapFieldStartId}
+                onChange={(value) => {
+                  setViewPickerIsDirty(true);
+                  setViewPickerRoadmapFieldStartId(value);
+                }}
+                options={
+                  availableFieldsForRoadmap.length > 0
+                    ? availableFieldsForRoadmap.map((field) => ({
+                        value: field.id,
+                        label: field.label,
+                      }))
+                    : [{ value: '', label: t`No Date field` }]
+                }
+                dropdownId={VIEW_PICKER_ROADMAP_FIELD_START_DROPDOWN_ID}
+              />
+            </ViewPickerSelectContainer>
+            <ViewPickerSelectContainer>
+              <Select
+                label={t`End date field`}
+                fullWidth
+                value={viewPickerRoadmapFieldEndId}
+                onChange={(value) => {
+                  setViewPickerIsDirty(true);
+                  setViewPickerRoadmapFieldEndId(value);
+                }}
+                options={
+                  availableFieldsForRoadmap.length > 0
+                    ? availableFieldsForRoadmap.map((field) => ({
+                        value: field.id,
+                        label: field.label,
+                      }))
+                    : [{ value: '', label: t`No Date field` }]
+                }
+                dropdownId={VIEW_PICKER_ROADMAP_FIELD_END_DROPDOWN_ID}
+              />
+            </ViewPickerSelectContainer>
+            {availableFieldsForRoadmap.length < 2 && (
+              <StyledFieldAvailableContainer>
+                <Trans>
+                  Set up two Date fields on {objectLabel} to create a Roadmap
+                </Trans>
+              </StyledFieldAvailableContainer>
+            )}
+            {availableFieldsForRoadmap.length >= 2 &&
+              viewPickerRoadmapFieldStartId !== '' &&
+              viewPickerRoadmapFieldStartId === viewPickerRoadmapFieldEndId && (
+                <StyledFieldAvailableContainer>
+                  <Trans>Start and end fields must be different</Trans>
+                </StyledFieldAvailableContainer>
+              )}
           </>
         )}
       </DropdownMenuItemsContainer>

@@ -3,11 +3,14 @@ import { ViewType } from '@/views/types/ViewType';
 import { useCreateViewFromCurrentState } from '@/views/view-picker/hooks/useCreateViewFromCurrentState';
 import { useDestroyViewFromCurrentState } from '@/views/view-picker/hooks/useDestroyViewFromCurrentState';
 import { useGetAvailableFieldsForCalendar } from '@/views/view-picker/hooks/useGetAvailableFieldsForCalendar';
+import { useGetAvailableFieldsForRoadmap } from '@/views/view-picker/hooks/useGetAvailableFieldsForRoadmap';
 import { useGetAvailableFieldsToGroupRecordsBy } from '@/views/view-picker/hooks/useGetAvailableFieldsToGroupRecordsBy';
 import { useViewPickerMode } from '@/views/view-picker/hooks/useViewPickerMode';
 import { viewPickerCalendarFieldMetadataIdComponentState } from '@/views/view-picker/states/viewPickerCalendarFieldMetadataIdComponentState';
 import { viewPickerIsPersistingComponentState } from '@/views/view-picker/states/viewPickerIsPersistingComponentState';
 import { viewPickerMainGroupByFieldMetadataIdComponentState } from '@/views/view-picker/states/viewPickerMainGroupByFieldMetadataIdComponentState';
+import { viewPickerRoadmapFieldEndIdComponentState } from '@/views/view-picker/states/viewPickerRoadmapFieldEndIdComponentState';
+import { viewPickerRoadmapFieldStartIdComponentState } from '@/views/view-picker/states/viewPickerRoadmapFieldStartIdComponentState';
 import { viewPickerTypeComponentState } from '@/views/view-picker/states/viewPickerTypeComponentState';
 import { useLingui } from '@lingui/react/macro';
 import { Button } from 'twenty-ui/input';
@@ -18,6 +21,7 @@ export const ViewPickerCreateButton = () => {
     useGetAvailableFieldsToGroupRecordsBy();
   const { availableFieldsForCalendar, navigateToDateFieldSettings } =
     useGetAvailableFieldsForCalendar();
+  const { availableFieldsForRoadmap } = useGetAvailableFieldsForRoadmap();
 
   const { viewPickerMode } = useViewPickerMode();
   const viewPickerType = useAtomComponentStateValue(
@@ -32,6 +36,20 @@ export const ViewPickerCreateButton = () => {
   const viewPickerCalendarFieldMetadataId = useAtomComponentStateValue(
     viewPickerCalendarFieldMetadataIdComponentState,
   );
+  const viewPickerRoadmapFieldStartId = useAtomComponentStateValue(
+    viewPickerRoadmapFieldStartIdComponentState,
+  );
+  const viewPickerRoadmapFieldEndId = useAtomComponentStateValue(
+    viewPickerRoadmapFieldEndIdComponentState,
+  );
+
+  // Roadmap needs two distinct DATE fields. Mirror the same "Go to Settings"
+  // escape hatch CALENDAR uses when the object has zero eligible fields.
+  const isRoadmapInvalid =
+    viewPickerType === ViewType.ROADMAP &&
+    (viewPickerRoadmapFieldStartId === '' ||
+      viewPickerRoadmapFieldEndId === '' ||
+      viewPickerRoadmapFieldStartId === viewPickerRoadmapFieldEndId);
 
   const { createViewFromCurrentState } = useCreateViewFromCurrentState();
   const { destroyViewFromCurrentState } = useDestroyViewFromCurrentState();
@@ -89,6 +107,22 @@ export const ViewPickerCreateButton = () => {
   }
 
   if (
+    viewPickerType === ViewType.ROADMAP &&
+    availableFieldsForRoadmap.length < 2
+  ) {
+    return (
+      <Button
+        title={t`Go to Settings`}
+        onClick={navigateToDateFieldSettings}
+        size="small"
+        accent="blue"
+        fullWidth
+        justify="center"
+      />
+    );
+  }
+
+  if (
     viewPickerType !== ViewType.KANBAN ||
     viewPickerMainGroupByFieldMetadataId !== ''
   ) {
@@ -106,7 +140,8 @@ export const ViewPickerCreateButton = () => {
           (viewPickerType === ViewType.KANBAN &&
             viewPickerMainGroupByFieldMetadataId === '') ||
           (viewPickerType === ViewType.CALENDAR &&
-            viewPickerCalendarFieldMetadataId === '')
+            viewPickerCalendarFieldMetadataId === '') ||
+          isRoadmapInvalid
         }
       />
     );

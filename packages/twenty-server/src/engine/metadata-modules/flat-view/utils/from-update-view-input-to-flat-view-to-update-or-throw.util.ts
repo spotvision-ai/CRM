@@ -115,6 +115,76 @@ export const fromUpdateViewInputToFlatViewToUpdateOrThrow = ({
       mainGroupByFieldMetadataUniversalIdentifier;
   }
 
+  if (updatedEditableFieldProperties.roadmapFieldStartId !== undefined) {
+    const { roadmapFieldStartUniversalIdentifier } =
+      resolveEntityRelationUniversalIdentifiers({
+        metadataName: 'view',
+        foreignKeyValues: {
+          roadmapFieldStartId: flatViewToUpdate.roadmapFieldStartId,
+        },
+        flatEntityMaps: { flatFieldMetadataMaps },
+      });
+
+    flatViewToUpdate.roadmapFieldStartUniversalIdentifier =
+      roadmapFieldStartUniversalIdentifier;
+  }
+
+  if (updatedEditableFieldProperties.roadmapFieldEndId !== undefined) {
+    const { roadmapFieldEndUniversalIdentifier } =
+      resolveEntityRelationUniversalIdentifiers({
+        metadataName: 'view',
+        foreignKeyValues: {
+          roadmapFieldEndId: flatViewToUpdate.roadmapFieldEndId,
+        },
+        flatEntityMaps: { flatFieldMetadataMaps },
+      });
+
+    flatViewToUpdate.roadmapFieldEndUniversalIdentifier =
+      roadmapFieldEndUniversalIdentifier;
+  }
+
+  if (updatedEditableFieldProperties.roadmapFieldGroupId !== undefined) {
+    const { roadmapFieldGroupUniversalIdentifier } =
+      resolveEntityRelationUniversalIdentifiers({
+        metadataName: 'view',
+        foreignKeyValues: {
+          roadmapFieldGroupId: flatViewToUpdate.roadmapFieldGroupId,
+        },
+        flatEntityMaps: { flatFieldMetadataMaps },
+      });
+
+    flatViewToUpdate.roadmapFieldGroupUniversalIdentifier =
+      roadmapFieldGroupUniversalIdentifier;
+  }
+
+  if (updatedEditableFieldProperties.roadmapFieldColorId !== undefined) {
+    const { roadmapFieldColorUniversalIdentifier } =
+      resolveEntityRelationUniversalIdentifiers({
+        metadataName: 'view',
+        foreignKeyValues: {
+          roadmapFieldColorId: flatViewToUpdate.roadmapFieldColorId,
+        },
+        flatEntityMaps: { flatFieldMetadataMaps },
+      });
+
+    flatViewToUpdate.roadmapFieldColorUniversalIdentifier =
+      roadmapFieldColorUniversalIdentifier;
+  }
+
+  if (updatedEditableFieldProperties.roadmapFieldLabelId !== undefined) {
+    const { roadmapFieldLabelUniversalIdentifier } =
+      resolveEntityRelationUniversalIdentifiers({
+        metadataName: 'view',
+        foreignKeyValues: {
+          roadmapFieldLabelId: flatViewToUpdate.roadmapFieldLabelId,
+        },
+        flatEntityMaps: { flatFieldMetadataMaps },
+      });
+
+    flatViewToUpdate.roadmapFieldLabelUniversalIdentifier =
+      roadmapFieldLabelUniversalIdentifier;
+  }
+
   // If changing visibility from WORKSPACE to UNLISTED, ensure createdByUserWorkspaceId is set
   // This prevents the view from disappearing for the user making the change
   if (
