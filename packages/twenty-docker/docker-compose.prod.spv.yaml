@@ -120,5 +120,42 @@ services:
         awslogs-stream: redis
         awslogs-create-group: "true"
 
+  # Optional DB service — gated behind the `with-db` Docker Compose profile
+  # so the same compose file can run against RDS (default, no db container)
+  # or against a local postgres (set `COMPOSE_PROFILES=with-db` in .env).
+  # When `with-db` is active, set `PG_DATABASE_URL` to point at `db:5432`.
+  # The volume is declared `external` below so this container reuses the
+  # data volume from the legacy `twenty-dev` stack — no dump/restore needed
+  # during the migration period.
+  db:
+    image: postgres:16
+    profiles: [with-db]
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${PG_DATABASE_NAME:-default}
+      POSTGRES_PASSWORD: ${PG_DATABASE_PASSWORD:-postgres}
+      POSTGRES_USER: ${PG_DATABASE_USER:-postgres}
+    healthcheck:
+      test: pg_isready -U ${PG_DATABASE_USER:-postgres} -h localhost -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: always
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /spotvision/twenty
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-stream: db
+        awslogs-create-group: "true"
+
 volumes:
   server-local-data:
+  # Points at the existing `twenty-dev_db-data` volume on the legacy VM so
+  # the optional `with-db` profile reuses production data in-place. If the
+  # volume doesn't exist yet (fresh VM), docker compose errors out — drop
+  # the `external: true` line and let compose create a new empty volume.
+  db-data:
+    external: true
+    name: twenty-dev_db-data
