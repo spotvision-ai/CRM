@@ -78,6 +78,27 @@ export const useRecordRoadmapSwimlanes = ({
     objectMetadataItem,
   ]);
 
+  // Records inside each swimlane are sorted ascending by the record's
+  // `position` field so vertical-drag reorders persist across reloads.
+  // Ties (or missing position on freshly-created records) fall back to the
+  // label for deterministic rendering. Fields are fetched by
+  // `useRelevantRecordsGqlFields` when the object exposes `position`.
+  const sortByPositionThenLabel = (
+    a: RoadmapPlacedRecord,
+    b: RoadmapPlacedRecord,
+  ) => {
+    const aPosition =
+      typeof a.record.position === 'number'
+        ? a.record.position
+        : Number.POSITIVE_INFINITY;
+    const bPosition =
+      typeof b.record.position === 'number'
+        ? b.record.position
+        : Number.POSITIVE_INFINITY;
+    if (aPosition !== bPosition) return aPosition - bPosition;
+    return a.label.localeCompare(b.label);
+  };
+
   return useMemo<UseRecordRoadmapSwimlanesResult>(() => {
     if (groupField === null) {
       return {
@@ -85,7 +106,7 @@ export const useRecordRoadmapSwimlanes = ({
           {
             key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
             label: 'All records',
-            records: placedRecords,
+            records: placedRecords.slice().sort(sortByPositionThenLabel),
           },
         ],
         groupFieldName: null,
@@ -104,7 +125,7 @@ export const useRecordRoadmapSwimlanes = ({
           {
             key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
             label: groupField.label ?? 'Group',
-            records: placedRecords,
+            records: placedRecords.slice().sort(sortByPositionThenLabel),
           },
         ],
         groupFieldName: groupField.name,
@@ -138,14 +159,16 @@ export const useRecordRoadmapSwimlanes = ({
         key: option.value,
         label: option.label,
         color: option.color,
-        records: byValue.get(option.value) ?? [],
+        records: (byValue.get(option.value) ?? [])
+          .slice()
+          .sort(sortByPositionThenLabel),
       }));
 
     if (uncategorized.length > 0) {
       swimlanes.push({
         key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
         label: 'Uncategorized',
-        records: uncategorized,
+        records: uncategorized.slice().sort(sortByPositionThenLabel),
       });
     }
 

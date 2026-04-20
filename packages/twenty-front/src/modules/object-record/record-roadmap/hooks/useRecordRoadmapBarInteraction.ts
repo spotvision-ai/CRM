@@ -16,6 +16,10 @@ type UseRecordRoadmapBarInteractionArgs = {
     startDate: Temporal.PlainDate;
     endDate: Temporal.PlainDate;
     targetSwimlaneKey?: string | null;
+    /** Record id of the row the bar was released over, when that row lives in
+        the same swimlane as the source. Signals "reorder by position" to the
+        caller; date/swimlane commits are skipped in that case. */
+    targetRowRecordId?: string | null;
   }) => void;
   /** Fired on pointerup when the user pressed and released without moving
       the bar — treated as a click and mapped to "open record detail". */
@@ -26,6 +30,7 @@ type UseRecordRoadmapBarInteractionArgs = {
 // pointer-up resolves the target swimlane via elementFromPoint rather than
 // maintaining row-to-swimlane maps in React state.
 const SWIMLANE_DATA_ATTR = 'data-roadmap-swimlane-key';
+const ROW_DATA_ATTR = 'data-roadmap-record-id';
 
 const findSwimlaneKeyAtPoint = (
   clientX: number,
@@ -36,6 +41,17 @@ const findSwimlaneKeyAtPoint = (
   const swimlane = element.closest(`[${SWIMLANE_DATA_ATTR}]`);
   if (swimlane === null) return null;
   return swimlane.getAttribute(SWIMLANE_DATA_ATTR);
+};
+
+const findRowRecordIdAtPoint = (
+  clientX: number,
+  clientY: number,
+): string | null => {
+  const element = document.elementFromPoint(clientX, clientY);
+  if (element === null) return null;
+  const row = element.closest(`[${ROW_DATA_ATTR}]`);
+  if (row === null) return null;
+  return row.getAttribute(ROW_DATA_ATTR);
 };
 
 type InProgressDrag = {
@@ -107,6 +123,35 @@ export const useRecordRoadmapBarInteraction = ({
         event.clientX,
         event.clientY,
       );
+      const droppedRowRecordId = findRowRecordIdAtPoint(
+        event.clientX,
+        event.clientY,
+      );
+
+      // Reorder-by-position: a `move` drop that lands on a different row of
+      // the *same* swimlane. We route this to the commit with only
+      // `targetRowRecordId` set — the caller then computes the new position
+      // and skips the date/group update so the bar stays in place
+      // horizontally while climbing or dropping rows. Cross-swimlane drops
+      // fall through to the existing date+group path below.
+      const isSameSwimlaneRowDrop =
+        drag.mode === 'move' &&
+        droppedRowRecordId !== null &&
+        droppedRowRecordId !== recordId &&
+        (droppedSwimlaneKey === null ||
+          droppedSwimlaneKey === currentSwimlaneKey);
+
+      if (isSameSwimlaneRowDrop) {
+        onCommit({
+          recordId,
+          startDate,
+          endDate,
+          targetRowRecordId: droppedRowRecordId,
+        });
+        reset();
+        return;
+      }
+
       const targetSwimlaneKey =
         drag.mode === 'move' &&
         droppedSwimlaneKey !== null &&

@@ -41,6 +41,7 @@ import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/use
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { computeRoadmapViewportDays } from '@/object-record/record-roadmap/utils/computeRoadmapViewportDays';
 import { parseRoadmapDateValue } from '@/object-record/record-roadmap/utils/computeRoadmapBarPosition';
+import { computeNewPositionOfDraggedRecord } from '@/object-record/utils/computeNewPositionOfDraggedRecord';
 
 const StyledTimelineContainer = styled.div`
   background-color: ${themeCssVariables.background.primary};
@@ -337,7 +338,11 @@ export const RecordRoadmapTimeline = () => {
     ) {
       setRecordRoadmapViewportStart(anchored);
     }
-  }, [placedRecords, recordRoadmapViewportStart, setRecordRoadmapViewportStart]);
+  }, [
+    placedRecords,
+    recordRoadmapViewportStart,
+    setRecordRoadmapViewportStart,
+  ]);
 
   // Preserve the visible date across zoom changes by scaling `scrollLeft`
   // in lock-step with `dayWidthPx`. Runs as a layout effect so the re-paint
@@ -392,12 +397,48 @@ export const RecordRoadmapTimeline = () => {
       startDate,
       endDate,
       targetSwimlaneKey,
+      targetRowRecordId,
     }: {
       recordId: string;
       startDate: Temporal.PlainDate;
       endDate: Temporal.PlainDate;
       targetSwimlaneKey?: string | null;
+      targetRowRecordId?: string | null;
     }) => {
+      // Reorder-by-position path. Resolve the swimlane the source currently
+      // lives in, pick records with a numeric `position`, and hand off to
+      // the shared Kanban helper so ordering math (intermediary halves,
+      // first/last edge cases) is identical across views.
+      if (isDefined(targetRowRecordId) && targetRowRecordId !== recordId) {
+        const sourceSwimlane = swimlanes.find((swimlane) =>
+          swimlane.records.some(({ record }) => record.id === recordId),
+        );
+        if (!isDefined(sourceSwimlane)) {
+          return;
+        }
+        const recordsWithPosition = sourceSwimlane.records
+          .map(({ record }) =>
+            typeof record.position === 'number'
+              ? { id: record.id, position: record.position }
+              : null,
+          )
+          .filter(isDefined);
+        const targetHasPosition = recordsWithPosition.some(
+          ({ id }) => id === targetRowRecordId,
+        );
+        if (!targetHasPosition) return;
+
+        const newPosition = computeNewPositionOfDraggedRecord({
+          arrayOfRecordsWithPosition: recordsWithPosition,
+          idOfItemToMove: recordId,
+          idOfTargetItem: targetRowRecordId,
+          isDroppedAfterList: false,
+        });
+
+        void updateDates({ recordId, position: newPosition });
+        return;
+      }
+
       const canUpdateGroup =
         supportsCrossSwimlaneDrop &&
         isDefined(groupFieldName) &&
@@ -423,6 +464,7 @@ export const RecordRoadmapTimeline = () => {
       endFieldMetadataItem,
       supportsCrossSwimlaneDrop,
       groupFieldName,
+      swimlanes,
     ],
   );
 

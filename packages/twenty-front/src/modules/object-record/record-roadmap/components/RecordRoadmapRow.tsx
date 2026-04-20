@@ -48,7 +48,9 @@ export const RecordRoadmapRow = ({
   onCommit,
   onOpenRecord,
 }: RecordRoadmapRowProps) => (
-  <StyledRow>
+  // `data-roadmap-record-id` is read by the bar drag hook to resolve the
+  // target row via elementFromPoint, enabling vertical reorder-by-position.
+  <StyledRow data-roadmap-record-id={recordId}>
     <RecordRoadmapBar
       recordId={recordId}
       label={label}

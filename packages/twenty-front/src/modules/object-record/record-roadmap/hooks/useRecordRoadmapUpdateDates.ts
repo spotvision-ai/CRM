@@ -14,6 +14,10 @@ type UpdateDatesArgs = {
   endDate?: Temporal.PlainDate;
   groupFieldName?: string;
   groupValue?: string | null;
+  /** New `position` written after a vertical reorder drag. Computed via
+      `computeNewPositionOfDraggedRecord` at the call site so the halfway
+      logic stays shared with Kanban/Table. */
+  position?: number;
 };
 
 // Persists a roadmap bar's start / end (and optional swimlane group) via the
@@ -35,8 +39,9 @@ export const useRecordRoadmapUpdateDates = () => {
       endDate,
       groupFieldName,
       groupValue,
+      position,
     }: UpdateDatesArgs) => {
-      const input: Record<string, string | null> = {};
+      const input: Record<string, string | number | null> = {};
       if (startFieldName !== undefined && startDate !== undefined) {
         // Preserve any time-of-day from the source by dropping to pure
         // date string; backend DATE_TIME columns accept date-only ISO.
@@ -47,6 +52,9 @@ export const useRecordRoadmapUpdateDates = () => {
       }
       if (groupFieldName !== undefined && groupValue !== undefined) {
         input[groupFieldName] = groupValue;
+      }
+      if (position !== undefined) {
+        input.position = position;
       }
       if (Object.keys(input).length === 0) {
         return;
