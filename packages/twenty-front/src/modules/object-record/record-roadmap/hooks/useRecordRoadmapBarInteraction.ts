@@ -57,7 +57,47 @@ const findRowRecordIdAtPoint = (
 type InProgressDrag = {
   mode: BarInteractionMode;
   initialClientX: number;
+  initialClientY: number;
   pointerId: number;
+};
+
+const DROP_TARGET_DATA_ATTR = 'data-roadmap-drop-target';
+
+// Paints the blue drop indicator on the row currently under the cursor and
+// clears it from the previous one. Runs on every pointermove so the target
+// tracks fluidly; DOM-mutation-only to avoid re-rendering every row on a
+// 500-record swimlane.
+const updateDropTargetHighlight = ({
+  previousElement,
+  clientX,
+  clientY,
+  sourceRecordId,
+}: {
+  previousElement: Element | null;
+  clientX: number;
+  clientY: number;
+  sourceRecordId: string;
+}): Element | null => {
+  const hit = document.elementFromPoint(clientX, clientY);
+  const row = hit?.closest('[data-roadmap-record-id]') ?? null;
+  const rowRecordId = row?.getAttribute('data-roadmap-record-id') ?? null;
+  const nextElement =
+    row !== null && rowRecordId !== null && rowRecordId !== sourceRecordId
+      ? row
+      : null;
+  if (previousElement !== null && previousElement !== nextElement) {
+    previousElement.removeAttribute(DROP_TARGET_DATA_ATTR);
+  }
+  if (nextElement !== null) {
+    nextElement.setAttribute(DROP_TARGET_DATA_ATTR, '');
+  }
+  return nextElement;
+};
+
+const clearDropTargetHighlight = (element: Element | null) => {
+  if (element !== null) {
+    element.removeAttribute(DROP_TARGET_DATA_ATTR);
+  }
 };
 
 // Encapsulates the pointer-down → move → up lifecycle for a single roadmap
@@ -75,9 +115,12 @@ export const useRecordRoadmapBarInteraction = ({
   onClick,
 }: UseRecordRoadmapBarInteractionArgs) => {
   const [deltaDays, setDeltaDays] = useState(0);
+  const [deltaYPx, setDeltaYPx] = useState(0);
   const [mode, setMode] = useState<BarInteractionMode | null>(null);
   // oxlint-disable-next-line twenty/no-state-useref
   const dragRef = useRef<InProgressDrag | null>(null);
+  // oxlint-disable-next-line twenty/no-state-useref
+  const dropTargetRef = useRef<Element | null>(null);
 
   const resolveDeltaDays = (currentClientX: number): number => {
     if (dragRef.current === null || dayWidthPx === 0) {
@@ -92,19 +135,34 @@ export const useRecordRoadmapBarInteraction = ({
       if (dragRef.current === null) return;
       if (event.pointerId !== dragRef.current.pointerId) return;
       setDeltaDays(resolveDeltaDays(event.clientX));
+      // Only tracked on `move` drags — resize handles stay horizontal-only
+      // so the bar doesn't appear to float vertically while the user is
+      // just stretching an end.
+      if (dragRef.current.mode === 'move') {
+        setDeltaYPx(event.clientY - dragRef.current.initialClientY);
+        dropTargetRef.current = updateDropTargetHighlight({
+          previousElement: dropTargetRef.current,
+          clientX: event.clientX,
+          clientY: event.clientY,
+          sourceRecordId: recordId,
+        });
+      }
     },
     // dayWidthPx is read via closure; the handler is re-created when it
     // changes (useCallback dependency), which re-binds the listeners on the
     // next pointerdown. Fine for our use: mouse doesn't stay down across
     // zoom changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dayWidthPx],
+    [dayWidthPx, recordId],
   );
 
   const reset = useCallback(() => {
     dragRef.current = null;
     setDeltaDays(0);
+    setDeltaYPx(0);
     setMode(null);
+    clearDropTargetHighlight(dropTargetRef.current);
+    dropTargetRef.current = null;
   }, []);
 
   const handlePointerUp = useCallback(
@@ -210,6 +268,7 @@ export const useRecordRoadmapBarInteraction = ({
       dragRef.current = {
         mode: nextMode,
         initialClientX: event.clientX,
+        initialClientY: event.clientY,
         pointerId: event.pointerId,
       };
       setMode(nextMode);
@@ -225,6 +284,7 @@ export const useRecordRoadmapBarInteraction = ({
 
   return {
     deltaDays,
+    deltaYPx,
     mode,
     onPointerDownMove: (event: React.PointerEvent<HTMLElement>) =>
       startInteraction(event, 'move'),

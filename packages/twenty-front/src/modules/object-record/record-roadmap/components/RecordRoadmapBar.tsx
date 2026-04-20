@@ -142,6 +142,7 @@ export const RecordRoadmapBar = ({
 }: RecordRoadmapBarProps) => {
   const {
     deltaDays,
+    deltaYPx,
     mode,
     onPointerDownMove,
     onPointerDownResizeStart,
@@ -191,6 +192,20 @@ export const RecordRoadmapBar = ({
         }
       : {};
 
+  const isMoveDrag = mode === 'move';
+  // While moving, lift the bar above the rows so `elementFromPoint` sees the
+  // row underneath (and so the drop-target highlight reads correctly). The
+  // transform lets the bar follow the cursor vertically, making the drag feel
+  // physical. z-index + box-shadow give it a "lifted" look over neighbors.
+  const dragStyle = isMoveDrag
+    ? {
+        transform: `translateY(${deltaYPx}px)`,
+        pointerEvents: 'none' as const,
+        zIndex: 3,
+        boxShadow: themeCssVariables.boxShadow.strong,
+      }
+    : {};
+
   return (
     <StyledBar
       hasError={hasError}
@@ -200,6 +215,7 @@ export const RecordRoadmapBar = ({
         left: leftPx,
         width: widthPx,
         ...colorStyle,
+        ...dragStyle,
         // Read-only mode: behave like a link (pointer cursor, no grabbing)
         // since drag/resize are disabled.
         ...(readOnly ? { cursor: 'pointer' } : {}),

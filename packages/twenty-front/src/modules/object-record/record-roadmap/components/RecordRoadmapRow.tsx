@@ -28,11 +28,22 @@ type RecordRoadmapRowProps = {
 // the two panes' rows stay aligned through hundreds of rows of vertical
 // scroll. `box-sizing: border-box` is the non-negotiable — without it the
 // 1px border is added on top of height and each row drifts by one pixel.
+//
+// `data-roadmap-drop-target` is toggled by the bar drag hook on the row
+// currently under the cursor. Inset shadows (not a top border) paint the
+// indicator so the row height doesn't shift while the indicator is active.
 const StyledRow = styled.div`
   border-bottom: 1px solid ${themeCssVariables.border.color.light};
   box-sizing: border-box;
   height: ${ROADMAP_ROW_HEIGHT}px;
   position: relative;
+
+  &[data-roadmap-drop-target] {
+    background-color: ${themeCssVariables.tag.background.sky};
+    box-shadow:
+      inset 0 2px 0 0 ${themeCssVariables.tag.text.blue},
+      inset 0 -2px 0 0 ${themeCssVariables.tag.text.blue};
+  }
 `;
 
 export const RecordRoadmapRow = ({
