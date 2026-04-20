@@ -21,6 +21,13 @@ services:
       - server-local-data:/app/packages/twenty-server/.local-storage
     ports:
       - "3000:3000"
+    # Load *every* key from /opt/spotvision/twenty/.env into the container,
+    # so optional providers (AUTH_GOOGLE_*, AUTH_MICROSOFT_*, EMAIL_*, etc.)
+    # don't need to be enumerated below. The explicit `environment:` block
+    # still overrides env_file and lets us keep defaults for a handful of
+    # well-known keys.
+    env_file:
+      - .env
     environment:
       NODE_PORT: 3000
       PG_DATABASE_URL: ${PG_DATABASE_URL}
@@ -80,6 +87,8 @@ services:
     volumes:
       - server-local-data:/app/packages/twenty-server/.local-storage
     command: ["yarn", "worker:prod"]
+    env_file:
+      - .env
     environment:
       PG_DATABASE_URL: ${PG_DATABASE_URL}
       PG_SSL_ALLOW_SELF_SIGNED: ${PG_SSL_ALLOW_SELF_SIGNED:-true}
