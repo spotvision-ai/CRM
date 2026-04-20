@@ -24,6 +24,11 @@ services:
     environment:
       NODE_PORT: 3000
       PG_DATABASE_URL: ${PG_DATABASE_URL}
+      # RDS uses the AWS RDS CA, which Node does not ship in its default
+      # trust store. `true` makes TypeORM set `rejectUnauthorized: false`
+      # so the connection is encrypted but the chain isn't validated.
+      # Swap to a CA-bundle mount later if verify-ca is needed.
+      PG_SSL_ALLOW_SELF_SIGNED: ${PG_SSL_ALLOW_SELF_SIGNED:-true}
       SERVER_URL: ${SERVER_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       DISABLE_DB_MIGRATIONS: ${DISABLE_DB_MIGRATIONS:-false}
@@ -77,6 +82,7 @@ services:
     command: ["yarn", "worker:prod"]
     environment:
       PG_DATABASE_URL: ${PG_DATABASE_URL}
+      PG_SSL_ALLOW_SELF_SIGNED: ${PG_SSL_ALLOW_SELF_SIGNED:-true}
       SERVER_URL: ${SERVER_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       # Migrations + cron registration run on the server; skip here.
