@@ -1,3 +1,4 @@
+import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { currentRecordSortsComponentState } from '@/object-record/record-sort/states/currentRecordSortsComponentState';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { usePerformViewSortAPIPersist } from '@/views/hooks/internal/usePerformViewSortAPIPersist';
@@ -18,6 +19,7 @@ export const useSaveRecordSortsToViewSorts = () => {
     performViewSortAPIUpdate,
     performViewSortAPIDestroy,
   } = usePerformViewSortAPIPersist();
+  const { invalidateMetadataStore } = useInvalidateMetadataStore();
 
   const { currentView } = useGetCurrentViewOnly();
 
@@ -91,9 +93,11 @@ export const useSaveRecordSortsToViewSorts = () => {
     if (deleteResult.status === 'failed') {
       return;
     }
+    invalidateMetadataStore();
   }, [
     canPersistChanges,
     currentView,
+    invalidateMetadataStore,
     store,
     currentRecordSortsCallbackState,
     performViewSortAPICreate,

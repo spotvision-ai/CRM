@@ -1,4 +1,5 @@
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
 import { useLoadRecordIndexStates } from '@/object-record/record-index/hooks/useLoadRecordIndexStates';
 import { type ExtendedAggregateOperations } from '@/object-record/record-table/types/ExtendedAggregateOperations';
@@ -17,6 +18,7 @@ export const useUpdateViewAggregate = () => {
   );
   const { performViewAPIUpdate } = usePerformViewAPIUpdate();
   const { loadRecordIndexStates } = useLoadRecordIndexStates();
+  const { invalidateMetadataStore } = useInvalidateMetadataStore();
 
   const updateViewAggregate = useCallback(
     async ({
@@ -62,10 +64,12 @@ export const useUpdateViewAggregate = () => {
 
         loadRecordIndexStates(updatedView, objectMetadataItem);
       }
+      invalidateMetadataStore();
     },
     [
       canPersistChanges,
       contextStoreCurrentViewId,
+      invalidateMetadataStore,
       performViewAPIUpdate,
       loadRecordIndexStates,
     ],

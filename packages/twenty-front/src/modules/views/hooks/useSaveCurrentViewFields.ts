@@ -2,6 +2,7 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { usePerformViewFieldAPIPersist } from '@/views/hooks/internal/usePerformViewFieldAPIPersist';
 import { useCanPersistViewChanges } from '@/views/hooks/useCanPersistViewChanges';
@@ -18,6 +19,7 @@ export const useSaveCurrentViewFields = () => {
   const { canPersistChanges } = useCanPersistViewChanges();
   const { performViewFieldAPICreate, performViewFieldAPIUpdate } =
     usePerformViewFieldAPIPersist();
+  const { invalidateMetadataStore } = useInvalidateMetadataStore();
 
   const { getViewFromState } = useGetViewFromState();
 
@@ -132,10 +134,12 @@ export const useSaveCurrentViewFields = () => {
         performViewFieldAPICreate({ inputs: viewFieldsToCreate }),
         performViewFieldAPIUpdate(viewFieldsToUpdate),
       ]);
+      invalidateMetadataStore();
     },
     [
       store,
       canPersistChanges,
+      invalidateMetadataStore,
       performViewFieldAPICreate,
       currentViewIdCallbackState,
       getViewFromState,

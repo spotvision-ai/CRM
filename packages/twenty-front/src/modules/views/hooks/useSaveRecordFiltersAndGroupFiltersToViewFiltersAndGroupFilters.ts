@@ -1,3 +1,4 @@
+import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { metadataStoreState } from '@/metadata-store/states/metadataStoreState';
 import { type FlatViewFilter } from '@/metadata-store/types/FlatViewFilter';
 import { currentRecordFilterGroupsComponentState } from '@/object-record/record-filter-group/states/currentRecordFilterGroupsComponentState';
@@ -23,6 +24,7 @@ export const useSaveRecordFiltersAndGroupFiltersToViewFiltersAndGroupFilters =
   () => {
     const { canPersistChanges } = useCanPersistViewChanges();
     const { currentView } = useGetCurrentViewOnly();
+    const { invalidateMetadataStore } = useInvalidateMetadataStore();
 
     const store = useStore();
 
@@ -191,9 +193,11 @@ export const useSaveRecordFiltersAndGroupFiltersToViewFiltersAndGroupFilters =
         if (deleteResult.status === 'failed') {
           return;
         }
+        invalidateMetadataStore();
       }, [
         canPersistChanges,
         currentView,
+        invalidateMetadataStore,
         store,
         currentRecordFilterGroupsCallbackState,
         currentRecordFiltersCallbackState,

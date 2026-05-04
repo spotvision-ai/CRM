@@ -2,6 +2,7 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { usePerformViewGroupAPIPersist } from '@/views/hooks/internal/usePerformViewGroupAPIPersist';
 import { useCanPersistViewChanges } from '@/views/hooks/useCanPersistViewChanges';
@@ -14,6 +15,7 @@ import { isUndefinedOrNull } from '~/utils/isUndefinedOrNull';
 export const useSaveCurrentViewGroups = () => {
   const { canPersistChanges } = useCanPersistViewChanges();
   const { performViewGroupAPIUpdate } = usePerformViewGroupAPIPersist();
+  const { invalidateMetadataStore } = useInvalidateMetadataStore();
 
   const { getViewFromState } = useGetViewFromState();
 
@@ -79,12 +81,14 @@ export const useSaveCurrentViewGroups = () => {
           },
         ],
       });
+      invalidateMetadataStore();
     },
     [
       store,
       canPersistChanges,
       currentViewIdCallbackState,
       getViewFromState,
+      invalidateMetadataStore,
       performViewGroupAPIUpdate,
     ],
   );
@@ -151,12 +155,14 @@ export const useSaveCurrentViewGroups = () => {
       }
 
       await performViewGroupAPIUpdate({ inputs: viewGroupInputsToUpdate });
+      invalidateMetadataStore();
     },
     [
       store,
       canPersistChanges,
       currentViewIdCallbackState,
       getViewFromState,
+      invalidateMetadataStore,
       performViewGroupAPIUpdate,
     ],
   );

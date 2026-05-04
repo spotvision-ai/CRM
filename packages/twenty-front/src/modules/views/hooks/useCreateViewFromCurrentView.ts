@@ -1,4 +1,5 @@
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { currentRecordFilterGroupsComponentState } from '@/object-record/record-filter-group/states/currentRecordFilterGroupsComponentState';
 import { anyFieldFilterValueComponentState } from '@/object-record/record-filter/states/anyFieldFilterValueComponentState';
 import { currentRecordFiltersComponentState } from '@/object-record/record-filter/states/currentRecordFiltersComponentState';
@@ -48,6 +49,7 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
 
   const { performViewFilterGroupAPICreate } =
     usePerformViewFilterGroupAPIPersist();
+  const { invalidateMetadataStore } = useInvalidateMetadataStore();
 
   const store = useStore();
 
@@ -249,10 +251,12 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
         }
       }
 
+      invalidateMetadataStore();
       return newViewId;
     },
     [
       currentViewId,
+      invalidateMetadataStore,
       performViewAPICreate,
       anyFieldFilterValue,
       objectMetadataItem,
