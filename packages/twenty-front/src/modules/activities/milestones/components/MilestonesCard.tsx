@@ -148,19 +148,26 @@ export const MilestonesCard = () => {
 
   const isOpportunity = targetRecord.targetObjectNameSingular === 'opportunity';
 
-  const { records, loading } = useFindManyRecords<OpportunityMilestoneRecord>({
-    objectNameSingular: 'opportunityMilestone',
-    filter: isOpportunity
-      ? {
-          and: [
-            { opportunityId: { eq: targetRecord.id } },
-            { status: { neq: 'DONE' } },
-          ],
-        }
-      : undefined,
-    orderBy: [{ actualEndDate: 'AscNullsLast' }],
-    skip: !isOpportunity,
-  });
+  const { records: rawRecords, loading } =
+    useFindManyRecords<OpportunityMilestoneRecord>({
+      objectNameSingular: 'opportunityMilestone',
+      filter: isOpportunity
+        ? { opportunityId: { eq: targetRecord.id } }
+        : undefined,
+      orderBy: [{ actualEndDate: 'AscNullsLast' }],
+      skip: !isOpportunity,
+    });
+
+  // Hide completed milestones. Filtering client-side because the `status`
+  // enum is workspace-configurable — sending `status: { neq: 'DONE' }`
+  // server-side throws "invalid input value for enum ..." on workspaces
+  // whose enum doesn't include the literal 'DONE' value. Match case-
+  // insensitively against the two common completed labels.
+  const completedStatuses = new Set(['DONE', 'COMPLETED']);
+  const records = rawRecords.filter(
+    (m) =>
+      !isDefined(m.status) || !completedStatuses.has(m.status.toUpperCase()),
+  );
 
   if (!isOpportunity) {
     return (
