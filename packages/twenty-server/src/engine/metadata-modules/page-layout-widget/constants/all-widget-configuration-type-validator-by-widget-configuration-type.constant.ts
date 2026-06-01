@@ -11,6 +11,7 @@ import { FrontComponentConfigurationDTO } from 'src/engine/metadata-modules/page
 import { GaugeChartConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/gauge-chart-configuration.dto';
 import { IframeConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/iframe-configuration.dto';
 import { LineChartConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/line-chart-configuration.dto';
+import { MarkdownConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/markdown-configuration.dto';
 import { MilestonesConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/milestones-configuration.dto';
 import { NotesConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/notes-configuration.dto';
 import { RecordTableConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/record-table-configuration.dto';
@@ -44,6 +45,7 @@ export const ALL_WIDGET_CONFIGURATION_TYPE_VALIDATOR_BY_WIDGET_CONFIGURATION_TYP
     FILES: FilesConfigurationDTO,
     NOTES: NotesConfigurationDTO,
     MILESTONES: MilestonesConfigurationDTO,
+    MARKDOWN: MarkdownConfigurationDTO,
     TASKS: TasksConfigurationDTO,
     TIMELINE: TimelineConfigurationDTO,
     VIEW: ViewConfigurationDTO,

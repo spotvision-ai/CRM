@@ -2336,6 +2336,12 @@ export enum MetadataEventAction {
   UPDATED = 'UPDATED'
 }
 
+export type MarkdownConfiguration = {
+  __typename?: 'MarkdownConfiguration';
+  configurationType: WidgetConfigurationType;
+  markdown?: Maybe<Scalars['String']>;
+};
+
 export type MilestonesConfiguration = {
   __typename?: 'MilestonesConfiguration';
   configurationType: WidgetConfigurationType;
@@ -5867,7 +5873,7 @@ export type Webhook = {
   updatedAt: Scalars['DateTime'];
 };
 
-export type WidgetConfiguration = AggregateChartConfiguration | BarChartConfiguration | CalendarConfiguration | EmailThreadConfiguration | EmailsConfiguration | FieldConfiguration | FieldRichTextConfiguration | FieldsConfiguration | FilesConfiguration | FrontComponentConfiguration | GaugeChartConfiguration | IframeConfiguration | LineChartConfiguration | MilestonesConfiguration | NotesConfiguration | PieChartConfiguration | RecordTableConfiguration | StandaloneRichTextConfiguration | TasksConfiguration | TimelineConfiguration | ViewConfiguration | WorkflowConfiguration | WorkflowRunConfiguration | WorkflowVersionConfiguration;
+export type WidgetConfiguration = AggregateChartConfiguration | BarChartConfiguration | CalendarConfiguration | EmailThreadConfiguration | EmailsConfiguration | FieldConfiguration | FieldRichTextConfiguration | FieldsConfiguration | FilesConfiguration | FrontComponentConfiguration | GaugeChartConfiguration | IframeConfiguration | LineChartConfiguration | MarkdownConfiguration | MilestonesConfiguration | NotesConfiguration | PieChartConfiguration | RecordTableConfiguration | StandaloneRichTextConfiguration | TasksConfiguration | TimelineConfiguration | ViewConfiguration | WorkflowConfiguration | WorkflowRunConfiguration | WorkflowVersionConfiguration;
 
 export enum WidgetConfigurationType {
   AGGREGATE_CHART = 'AGGREGATE_CHART',
@@ -5883,6 +5889,7 @@ export enum WidgetConfigurationType {
   GAUGE_CHART = 'GAUGE_CHART',
   IFRAME = 'IFRAME',
   LINE_CHART = 'LINE_CHART',
+  MARKDOWN = 'MARKDOWN',
   MILESTONES = 'MILESTONES',
   NOTES = 'NOTES',
   PIE_CHART = 'PIE_CHART',
@@ -5907,6 +5914,7 @@ export enum WidgetType {
   FRONT_COMPONENT = 'FRONT_COMPONENT',
   GRAPH = 'GRAPH',
   IFRAME = 'IFRAME',
+  MARKDOWN = 'MARKDOWN',
   MILESTONES = 'MILESTONES',
   NOTES = 'NOTES',
   RECORD_TABLE = 'RECORD_TABLE',

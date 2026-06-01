@@ -12,6 +12,7 @@ import {
   type GaugeChartConfiguration,
   type IframeConfiguration,
   type LineChartConfiguration,
+  type MarkdownConfiguration,
   type MilestonesConfiguration,
   type NotesConfiguration,
   type PieChartConfiguration,
@@ -81,6 +82,9 @@ type WidgetConfigurationTypenameMap = {
   };
   LineChartConfiguration: Omit<LineChartConfiguration, 'configurationType'> & {
     configurationType: WidgetConfigurationType.LINE_CHART;
+  };
+  MarkdownConfiguration: Omit<MarkdownConfiguration, 'configurationType'> & {
+    configurationType: WidgetConfigurationType.MARKDOWN;
   };
   MilestonesConfiguration: Omit<
     MilestonesConfiguration,

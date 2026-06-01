@@ -17,6 +17,8 @@ export const getPageLayoutPageTitle = (page: PageLayoutSidePanelPage) => {
       return t`Fields Settings`;
     case SidePanelPages.RecordPageFieldSettings:
       return t`Field widget`;
+    case SidePanelPages.RecordPageMarkdownSettings:
+      return t`Markdown content`;
     case SidePanelPages.DashboardRecordTableSettings:
       return t`Record Table Settings`;
     case SidePanelPages.PageLayoutRecordPageWidgetTypeSelect:

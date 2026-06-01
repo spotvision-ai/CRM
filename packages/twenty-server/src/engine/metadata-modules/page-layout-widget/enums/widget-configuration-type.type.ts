@@ -29,6 +29,7 @@ export enum WidgetConfigurationType {
   RECORD_TABLE = 'RECORD_TABLE',
   EMAIL_THREAD = 'EMAIL_THREAD',
   MILESTONES = 'MILESTONES',
+  MARKDOWN = 'MARKDOWN',
 }
 export type AllGraphWidgetConfigurationType =
   | WidgetConfigurationType.AGGREGATE_CHART

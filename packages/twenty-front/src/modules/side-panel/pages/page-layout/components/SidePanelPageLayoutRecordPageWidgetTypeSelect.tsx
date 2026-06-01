@@ -31,7 +31,7 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { SidePanelPages } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
-import { IconApps, IconFlag, IconList } from 'twenty-ui/display';
+import { IconApps, IconCode, IconFlag, IconList } from 'twenty-ui/display';
 import { v4 as uuidv4 } from 'uuid';
 import {
   type FrontComponent,
@@ -328,6 +328,71 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
 
   const isOpportunityPageLayout = targetObjectNameSingular === 'opportunity';
 
+  const handleCreateMarkdownWidget = useCallback(() => {
+    const replacePositionIndex = getExistingWidgetPositionIndex();
+    removeExistingWidgetIfReplacing();
+
+    const updatedPageLayout = store.get(pageLayoutDraftState);
+    const activeTab = updatedPageLayout.tabs.find((tab) => tab.id === tabId);
+    const positionIndex =
+      replacePositionIndex ?? activeTab?.widgets.length ?? 0;
+    const widgetId = uuidv4();
+
+    const newWidget: PageLayoutWidget = {
+      __typename: 'PageLayoutWidget',
+      id: widgetId,
+      applicationId: '',
+      isActive: true,
+      pageLayoutTabId: tabId,
+      title: t`Markdown`,
+      type: WidgetType.MARKDOWN,
+      configuration: {
+        __typename: 'MarkdownConfiguration',
+        configurationType: WidgetConfigurationType.MARKDOWN,
+        markdown: null,
+      },
+      gridPosition: {
+        __typename: 'GridPosition',
+        row: 0,
+        column: 0,
+        rowSpan: 1,
+        columnSpan: 12,
+      },
+      position: {
+        __typename: 'PageLayoutWidgetVerticalListPosition',
+        layoutMode: PageLayoutTabLayoutMode.VERTICAL_LIST,
+        index: positionIndex,
+      },
+      objectMetadataId: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    };
+
+    store.set(pageLayoutDraftState, (prev) => ({
+      ...prev,
+      tabs: addWidgetToTab(prev.tabs, tabId, newWidget),
+    }));
+
+    setPageLayoutEditingWidgetId(widgetId);
+    insertCreatedWidgetAtContext(widgetId);
+
+    navigatePageLayoutSidePanel({
+      sidePanelPage: SidePanelPages.RecordPageMarkdownSettings,
+      focusTitleInput: true,
+      resetNavigationStack: true,
+    });
+  }, [
+    getExistingWidgetPositionIndex,
+    insertCreatedWidgetAtContext,
+    navigatePageLayoutSidePanel,
+    pageLayoutDraftState,
+    removeExistingWidgetIfReplacing,
+    setPageLayoutEditingWidgetId,
+    store,
+    tabId,
+  ]);
+
   const handleCreateMilestonesWidget = useCallback(() => {
     const replacePositionIndex = getExistingWidgetPositionIndex();
     removeExistingWidgetIfReplacing();
@@ -391,6 +456,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
   const selectableItemIds = [
     'fields',
     'field',
+    'markdown',
     ...(isOpportunityPageLayout ? ['milestones'] : []),
     ...frontComponentsWithSelectItemId.map(({ selectItemId }) => selectItemId),
   ];
@@ -412,6 +478,17 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
             label={t`Field`}
             id="field"
             onClick={handleCreateFieldWidget}
+          />
+        </SelectableListItem>
+        <SelectableListItem
+          itemId="markdown"
+          onEnter={handleCreateMarkdownWidget}
+        >
+          <CommandMenuItem
+            Icon={IconCode}
+            label={t`Markdown`}
+            id="markdown"
+            onClick={handleCreateMarkdownWidget}
           />
         </SelectableListItem>
         {isOpportunityPageLayout && (

@@ -68,6 +68,9 @@ export class FlatPageLayoutWidgetTypeValidatorService {
       MILESTONES: validateSimpleRecordPageWidgetForCreation(
         WidgetConfigurationType.MILESTONES,
       ),
+      MARKDOWN: validateSimpleRecordPageWidgetForCreation(
+        WidgetConfigurationType.MARKDOWN,
+      ),
       NOTES: validateSimpleRecordPageWidgetForCreation(
         WidgetConfigurationType.NOTES,
       ),
@@ -124,6 +127,9 @@ export class FlatPageLayoutWidgetTypeValidatorService {
       ),
       MILESTONES: validateSimpleRecordPageWidgetForUpdate(
         WidgetConfigurationType.MILESTONES,
+      ),
+      MARKDOWN: validateSimpleRecordPageWidgetForUpdate(
+        WidgetConfigurationType.MARKDOWN,
       ),
       NOTES: validateSimpleRecordPageWidgetForUpdate(
         WidgetConfigurationType.NOTES,

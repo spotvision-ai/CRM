@@ -143,6 +143,11 @@ export type MilestonesConfiguration = {
   configurationType: 'MILESTONES';
 };
 
+export type MarkdownConfiguration = {
+  configurationType: 'MARKDOWN';
+  markdown?: string | null;
+};
+
 export type NotesConfiguration = {
   configurationType: 'NOTES';
 };
@@ -192,6 +197,7 @@ export type PageLayoutWidgetConfiguration =
   | TimelineConfiguration
   | TasksConfiguration
   | MilestonesConfiguration
+  | MarkdownConfiguration
   | NotesConfiguration
   | FilesConfiguration
   | EmailsConfiguration

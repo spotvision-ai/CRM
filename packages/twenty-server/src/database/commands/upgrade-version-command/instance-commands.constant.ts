@@ -47,6 +47,7 @@ import { AddSubFieldNameToViewSortFastInstanceCommand } from 'src/database/comma
 import { DropPostgresCredentialsTableFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1798500000000-drop-postgres-credentials-table';
 import { AddRelationTargetFieldMetadataIdToViewFilterFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-6/2-6-instance-command-fast-1798000005000-add-relation-target-field-metadata-id-to-view-filter';
 import { AddMilestonesToPageLayoutWidgetTypeEnumFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1779456242589-addMilestonesToPageLayoutWidgetTypeEnum';
+import { AddMarkdownToPageLayoutWidgetTypeEnumFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1779999999999-addMarkdownToPageLayoutWidgetTypeEnum';
 
 export const INSTANCE_COMMANDS = [
   AddViewFieldGroupIdIndexOnViewFieldFastInstanceCommand,
@@ -96,4 +97,5 @@ export const INSTANCE_COMMANDS = [
   DropPostgresCredentialsTableFastInstanceCommand,
   AddRelationTargetFieldMetadataIdToViewFilterFastInstanceCommand,
   AddMilestonesToPageLayoutWidgetTypeEnumFastInstanceCommand,
+  AddMarkdownToPageLayoutWidgetTypeEnumFastInstanceCommand,
 ];

@@ -4,6 +4,7 @@ import { assertUnreachable } from 'twenty-shared/utils';
 import {
   IconAppWindow,
   IconChartPie,
+  IconCode,
   IconFrame,
   IconList,
   IconPlus,
@@ -24,6 +25,8 @@ export const getPageLayoutIcon = (page: PageLayoutSidePanelPage) => {
       return IconList;
     case SidePanelPages.RecordPageFieldSettings:
       return IconList;
+    case SidePanelPages.RecordPageMarkdownSettings:
+      return IconCode;
     case SidePanelPages.DashboardRecordTableSettings:
       return IconTable;
     case SidePanelPages.PageLayoutRecordPageWidgetTypeSelect:

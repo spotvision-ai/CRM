@@ -188,6 +188,7 @@ export type {
   TimelineConfiguration,
   TasksConfiguration,
   MilestonesConfiguration,
+  MarkdownConfiguration,
   NotesConfiguration,
   FilesConfiguration,
   EmailsConfiguration,

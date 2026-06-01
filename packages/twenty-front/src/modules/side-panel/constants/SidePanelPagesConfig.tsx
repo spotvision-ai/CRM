@@ -12,6 +12,7 @@ import { SidePanelDashboardIframeSettings } from '@/side-panel/pages/page-layout
 import { SidePanelDashboardRecordTableSettings } from '@/side-panel/pages/page-layout/components/dashboard/SidePanelDashboardRecordTableSettings';
 import { SidePanelRecordPageFieldSettings } from '@/side-panel/pages/page-layout/components/record-page/SidePanelRecordPageFieldSettings';
 import { SidePanelRecordPageFieldsSettings } from '@/side-panel/pages/page-layout/components/record-page/SidePanelRecordPageFieldsSettings';
+import { SidePanelRecordPageMarkdownSettings } from '@/side-panel/pages/page-layout/components/record-page/SidePanelRecordPageMarkdownSettings';
 import { SidePanelPageLayoutDashboardWidgetTypeSelect } from '@/side-panel/pages/page-layout/components/SidePanelPageLayoutDashboardWidgetTypeSelect';
 import { SidePanelPageLayoutRecordPageWidgetTypeSelect } from '@/side-panel/pages/page-layout/components/SidePanelPageLayoutRecordPageWidgetTypeSelect';
 import { SidePanelPageLayoutTabSettings } from '@/side-panel/pages/page-layout/components/SidePanelPageLayoutTabSettings';
@@ -75,6 +76,10 @@ export const SIDE_PANEL_PAGES_CONFIG = new Map<SidePanelPages, React.ReactNode>(
     [
       SidePanelPages.RecordPageFieldSettings,
       <SidePanelRecordPageFieldSettings />,
+    ],
+    [
+      SidePanelPages.RecordPageMarkdownSettings,
+      <SidePanelRecordPageMarkdownSettings />,
     ],
     [SidePanelPages.ViewFrontComponent, <SidePanelFrontComponentPage />],
     [

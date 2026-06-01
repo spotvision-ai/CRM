@@ -108,6 +108,18 @@ export const useOpenWidgetSettingsInSidePanel = (
         return;
       }
 
+      if (widgetType === WidgetType.MARKDOWN) {
+        if (!isDashboardPageLayout) {
+          navigatePageLayoutSidePanel({
+            sidePanelPage: SidePanelPages.RecordPageMarkdownSettings,
+            pageTitle: t`Markdown content`,
+            resetNavigationStack: true,
+          });
+          setPageLayoutEditingWidgetId(widgetId);
+        }
+        return;
+      }
+
       if (widgetType === WidgetType.RECORD_TABLE) {
         if (!isDashboardPageLayout) {
           return;

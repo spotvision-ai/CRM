@@ -4,6 +4,7 @@ import { AggregateChartConfigurationDTO } from 'src/engine/metadata-modules/page
 import { BarChartConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/bar-chart-configuration.dto';
 import { FieldConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/field-configuration.dto';
 import { FrontComponentConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/front-component-configuration.dto';
+import { MarkdownConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/markdown-configuration.dto';
 import { MilestonesConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/milestones-configuration.dto';
 import { GaugeChartConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/gauge-chart-configuration.dto';
 import { IframeConfigurationDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/iframe-configuration.dto';
@@ -158,6 +159,12 @@ export const validateWidgetConfigurationInput = ({
     case WidgetConfigurationType.MILESTONES:
       errors = validateWidgetConfigurationByDto(
         MilestonesConfigurationDTO,
+        configuration,
+      );
+      break;
+    case WidgetConfigurationType.MARKDOWN:
+      errors = validateWidgetConfigurationByDto(
+        MarkdownConfigurationDTO,
         configuration,
       );
       break;

@@ -9,6 +9,7 @@ import { SidePanelPages } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import {
   IconAppWindow,
+  IconCode,
   IconFrame,
   IconList,
   IconPlus,
@@ -217,6 +218,38 @@ export const usePageLayoutHeaderInfo = ({
         headerIcon: IconList,
         headerIconColor: iconColor,
         headerType: t`Field Widget`,
+        title,
+        isReadonly: false,
+        tab: undefined,
+        widgetInEditMode,
+        isIconEditable: false,
+        selectedIconKey: null,
+      };
+    }
+
+    case SidePanelPages.RecordPageMarkdownSettings: {
+      if (!isDefined(pageLayoutEditingWidgetId)) {
+        return null;
+      }
+
+      const widgetInEditMode = draftPageLayout.tabs
+        .flatMap((tab) => tab.widgets)
+        .find((widget) => widget.id === pageLayoutEditingWidgetId);
+
+      if (!isDefined(widgetInEditMode)) {
+        return null;
+      }
+
+      const title = isDefined(editedTitle)
+        ? editedTitle
+        : isDefined(widgetInEditMode.title) && widgetInEditMode.title !== ''
+          ? widgetInEditMode.title
+          : '';
+
+      return {
+        headerIcon: IconCode,
+        headerIconColor: iconColor,
+        headerType: t`Markdown Widget`,
         title,
         isReadonly: false,
         tab: undefined,

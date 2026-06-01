@@ -8,4 +8,5 @@ export type PageLayoutSidePanelPage =
   | SidePanelPages.DashboardRecordTableSettings
   | SidePanelPages.RecordPageFieldsSettings
   | SidePanelPages.RecordPageFieldSettings
+  | SidePanelPages.RecordPageMarkdownSettings
   | SidePanelPages.PageLayoutRecordPageWidgetTypeSelect;

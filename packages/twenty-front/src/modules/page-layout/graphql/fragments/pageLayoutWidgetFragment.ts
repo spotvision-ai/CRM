@@ -190,6 +190,10 @@ export const PAGE_LAYOUT_WIDGET_FRAGMENT = gql`
       ... on MilestonesConfiguration {
         configurationType
       }
+      ... on MarkdownConfiguration {
+        configurationType
+        markdown
+      }
       ... on TimelineConfiguration {
         configurationType
       }
