@@ -2,7 +2,7 @@ import { styled } from '@linaria/react';
 import { Temporal } from 'temporal-polyfill';
 import { type ThemeColor } from 'twenty-ui/theme';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
-import { IconLock } from 'twenty-ui/display';
+import { IconLock } from 'twenty-ui/icon';
 
 import {
   ROADMAP_BAR_HEIGHT,

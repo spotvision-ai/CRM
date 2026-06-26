@@ -33,7 +33,11 @@ describe('computeCursorArgFilter', () => {
       roadmapEndViewIds: [],
       roadmapGroupViewIds: [],
       roadmapColorViewIds: [],
-      roadmapLabelViewIds: [],      roadmapPlannedStartViewIds: [],      roadmapPlannedEndViewIds: [],      roadmapStatusViewIds: [],      roadmapBlockedByViewIds: [],
+      roadmapLabelViewIds: [],
+      roadmapPlannedStartViewIds: [],
+      roadmapPlannedEndViewIds: [],
+      roadmapStatusViewIds: [],
+      roadmapBlockedByViewIds: [],
       applicationId: null,
       label: overrides.name,
       ...overrides,
@@ -96,7 +100,6 @@ describe('computeCursorArgFilter', () => {
     labelSingular: 'Person',
     labelPlural: 'People',
     targetTableName: 'person',
-    isCustom: false,
     isRemote: false,
     isActive: true,
     isSystem: false,
@@ -253,6 +256,51 @@ describe('computeCursorArgFilter', () => {
           fullName: {
             firstName: { gt: 'John' },
           },
+        },
+      ]);
+    });
+
+    it('should handle dotted composite cursor keys', () => {
+      const cursor = {
+        'fullName.firstName': 'John',
+        'fullName.lastName': 'Doe',
+      } as any;
+      const orderBy = [
+        {
+          fullName: {
+            firstName: OrderByDirection.AscNullsLast,
+            lastName: OrderByDirection.AscNullsLast,
+          },
+        },
+      ];
+
+      const result = computeCursorArgFilter(
+        cursor,
+        orderBy,
+        flatObjectMetadata,
+        flatFieldMetadataMaps,
+        true,
+      );
+
+      expect(result).toEqual([
+        {
+          fullName: {
+            firstName: { gt: 'John' },
+          },
+        },
+        {
+          and: [
+            {
+              fullName: {
+                firstName: { eq: 'John' },
+              },
+            },
+            {
+              fullName: {
+                lastName: { gt: 'Doe' },
+              },
+            },
+          ],
         },
       ]);
     });

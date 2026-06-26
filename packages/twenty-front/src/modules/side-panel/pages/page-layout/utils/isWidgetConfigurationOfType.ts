@@ -9,7 +9,6 @@ import {
   type FieldsConfiguration,
   type FilesConfiguration,
   type FrontComponentConfiguration,
-  type GaugeChartConfiguration,
   type IframeConfiguration,
   type LineChartConfiguration,
   type MarkdownConfiguration,
@@ -70,12 +69,6 @@ type WidgetConfigurationTypenameMap = {
   };
   FilesConfiguration: Omit<FilesConfiguration, 'configurationType'> & {
     configurationType: WidgetConfigurationType.FILES;
-  };
-  GaugeChartConfiguration: Omit<
-    GaugeChartConfiguration,
-    'configurationType'
-  > & {
-    configurationType: WidgetConfigurationType.GAUGE_CHART;
   };
   IframeConfiguration: Omit<IframeConfiguration, 'configurationType'> & {
     configurationType: WidgetConfigurationType.IFRAME;

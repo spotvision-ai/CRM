@@ -1,4 +1,10 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  HideField,
+  Int,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
 
 import { IDField } from '@ptc-org/nestjs-query-graphql';
 import {
@@ -13,6 +19,7 @@ import {
 
 import { UUIDScalarType } from 'src/engine/api/graphql/workspace-schema-builder/graphql-types/scalars';
 import { ViewFieldGroupDTO } from 'src/engine/metadata-modules/view-field-group/dtos/view-field-group.dto';
+import { type ViewOverrides } from 'src/engine/metadata-modules/view/entities/view.entity';
 import { ViewFieldDTO } from 'src/engine/metadata-modules/view-field/dtos/view-field.dto';
 import { ViewFilterGroupDTO } from 'src/engine/metadata-modules/view-filter-group/dtos/view-filter-group.dto';
 import { ViewFilterDTO } from 'src/engine/metadata-modules/view-filter/dtos/view-filter.dto';
@@ -72,6 +79,9 @@ export class ViewDTO {
 
   @Field({ nullable: false, defaultValue: false })
   shouldHideEmptyGroups: boolean;
+
+  @Field(() => Int, { nullable: true })
+  kanbanColumnWidth?: number | null;
 
   @Field(() => UUIDScalarType, { nullable: true })
   calendarFieldMetadataId?: string | null;
@@ -158,4 +168,10 @@ export class ViewDTO {
 
   @Field(() => UUIDScalarType, { nullable: true })
   createdByUserWorkspaceId?: string | null;
+
+  @Field(() => Boolean, { nullable: false })
+  isActive: boolean;
+
+  @HideField()
+  overrides?: ViewOverrides | null;
 }

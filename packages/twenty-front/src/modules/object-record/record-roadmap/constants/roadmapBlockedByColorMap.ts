@@ -12,9 +12,9 @@ export const ROADMAP_BLOCKED_BY_COLOR_MAP: Record<string, ThemeColor | null> = {
   EXTERNAL_VENDOR: 'purple',
 };
 
-export const getRoadmapBlockedByColor = (
+export function getRoadmapBlockedByColor(
   blockedBy: string | null | undefined,
-): ThemeColor | null => {
+): ThemeColor | null {
   if (blockedBy === null || blockedBy === undefined) return null;
   return ROADMAP_BLOCKED_BY_COLOR_MAP[blockedBy] ?? null;
-};
+}

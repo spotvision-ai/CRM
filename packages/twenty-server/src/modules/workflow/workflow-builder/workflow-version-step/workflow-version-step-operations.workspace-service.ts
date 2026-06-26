@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { inputSchemaToOutputSchema } from 'twenty-shared/logic-function';
 import {
   FieldMetadataType,
   StepLogicalOperator,
@@ -11,6 +12,7 @@ import {
   IF_ELSE_BRANCH_POSITION_OFFSETS,
   getFunctionInputFromInputSchema,
   type StepIfElseBranch,
+  WorkflowActionType,
 } from 'twenty-shared/workflow';
 import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
@@ -21,11 +23,17 @@ import { AiAgentRoleService } from 'src/engine/metadata-modules/ai/ai-agent-role
 import { AgentService } from 'src/engine/metadata-modules/ai/ai-agent/agent.service';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { LogicFunctionFromSourceService } from 'src/engine/metadata-modules/logic-function/services/logic-function-from-source.service';
+import {
+  LogicFunctionException,
+  LogicFunctionExceptionCode,
+} from 'src/engine/metadata-modules/logic-function/logic-function.exception';
 import { findFlatLogicFunctionOrThrow } from 'src/engine/metadata-modules/logic-function/utils/find-flat-logic-function-or-throw.util';
 import { ObjectMetadataEntity } from 'src/engine/metadata-modules/object-metadata/object-metadata.entity';
 import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-target.entity';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
+import { InjectWorkspaceScopedRepository } from 'src/engine/twenty-orm/workspace-scoped-repository/inject-workspace-scoped-repository.decorator';
+import { WorkspaceScopedRepository } from 'src/engine/twenty-orm/workspace-scoped-repository/workspace-scoped-repository';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
 import {
   WorkflowVersionStepException,
@@ -33,10 +41,10 @@ import {
 } from 'src/modules/workflow/common/exceptions/workflow-version-step.exception';
 import { type WorkflowVersionWorkspaceEntity } from 'src/modules/workflow/common/standard-objects/workflow-version.workspace-entity';
 import { WorkflowCommonWorkspaceService } from 'src/modules/workflow/common/workspace-services/workflow-common.workspace-service';
+import { type OutputSchema } from 'src/modules/workflow/workflow-builder/workflow-schema/types/output-schema.type';
 import { CodeStepBuildService } from 'src/modules/workflow/workflow-builder/workflow-version-step/code-step/services/code-step-build.service';
 import { type BaseWorkflowActionSettings } from 'src/modules/workflow/workflow-executor/workflow-actions/types/workflow-action-settings.type';
 import {
-  WorkflowActionType,
   type WorkflowAction,
   type WorkflowEmptyAction,
   type WorkflowFormAction,
@@ -68,8 +76,8 @@ export class WorkflowVersionStepOperationsWorkspaceService {
     private readonly logicFunctionFromSourceService: LogicFunctionFromSourceService,
     private readonly codeStepBuildService: CodeStepBuildService,
     private readonly agentService: AgentService,
-    @InjectRepository(RoleTargetEntity)
-    private readonly roleTargetRepository: Repository<RoleTargetEntity>,
+    @InjectWorkspaceScopedRepository(RoleTargetEntity)
+    private readonly roleTargetRepository: WorkspaceScopedRepository<RoleTargetEntity>,
     @InjectRepository(ObjectMetadataEntity)
     private readonly objectMetadataRepository: Repository<ObjectMetadataEntity>,
     private readonly workflowCommonWorkspaceService: WorkflowCommonWorkspaceService,
@@ -87,10 +95,25 @@ export class WorkflowVersionStepOperationsWorkspaceService {
   }) {
     switch (step.type) {
       case WorkflowActionType.CODE: {
-        await this.logicFunctionFromSourceService.deleteOneWithSource({
-          id: step.settings.input.logicFunctionId,
-          workspaceId,
-        });
+        if (!isValidUuid(step.settings.input.logicFunctionId)) {
+          break;
+        }
+
+        await this.logicFunctionFromSourceService
+          .deleteOneWithSource({
+            id: step.settings.input.logicFunctionId,
+            workspaceId,
+          })
+          .catch((error) => {
+            if (
+              error instanceof LogicFunctionException &&
+              error.code === LogicFunctionExceptionCode.LOGIC_FUNCTION_NOT_FOUND
+            ) {
+              return;
+            }
+
+            throw error;
+          });
         break;
       }
       case WorkflowActionType.AI_AGENT: {
@@ -98,12 +121,14 @@ export class WorkflowVersionStepOperationsWorkspaceService {
           break;
         }
 
-        const roleTarget = await this.roleTargetRepository.findOne({
-          where: {
-            agentId: step.settings.input.agentId,
-            workspaceId,
+        const roleTarget = await this.roleTargetRepository.findOne(
+          workspaceId,
+          {
+            where: {
+              agentId: step.settings.input.agentId,
+            },
           },
-        });
+        );
 
         await this.agentService.deleteManyAgents({
           ids: [step.settings.input.agentId],
@@ -180,6 +205,7 @@ export class WorkflowVersionStepOperationsWorkspaceService {
                 },
                 _outputSchemaType: 'LINK',
               },
+              expectedOutputSchema: {},
               input: {
                 logicFunctionId: newLogicFunction.id,
                 logicFunctionInput: isDefined(
@@ -220,6 +246,23 @@ export class WorkflowVersionStepOperationsWorkspaceService {
           flatLogicFunctionMaps,
         });
 
+        const declaredOutputSchema =
+          flatLogicFunction.workflowActionTriggerSettings?.outputSchema;
+
+        const initialOutputSchema: OutputSchema = isDefined(
+          declaredOutputSchema,
+        )
+          ? inputSchemaToOutputSchema(declaredOutputSchema)
+          : {
+              link: {
+                isLeaf: true,
+                icon: 'IconVariable',
+                tab: 'test',
+                label: 'Generate Function Output',
+              },
+              _outputSchemaType: 'LINK',
+            };
+
         return {
           builtStep: {
             ...baseStep,
@@ -229,15 +272,8 @@ export class WorkflowVersionStepOperationsWorkspaceService {
             type: WorkflowActionType.LOGIC_FUNCTION,
             settings: {
               ...BASE_STEP_DEFINITION,
-              outputSchema: {
-                link: {
-                  isLeaf: true,
-                  icon: 'IconVariable',
-                  tab: 'test',
-                  label: 'Generate Function Output',
-                },
-                _outputSchemaType: 'LINK',
-              },
+              outputSchema: initialOutputSchema,
+              expectedOutputSchema: {},
               input: {
                 logicFunctionId,
                 logicFunctionInput: isDefined(
@@ -400,6 +436,29 @@ export class WorkflowVersionStepOperationsWorkspaceService {
               input: {
                 objectName: activeObjectMetadataItem?.nameSingular || '',
                 limit: 1,
+                offset: 0,
+              },
+            },
+          },
+        };
+      }
+      case WorkflowActionType.PICK_RECORD: {
+        const activeObjectMetadataItem =
+          await this.objectMetadataRepository.findOne({
+            where: { workspaceId, isActive: true, isSystem: false },
+          });
+
+        return {
+          builtStep: {
+            ...baseStep,
+            name: 'Pick Record',
+            type: WorkflowActionType.PICK_RECORD,
+            settings: {
+              ...BASE_STEP_DEFINITION,
+              input: {
+                objectName: activeObjectMetadataItem?.nameSingular || '',
+                strategy: 'RANDOM',
+                recordIds: [],
               },
             },
           },
@@ -442,6 +501,7 @@ export class WorkflowVersionStepOperationsWorkspaceService {
             type: WorkflowActionType.HTTP_REQUEST,
             settings: {
               ...BASE_STEP_DEFINITION,
+              expectedOutputSchema: {},
               input: {
                 url: '',
                 method: 'GET',

@@ -9,7 +9,7 @@ import {
   IconList,
   IconPlus,
   IconTable,
-} from 'twenty-ui/display';
+} from 'twenty-ui/icon';
 
 export const getPageLayoutIcon = (page: PageLayoutSidePanelPage) => {
   switch (page) {

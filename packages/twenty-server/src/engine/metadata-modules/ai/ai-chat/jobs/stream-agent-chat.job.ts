@@ -7,8 +7,12 @@ import type {
   ExtendedUIMessage,
   ExtendedUIMessagePart,
 } from 'twenty-shared/ai';
+import { isNonEmptyString } from '@sniptt/guards';
 import { Repository } from 'typeorm';
+import { isDefined } from 'twenty-shared/utils';
 
+import { InjectWorkspaceScopedRepository } from 'src/engine/twenty-orm/workspace-scoped-repository/inject-workspace-scoped-repository.decorator';
+import { WorkspaceScopedRepository } from 'src/engine/twenty-orm/workspace-scoped-repository/workspace-scoped-repository';
 import { Process } from 'src/engine/core-modules/message-queue/decorators/process.decorator';
 import { Processor } from 'src/engine/core-modules/message-queue/decorators/processor.decorator';
 import { MessageQueue } from 'src/engine/core-modules/message-queue/message-queue.constants';
@@ -37,8 +41,8 @@ export class StreamAgentChatJob {
   private readonly logger = new Logger(StreamAgentChatJob.name);
 
   constructor(
-    @InjectRepository(AgentChatThreadEntity)
-    private readonly threadRepository: Repository<AgentChatThreadEntity>,
+    @InjectWorkspaceScopedRepository(AgentChatThreadEntity)
+    private readonly threadRepository: WorkspaceScopedRepository<AgentChatThreadEntity>,
     @InjectRepository(WorkspaceEntity)
     private readonly workspaceRepository: Repository<WorkspaceEntity>,
     private readonly agentChatService: AgentChatService,
@@ -100,14 +104,11 @@ export class StreamAgentChatJob {
     } finally {
       await this.cancelSubscriberService.unsubscribe(cancelChannel);
       await this.threadRepository
-        .createQueryBuilder()
-        .update(AgentChatThreadEntity)
-        .set({ activeStreamId: null })
-        .where('id = :id AND "activeStreamId" = :streamId', {
-          id: data.threadId,
-          streamId: data.streamId,
-        })
-        .execute()
+        .update(
+          data.workspaceId,
+          { id: data.threadId, activeStreamId: data.streamId },
+          { activeStreamId: null },
+        )
         .catch(() => {});
 
       if (!abortController.signal.aborted) {
@@ -229,6 +230,7 @@ export class StreamAgentChatJob {
             await this.chatExecutionService.streamChat({
               workspace,
               userWorkspaceId: data.userWorkspaceId,
+              threadId: data.threadId,
               messages: data.messages,
               browsingContext: data.browsingContext,
               modelId: data.modelId,
@@ -275,12 +277,16 @@ export class StreamAgentChatJob {
                   },
                 });
               },
-              onFinish: async ({ responseMessage }) => {
+              onFinish: async ({ responseMessage, isAborted }) => {
                 try {
                   await this.handleStreamFinish({
                     responseMessage,
+                    isAborted,
+                    streamError,
+                    outOfCredits: checkHasNoMoreAvailableCredits(),
                     threadId: data.threadId,
                     workspaceId: data.workspaceId,
+                    userWorkspaceId: data.userWorkspaceId,
                     streamUsage,
                     lastStepConversationSize,
                     totalCacheCreationTokens,
@@ -353,7 +359,6 @@ export class StreamAgentChatJob {
       type: string;
       usage?: {
         inputTokens?: number;
-        inputTokenDetails?: { cacheReadTokens?: number };
       };
       totalUsage?: {
         inputTokens?: number;
@@ -378,13 +383,12 @@ export class StreamAgentChatJob {
   }) {
     if (part.type === 'finish-step') {
       const stepInput = part.usage?.inputTokens ?? 0;
-      const stepCached = part.usage?.inputTokenDetails?.cacheReadTokens ?? 0;
       const stepCacheCreation = extractCacheCreationTokens(
         part.providerMetadata,
       );
 
       onUpdateCacheCreationTokens(totalCacheCreationTokens + stepCacheCreation);
-      onUpdateConversationSize(stepInput + stepCached + stepCacheCreation);
+      onUpdateConversationSize(stepInput);
     }
 
     if (part.type === 'finish') {
@@ -432,8 +436,12 @@ export class StreamAgentChatJob {
 
   private async handleStreamFinish({
     responseMessage,
+    isAborted,
+    streamError,
+    outOfCredits,
     threadId,
     workspaceId,
+    userWorkspaceId,
     streamUsage,
     lastStepConversationSize,
     totalCacheCreationTokens,
@@ -441,8 +449,12 @@ export class StreamAgentChatJob {
     userMessagePromise,
   }: {
     responseMessage: Omit<ExtendedUIMessage, 'id'>;
+    isAborted: boolean;
+    streamError: unknown;
+    outOfCredits: boolean;
     threadId: string;
     workspaceId: string;
+    userWorkspaceId: string;
     streamUsage: {
       inputTokens: number;
       outputTokens: number;
@@ -455,11 +467,28 @@ export class StreamAgentChatJob {
     modelConfig: AiModelConfig;
     userMessagePromise: Promise<{ turnId: string | null }>;
   }): Promise<void> {
+    const hasText = responseMessage.parts.some(
+      (part) => part.type === 'text' && isNonEmptyString(part.text),
+    );
+
+    if (isAborted || !hasText) {
+      this.logAssistantTurnWithoutText({
+        responseMessage,
+        isAborted,
+        streamError,
+        outOfCredits,
+        hasText,
+        threadId,
+        workspaceId,
+        streamUsage,
+      });
+    }
+
     if (responseMessage.parts.length === 0) {
       return;
     }
 
-    const threadStatus = await this.threadRepository.findOne({
+    const threadStatus = await this.threadRepository.findOne(workspaceId, {
       where: { id: threadId },
       select: ['id', 'deletedAt'],
     });
@@ -477,20 +506,84 @@ export class StreamAgentChatJob {
       workspaceId,
     });
 
-    await this.threadRepository.update(threadId, {
-      totalInputTokens: () => `"totalInputTokens" + ${streamUsage.inputTokens}`,
-      totalOutputTokens: () =>
-        `"totalOutputTokens" + ${streamUsage.outputTokens}`,
-      totalInputCredits: () =>
-        `"totalInputCredits" + ${streamUsage.inputCredits}`,
-      totalOutputCredits: () =>
-        `"totalOutputCredits" + ${streamUsage.outputCredits}`,
-      totalCacheReadTokens: () =>
-        `"totalCacheReadTokens" + ${streamUsage.cacheReadTokens}`,
-      totalCacheCreationTokens: () =>
-        `"totalCacheCreationTokens" + ${totalCacheCreationTokens}`,
-      contextWindowTokens: modelConfig.contextWindowTokens,
-      conversationSize: lastStepConversationSize,
+    await this.threadRepository.update(
+      workspaceId,
+      { id: threadId },
+      {
+        totalInputTokens: () =>
+          `"totalInputTokens" + ${streamUsage.inputTokens}`,
+        totalOutputTokens: () =>
+          `"totalOutputTokens" + ${streamUsage.outputTokens}`,
+        totalInputCredits: () =>
+          `"totalInputCredits" + ${streamUsage.inputCredits}`,
+        totalOutputCredits: () =>
+          `"totalOutputCredits" + ${streamUsage.outputCredits}`,
+        totalCacheReadTokens: () =>
+          `"totalCacheReadTokens" + ${streamUsage.cacheReadTokens}`,
+        totalCacheCreationTokens: () =>
+          `"totalCacheCreationTokens" + ${totalCacheCreationTokens}`,
+        contextWindowTokens: modelConfig.contextWindowTokens,
+        conversationSize: lastStepConversationSize,
+      },
+    );
+
+    await this.agentChatService.notifyThreadUsageUpdated({
+      threadId,
+      userWorkspaceId,
+      workspaceId,
     });
+  }
+
+  private logAssistantTurnWithoutText({
+    responseMessage,
+    isAborted,
+    streamError,
+    outOfCredits,
+    hasText,
+    threadId,
+    workspaceId,
+    streamUsage,
+  }: {
+    responseMessage: Omit<ExtendedUIMessage, 'id'>;
+    isAborted: boolean;
+    streamError: unknown;
+    outOfCredits: boolean;
+    hasText: boolean;
+    threadId: string;
+    workspaceId: string;
+    streamUsage: {
+      inputTokens: number;
+      outputTokens: number;
+    };
+  }): void {
+    const reason = isAborted
+      ? 'user-cancelled'
+      : streamError
+        ? 'stream-error'
+        : outOfCredits
+          ? 'credits-exhausted'
+          : 'empty-completion';
+
+    const errorDetail =
+      streamError instanceof Error
+        ? `${streamError.name}: ${streamError.message}`
+        : isDefined(streamError)
+          ? String(streamError)
+          : 'none';
+
+    this.logger.warn(
+      `[AI_CHAT_NO_TEXT] Assistant turn ended without a text reply — ` +
+        `reason=${reason}, threadId=${threadId}, workspaceId=${workspaceId}, ` +
+        `isAborted=${isAborted}, outOfCredits=${outOfCredits}, hasText=${hasText}, ` +
+        `streamError=${errorDetail}, ` +
+        `inputTokens=${streamUsage.inputTokens},` +
+        `responseMessage.parts=${JSON.stringify(responseMessage.parts)}`,
+    );
+
+    if (streamError instanceof Error && isDefined(streamError.stack)) {
+      this.logger.warn(
+        `[AI_CHAT_NO_TEXT] streamError stack — threadId=${threadId}: ${streamError.stack}`,
+      );
+    }
   }
 }

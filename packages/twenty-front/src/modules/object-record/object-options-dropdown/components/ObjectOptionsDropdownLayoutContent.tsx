@@ -17,7 +17,11 @@ import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/use
 import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
 import { useUpdateCurrentView } from '@/views/hooks/useUpdateCurrentView';
 import { type GraphQLView } from '@/views/types/GraphQLView';
-import { ViewType, viewTypeIconMapping } from '@/views/types/ViewType';
+import {
+  getViewTypeLabel,
+  ViewType,
+  viewTypeIconMapping,
+} from '@/views/types/ViewType';
 import { useGetAvailableFieldsForCalendar } from '@/views/view-picker/hooks/useGetAvailableFieldsForCalendar';
 import { useGetAvailableFieldsForRoadmap } from '@/views/view-picker/hooks/useGetAvailableFieldsForRoadmap';
 import { useGetAvailableFieldsToGroupRecordsBy } from '@/views/view-picker/hooks/useGetAvailableFieldsToGroupRecordsBy';
@@ -37,8 +41,8 @@ import {
   IconLayoutSidebarRight,
   IconColorSwatch,
   IconTable,
-  OverflowingTextWithTooltip,
-} from 'twenty-ui/display';
+} from 'twenty-ui/icon';
+import { OverflowingTextWithTooltip } from 'twenty-ui/surfaces';
 import { MenuItem, MenuItemSelect, MenuItemToggle } from 'twenty-ui/navigation';
 import {
   ViewCalendarLayout,
@@ -245,7 +249,7 @@ export const ObjectOptionsDropdownLayoutContent = () => {
             >
               <MenuItemSelect
                 LeftIcon={IconTable}
-                text={t`Table`}
+                text={t(getViewTypeLabel(ViewType.TABLE))}
                 selected={currentView?.type === ViewType.TABLE}
                 focused={selectedItemId === ViewType.TABLE}
                 onClick={async () => {
@@ -263,7 +267,7 @@ export const ObjectOptionsDropdownLayoutContent = () => {
             >
               <MenuItemSelect
                 LeftIcon={viewTypeIconMapping(ViewType.CALENDAR)}
-                text={t`Calendar`}
+                text={t(getViewTypeLabel(ViewType.CALENDAR))}
                 selected={currentView?.type === ViewType.CALENDAR}
                 focused={selectedItemId === ViewType.CALENDAR}
                 onClick={handleSelectCalendarViewType}
@@ -277,7 +281,7 @@ export const ObjectOptionsDropdownLayoutContent = () => {
             >
               <MenuItemSelect
                 LeftIcon={viewTypeIconMapping(ViewType.KANBAN)}
-                text={t`Kanban`}
+                text={t(getViewTypeLabel(ViewType.KANBAN))}
                 disabled={isDefaultView}
                 focused={selectedItemId === ViewType.KANBAN}
                 contextualText={

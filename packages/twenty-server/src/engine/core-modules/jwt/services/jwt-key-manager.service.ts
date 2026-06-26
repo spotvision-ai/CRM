@@ -13,6 +13,8 @@ import {
   JwtKeyManagerException,
   JwtKeyManagerExceptionCode,
 } from 'src/engine/core-modules/jwt/jwt-key-manager.exception';
+import { type EncryptedString } from 'src/engine/core-modules/secret-encryption/branded-strings/encrypted-string.type';
+import { type PlaintextString } from 'src/engine/core-modules/secret-encryption/branded-strings/plaintext-string.type';
 import { SecretEncryptionService } from 'src/engine/core-modules/secret-encryption/secret-encryption.service';
 
 export type CurrentSigningKey = {
@@ -52,14 +54,12 @@ export class JwtKeyManagerService {
       const result = await this.currentSigningKeyPromise;
 
       if (!isDefined(result)) {
-        this.currentSigningKeyPromise = null;
-        this.currentSigningKeyCachedAt = 0;
+        this.invalidateCurrentSigningKeyLocalCache();
       }
 
       return result;
     } catch (error) {
-      this.currentSigningKeyPromise = null;
-      this.currentSigningKeyCachedAt = 0;
+      this.invalidateCurrentSigningKeyLocalCache();
       throw error;
     }
   }
@@ -76,6 +76,37 @@ export class JwtKeyManagerService {
     return this.signingKeyRepository.find({
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async rotateCurrent(): Promise<CurrentSigningKey> {
+    const generated = this.generateEcP256KeyPair();
+    const newId = randomUUID();
+
+    await this.signingKeyRepository.manager.transaction(
+      async (entityManager) => {
+        const repository = entityManager.getRepository(SigningKeyEntity);
+
+        await repository.update(
+          { isCurrent: true },
+          { isCurrent: false, privateKey: null },
+        );
+
+        await repository.insert({
+          id: newId,
+          publicKey: generated.publicKeyPem,
+          privateKey: this.secretEncryptionService.encryptVersioned(
+            generated.privateKeyPem,
+          ),
+          isCurrent: true,
+          revokedAt: null,
+        });
+      },
+    );
+
+    await this.coreEntityCacheService.invalidate('signingKeyPublicKey', newId);
+    this.invalidateCurrentSigningKeyLocalCache();
+
+    return { id: newId, privateKeyPem: generated.privateKeyPem };
   }
 
   async revokeSigningKey(id: string): Promise<SigningKeyEntity> {
@@ -107,10 +138,14 @@ export class JwtKeyManagerService {
     }
 
     await this.coreEntityCacheService.invalidate('signingKeyPublicKey', id);
-    this.currentSigningKeyPromise = null;
-    this.currentSigningKeyCachedAt = 0;
+    this.invalidateCurrentSigningKeyLocalCache();
 
     return this.signingKeyRepository.findOneByOrFail({ id });
+  }
+
+  private invalidateCurrentSigningKeyLocalCache(): void {
+    this.currentSigningKeyPromise = null;
+    this.currentSigningKeyCachedAt = 0;
   }
 
   private async loadOrCreateCurrentSigningKey(): Promise<CurrentSigningKey | null> {
@@ -146,7 +181,7 @@ export class JwtKeyManagerService {
   }
 
   private decryptPrivateKey(
-    encryptedPrivateKey: string | null,
+    encryptedPrivateKey: EncryptedString | null,
     id: string,
   ): string {
     if (!isDefined(encryptedPrivateKey)) {
@@ -156,7 +191,9 @@ export class JwtKeyManagerService {
       );
     }
 
-    return this.secretEncryptionService.decryptVersioned(encryptedPrivateKey);
+    return this.secretEncryptionService.decryptVersionedOrThrow(
+      encryptedPrivateKey,
+    );
   }
 
   private async generateAndPersistCurrent(): Promise<CurrentSigningKey> {
@@ -197,7 +234,7 @@ export class JwtKeyManagerService {
   }
 
   private generateEcP256KeyPair(): {
-    privateKeyPem: string;
+    privateKeyPem: PlaintextString;
     publicKeyPem: string;
   } {
     const { privateKey, publicKey } = generateKeyPairSync('ec', {
@@ -206,7 +243,7 @@ export class JwtKeyManagerService {
 
     const privateKeyPem = privateKey
       .export({ format: 'pem', type: 'pkcs8' })
-      .toString();
+      .toString() as PlaintextString;
     const publicKeyPem = publicKey
       .export({ format: 'pem', type: 'spki' })
       .toString();

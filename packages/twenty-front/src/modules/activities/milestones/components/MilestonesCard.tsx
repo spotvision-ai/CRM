@@ -1,7 +1,7 @@
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
 import { isDefined } from 'twenty-shared/utils';
-import { IconCalendar } from 'twenty-ui/display';
+import { IconCalendar } from 'twenty-ui/icon';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 import { ActivityList } from '@/activities/components/ActivityList';
@@ -89,12 +89,12 @@ const StyledStatus = styled.span`
 `;
 
 const StyledDescription = styled.div`
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: ${themeCssVariables.font.color.secondary};
   display: -webkit-box;
   font-size: ${themeCssVariables.font.size.sm};
-  -webkit-line-clamp: 2;
   line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre-wrap;

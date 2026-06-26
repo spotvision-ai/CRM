@@ -165,6 +165,9 @@ export class Billing {
   @Field(() => String, { nullable: true })
   billingUrl?: string;
 
+  @Field(() => String, { nullable: true })
+  stripePublishableKey?: string;
+
   @Field(() => [BillingTrialPeriodDTO])
   trialPeriods: BillingTrialPeriodDTO[];
 }
@@ -267,6 +270,9 @@ export class ClientConfig {
   @Field(() => String)
   frontDomain: string;
 
+  @Field(() => String, { nullable: true })
+  publicFunctionDomain: string | null;
+
   @Field(() => Boolean)
   analyticsEnabled: boolean;
 
@@ -310,7 +316,7 @@ export class ClientConfig {
   isImapSmtpCaldavEnabled: boolean;
 
   @Field(() => Boolean)
-  isEmailGroupEnabled: boolean;
+  isEmailingDomainInDemoMode: boolean;
 
   @Field(() => Boolean)
   allowRequestsToTwentyIcons: boolean;

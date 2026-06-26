@@ -61,8 +61,8 @@ export const computeStandardOpportunityMilestoneViewFields = (
           size: 150,
         },
       }),
-    allOpportunityMilestonesPlannedEndDate:
-      createStandardViewFieldFlatMetadata({
+    allOpportunityMilestonesPlannedEndDate: createStandardViewFieldFlatMetadata(
+      {
         ...args,
         objectName: 'opportunityMilestone',
         context: {
@@ -73,20 +73,20 @@ export const computeStandardOpportunityMilestoneViewFields = (
           isVisible: true,
           size: 150,
         },
-      }),
-    allOpportunityMilestonesActualEndDate:
-      createStandardViewFieldFlatMetadata({
-        ...args,
-        objectName: 'opportunityMilestone',
-        context: {
-          viewName: 'allOpportunityMilestones',
-          viewFieldName: 'actualEndDate',
-          fieldName: 'actualEndDate',
-          position: 5,
-          isVisible: true,
-          size: 150,
-        },
-      }),
+      },
+    ),
+    allOpportunityMilestonesActualEndDate: createStandardViewFieldFlatMetadata({
+      ...args,
+      objectName: 'opportunityMilestone',
+      context: {
+        viewName: 'allOpportunityMilestones',
+        viewFieldName: 'actualEndDate',
+        fieldName: 'actualEndDate',
+        position: 5,
+        isVisible: true,
+        size: 150,
+      },
+    }),
     allOpportunityMilestonesBlockedBy: createStandardViewFieldFlatMetadata({
       ...args,
       objectName: 'opportunityMilestone',
