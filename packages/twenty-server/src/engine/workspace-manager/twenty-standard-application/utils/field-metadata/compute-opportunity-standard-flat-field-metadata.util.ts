@@ -419,7 +419,7 @@ export const buildOpportunityStandardFlatFieldMetadatas = ({
       label: i18nLabel(msg`Milestones`),
       description: i18nLabel(msg`Milestones tied to the opportunity`),
       icon: 'IconFlag',
-      isUIReadOnly: true,
+      isUIEditable: false,
       isNullable: true,
       targetObjectName: 'opportunityMilestone',
       targetFieldName: 'opportunity',

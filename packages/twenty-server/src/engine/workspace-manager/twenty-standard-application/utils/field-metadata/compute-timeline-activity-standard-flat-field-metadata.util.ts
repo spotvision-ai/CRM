@@ -397,7 +397,7 @@ export const buildTimelineActivityStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Event target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'opportunityMilestone',
       targetFieldName: 'timelineActivities',
       settings: {

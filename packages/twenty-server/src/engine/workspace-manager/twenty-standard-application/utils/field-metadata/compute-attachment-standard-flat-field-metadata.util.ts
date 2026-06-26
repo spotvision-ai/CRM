@@ -477,7 +477,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'opportunityMilestone',
       targetFieldName: 'attachments',
       settings: {

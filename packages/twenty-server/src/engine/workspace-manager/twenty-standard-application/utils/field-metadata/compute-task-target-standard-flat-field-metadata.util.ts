@@ -316,7 +316,7 @@ export const buildTaskTargetStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`TaskTarget target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'opportunityMilestone',
       targetFieldName: 'taskTargets',
       settings: {

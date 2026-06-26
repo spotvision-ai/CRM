@@ -487,7 +487,7 @@ export const buildWorkspaceMemberStandardFlatFieldMetadatas = ({
       ),
       icon: 'IconFlag',
       isNullable: false,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'opportunityMilestone',
       targetFieldName: 'assignee',
       settings: {

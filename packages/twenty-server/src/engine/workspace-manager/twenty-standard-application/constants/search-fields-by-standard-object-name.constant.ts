@@ -33,6 +33,8 @@ export const SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME = {
   ],
   noteTarget: [{ name: 'id', type: FieldMetadataType.UUID }],
   opportunity: [{ name: 'name', type: FieldMetadataType.TEXT }],
+  opportunityMilestone: [{ name: 'name', type: FieldMetadataType.TEXT }],
+  opportunityMilestoneDependency: [{ name: 'id', type: FieldMetadataType.UUID }],
   person: [
     { name: 'name', type: FieldMetadataType.FULL_NAME },
     { name: 'emails', type: FieldMetadataType.EMAILS },
