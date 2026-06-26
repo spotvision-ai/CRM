@@ -9,9 +9,7 @@ import { type MigrationInterface, type QueryRunner } from 'typeorm';
 //
 // Idempotent — `ADD VALUE IF NOT EXISTS` is a no-op on fresh dev DBs
 // that already have FIELDS_WIDGET from upstream's earlier migration.
-export class RestoreFieldsWidgetInViewTypeEnum1776370918600
-  implements MigrationInterface
-{
+export class RestoreFieldsWidgetInViewTypeEnum1776370918600 implements MigrationInterface {
   name = 'RestoreFieldsWidgetInViewTypeEnum1776370918600';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

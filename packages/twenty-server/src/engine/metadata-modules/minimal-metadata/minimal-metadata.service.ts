@@ -140,8 +140,7 @@ export class MinimalMetadataService {
         roadmapFieldGroupId: flatView.roadmapFieldGroupId ?? null,
         roadmapFieldColorId: flatView.roadmapFieldColorId ?? null,
         roadmapFieldLabelId: flatView.roadmapFieldLabelId ?? null,
-        roadmapFieldPlannedStartId:
-          flatView.roadmapFieldPlannedStartId ?? null,
+        roadmapFieldPlannedStartId: flatView.roadmapFieldPlannedStartId ?? null,
         roadmapFieldPlannedEndId: flatView.roadmapFieldPlannedEndId ?? null,
         roadmapFieldStatusId: flatView.roadmapFieldStatusId ?? null,
         roadmapFieldBlockedById: flatView.roadmapFieldBlockedById ?? null,

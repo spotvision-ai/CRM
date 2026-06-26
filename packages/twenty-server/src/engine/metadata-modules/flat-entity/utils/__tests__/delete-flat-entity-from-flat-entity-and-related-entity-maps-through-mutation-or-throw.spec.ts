@@ -117,13 +117,21 @@ describe('deleteFlatEntityFromFlatEntityAndRelatedEntityMapsThroughMutationOrThr
       roadmapEndViewIds: [],
       roadmapGroupViewIds: [],
       roadmapColorViewIds: [],
-      roadmapLabelViewIds: [],      roadmapPlannedStartViewIds: [],      roadmapPlannedEndViewIds: [],      roadmapStatusViewIds: [],      roadmapBlockedByViewIds: [],
+      roadmapLabelViewIds: [],
+      roadmapPlannedStartViewIds: [],
+      roadmapPlannedEndViewIds: [],
+      roadmapStatusViewIds: [],
+      roadmapBlockedByViewIds: [],
       calendarViewUniversalIdentifiers: [],
       roadmapStartViewUniversalIdentifiers: [],
       roadmapEndViewUniversalIdentifiers: [],
       roadmapGroupViewUniversalIdentifiers: [],
       roadmapColorViewUniversalIdentifiers: [],
-      roadmapLabelViewUniversalIdentifiers: [],      roadmapPlannedStartViewUniversalIdentifiers: [],      roadmapPlannedEndViewUniversalIdentifiers: [],      roadmapStatusViewUniversalIdentifiers: [],      roadmapBlockedByViewUniversalIdentifiers: [],
+      roadmapLabelViewUniversalIdentifiers: [],
+      roadmapPlannedStartViewUniversalIdentifiers: [],
+      roadmapPlannedEndViewUniversalIdentifiers: [],
+      roadmapStatusViewUniversalIdentifiers: [],
+      roadmapBlockedByViewUniversalIdentifiers: [],
     });
   });
 });

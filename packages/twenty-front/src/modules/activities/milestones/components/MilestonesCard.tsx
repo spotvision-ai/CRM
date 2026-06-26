@@ -89,12 +89,12 @@ const StyledStatus = styled.span`
 `;
 
 const StyledDescription = styled.div`
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: ${themeCssVariables.font.color.secondary};
   display: -webkit-box;
   font-size: ${themeCssVariables.font.size.sm};
-  -webkit-line-clamp: 2;
   line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre-wrap;

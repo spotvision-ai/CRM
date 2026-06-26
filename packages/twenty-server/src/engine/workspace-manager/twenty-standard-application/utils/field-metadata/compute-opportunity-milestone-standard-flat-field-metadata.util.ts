@@ -431,7 +431,9 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
       morphId: null,
       fieldName: 'assignee',
       label: i18nLabel(msg`Assignee`),
-      description: i18nLabel(msg`Workspace member responsible for this milestone`),
+      description: i18nLabel(
+        msg`Workspace member responsible for this milestone`,
+      ),
       icon: 'IconUserCircle',
       isNullable: true,
       targetObjectName: 'workspaceMember',

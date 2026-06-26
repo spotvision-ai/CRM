@@ -82,8 +82,8 @@ import { AddViewKanbanColumnWidthFastInstanceCommand } from './2-15/2-15-instanc
 import { AddPrimaryPublicDomainToApplicationFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-16/2-16-instance-command-fast-1782281874768-add-primary-public-domain-to-application';
 import { MakePublicDomainApplicationIdNotNullSlowInstanceCommand } from 'src/database/commands/upgrade-version-command/2-16/2-16-instance-command-slow-1782281874769-make-public-domain-application-id-not-null';
 import { AddServerTriggerSettingsToLogicFunctionFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-16/2-16-instance-command-fast-1782211913427-add-server-trigger-settings-to-logic-function';
-import { AddMilestonesToPageLayoutWidgetTypeEnumFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1779456242589-addMilestonesToPageLayoutWidgetTypeEnum';
-import { AddMarkdownToPageLayoutWidgetTypeEnumFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1779999999999-addMarkdownToPageLayoutWidgetTypeEnum';
+import { AddMilestonesToPageLayoutWidgetTypeEnumFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1779456242589-add-milestones-to-page-layout-widget-type-enum';
+import { AddMarkdownToPageLayoutWidgetTypeEnumFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-5/2-5-instance-command-fast-1779999999999-add-markdown-to-page-layout-widget-type-enum';
 
 export const INSTANCE_COMMANDS = [
   AddViewFieldGroupIdIndexOnViewFieldFastInstanceCommand,

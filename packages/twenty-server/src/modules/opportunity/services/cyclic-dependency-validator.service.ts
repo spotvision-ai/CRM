@@ -34,70 +34,62 @@ export class CyclicDependencyValidatorService {
     workspaceId: string,
   ): Promise<void> {
     if (dependentMilestoneId === requiredMilestoneId) {
-      throw new CyclicDependencyError(
-        'A milestone cannot depend on itself.',
-      );
+      throw new CyclicDependencyError('A milestone cannot depend on itself.');
     }
 
     const authContext = buildSystemAuthContext(workspaceId);
 
-    await this.globalWorkspaceOrmManager.executeInWorkspaceContext(
-      async () => {
-        const repository =
-          await this.globalWorkspaceOrmManager.getRepository(
-            workspaceId,
-            OpportunityMilestoneDependencyWorkspaceEntity,
-            {
-              shouldBypassPermissionChecks: true,
-            },
+    await this.globalWorkspaceOrmManager.executeInWorkspaceContext(async () => {
+      const repository = await this.globalWorkspaceOrmManager.getRepository(
+        workspaceId,
+        OpportunityMilestoneDependencyWorkspaceEntity,
+        {
+          shouldBypassPermissionChecks: true,
+        },
+      );
+
+      const visited = new Set<string>();
+      // BFS frontier: ids whose `dependsOn` predecessors we still need
+      // to enumerate. Start at `requiredMilestoneId` because we want to
+      // know "would adding this edge make `dependentId` reachable from
+      // `requiredId`?" — if yes, there's a cycle.
+      let frontier: string[] = [requiredMilestoneId];
+
+      for (let depth = 0; depth < MAX_BFS_DEPTH; depth++) {
+        if (frontier.length === 0) return;
+
+        if (frontier.includes(dependentMilestoneId)) {
+          throw new CyclicDependencyError(
+            'This dependency would create a cycle.',
           );
-
-        const visited = new Set<string>();
-        // BFS frontier: ids whose `dependsOn` predecessors we still need
-        // to enumerate. Start at `requiredMilestoneId` because we want to
-        // know "would adding this edge make `dependentId` reachable from
-        // `requiredId`?" — if yes, there's a cycle.
-        let frontier: string[] = [requiredMilestoneId];
-
-        for (let depth = 0; depth < MAX_BFS_DEPTH; depth++) {
-          if (frontier.length === 0) return;
-
-          if (frontier.includes(dependentMilestoneId)) {
-            throw new CyclicDependencyError(
-              'This dependency would create a cycle.',
-            );
-          }
-
-          const newlyVisited = frontier.filter(
-            (id) => !visited.has(id),
-          );
-
-          newlyVisited.forEach((id) => visited.add(id));
-
-          if (newlyVisited.length === 0) return;
-
-          // Find all edges where any of these milestones is the dependent
-          // — those are predecessors we still need to explore.
-          const predecessorEdges = await repository.find({
-            where: newlyVisited.map((id) => ({
-              dependentMilestoneId: id,
-            })),
-            select: ['requiredMilestoneId'],
-          });
-
-          frontier = predecessorEdges
-            .map((edge) => edge.requiredMilestoneId)
-            .filter((id): id is string => id !== null);
         }
 
-        // Reached MAX_BFS_DEPTH without confirming no-cycle — defensive:
-        // assume cycle to keep the graph clean. In practice the graph
-        // should never be 200 levels deep.
-        throw new CyclicDependencyError(
-          'Dependency graph is too deep to validate safely.',
-        );
-      },
-      authContext,
-    );
+        const newlyVisited = frontier.filter((id) => !visited.has(id));
+
+        newlyVisited.forEach((id) => visited.add(id));
+
+        if (newlyVisited.length === 0) return;
+
+        // Find all edges where any of these milestones is the dependent
+        // — those are predecessors we still need to explore.
+        const predecessorEdges = await repository.find({
+          where: newlyVisited.map((id) => ({
+            dependentMilestoneId: id,
+          })),
+          select: ['requiredMilestoneId'],
+        });
+
+        frontier = predecessorEdges
+          .map((edge) => edge.requiredMilestoneId)
+          .filter((id): id is string => id !== null);
+      }
+
+      // Reached MAX_BFS_DEPTH without confirming no-cycle — defensive:
+      // assume cycle to keep the graph clean. In practice the graph
+      // should never be 200 levels deep.
+      throw new CyclicDependencyError(
+        'Dependency graph is too deep to validate safely.',
+      );
+    }, authContext);
   }
 }

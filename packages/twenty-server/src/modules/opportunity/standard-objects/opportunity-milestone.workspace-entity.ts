@@ -43,8 +43,12 @@ export class OpportunityMilestoneWorkspaceEntity extends BaseWorkspaceEntity {
   timelineActivities: EntityRelation<TimelineActivityWorkspaceEntity[]>;
   taskTargets: EntityRelation<TaskTargetWorkspaceEntity[]>;
   // Edges where this milestone is the *dependent* (i.e. its predecessors).
-  dependsOnEdges: EntityRelation<OpportunityMilestoneDependencyWorkspaceEntity[]>;
+  dependsOnEdges: EntityRelation<
+    OpportunityMilestoneDependencyWorkspaceEntity[]
+  >;
   // Edges where this milestone is the *required* one (i.e. milestones that wait on it).
-  requiredByEdges: EntityRelation<OpportunityMilestoneDependencyWorkspaceEntity[]>;
+  requiredByEdges: EntityRelation<
+    OpportunityMilestoneDependencyWorkspaceEntity[]
+  >;
   searchVector: string;
 }

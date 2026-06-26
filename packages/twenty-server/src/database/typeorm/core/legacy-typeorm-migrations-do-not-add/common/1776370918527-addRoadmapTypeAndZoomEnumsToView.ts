@@ -1,8 +1,6 @@
 import { type MigrationInterface, type QueryRunner } from 'typeorm';
 
-export class AddRoadmapTypeAndZoomEnumsToView1776370918527
-  implements MigrationInterface
-{
+export class AddRoadmapTypeAndZoomEnumsToView1776370918527 implements MigrationInterface {
   name = 'AddRoadmapTypeAndZoomEnumsToView1776370918527';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

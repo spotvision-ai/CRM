@@ -182,8 +182,7 @@ const collectRoadmapValidationErrors = ({
 
   if (isDefined(flatView.roadmapFieldPlannedStartUniversalIdentifier)) {
     const plannedStartField = findFlatEntityByUniversalIdentifier({
-      universalIdentifier:
-        flatView.roadmapFieldPlannedStartUniversalIdentifier,
+      universalIdentifier: flatView.roadmapFieldPlannedStartUniversalIdentifier,
       flatEntityMaps: flatFieldMetadataMaps,
     });
     if (!isDefined(plannedStartField)) {

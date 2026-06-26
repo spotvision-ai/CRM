@@ -23,9 +23,7 @@ type CreateMilestoneDependencyPayload = {
 };
 
 @WorkspaceQueryHook(`opportunityMilestoneDependency.createOne`)
-export class OpportunityMilestoneDependencyCreateOnePreQueryHook
-  implements WorkspacePreQueryHookInstance
-{
+export class OpportunityMilestoneDependencyCreateOnePreQueryHook implements WorkspacePreQueryHookInstance {
   constructor(
     private readonly cyclicDependencyValidatorService: CyclicDependencyValidatorService,
   ) {}
