@@ -30,6 +30,7 @@ describe('ClientConfigService', () => {
           provide: DomainServerConfigService,
           useValue: {
             getFrontUrl: jest.fn(),
+            getPublicBaseHostnameOrUndefined: jest.fn(),
           },
         },
         {
@@ -74,6 +75,7 @@ describe('ClientConfigService', () => {
             BILLING_PLAN_REQUIRED_LINK: 'https://billing.example.com',
             BILLING_FREE_TRIAL_WITH_CREDIT_CARD_DURATION_IN_DAYS: 30,
             BILLING_FREE_TRIAL_WITHOUT_CREDIT_CARD_DURATION_IN_DAYS: 7,
+            BILLING_STRIPE_PUBLISHABLE_KEY: 'pk_test_123',
             AUTH_GOOGLE_ENABLED: true,
             AUTH_PASSWORD_ENABLED: true,
             AUTH_MICROSOFT_ENABLED: false,
@@ -121,6 +123,7 @@ describe('ClientConfigService', () => {
         billing: {
           isBillingEnabled: true,
           billingUrl: 'https://billing.example.com',
+          stripePublishableKey: 'pk_test_123',
           trialPeriods: [
             {
               duration: 30,
@@ -145,6 +148,7 @@ describe('ClientConfigService', () => {
         isEmailVerificationRequired: true,
         defaultSubdomain: 'app',
         frontDomain: 'app.twenty.com',
+        publicFunctionDomain: null,
         support: {
           supportDriver: 'FRONT',
           supportFrontChatId: 'chat-123',
@@ -171,7 +175,7 @@ describe('ClientConfigService', () => {
         isGoogleCalendarEnabled: true,
         isConfigVariablesInDbEnabled: false,
         isImapSmtpCaldavEnabled: false,
-        isEmailGroupEnabled: false,
+        isEmailingDomainInDemoMode: false,
         allowRequestsToTwentyIcons: false,
         calendarBookingPageId: 'team/twenty/talk-to-us',
         isCloudflareIntegrationEnabled: false,

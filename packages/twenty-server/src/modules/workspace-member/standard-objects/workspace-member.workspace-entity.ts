@@ -1,16 +1,14 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 import { type APP_LOCALES } from 'twenty-shared/translations';
-import { FieldMetadataType, type FullNameMetadata } from 'twenty-shared/types';
+import { type FullNameMetadata } from 'twenty-shared/types';
 import { type Relation } from 'typeorm';
 
 import { BaseWorkspaceEntity } from 'src/engine/twenty-orm/base.workspace-entity';
-import { type FieldTypeAndNameMetadata } from 'src/engine/workspace-manager/utils/get-ts-vector-column-expression.util';
 import { type AttachmentWorkspaceEntity } from 'src/modules/attachment/standard-objects/attachment.workspace-entity';
 import { type BlocklistWorkspaceEntity } from 'src/modules/blocklist/standard-objects/blocklist.workspace-entity';
 import { type CalendarEventParticipantWorkspaceEntity } from 'src/modules/calendar/common/standard-objects/calendar-event-participant.workspace-entity';
 import { type CompanyWorkspaceEntity } from 'src/modules/company/standard-objects/company.workspace-entity';
-import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { type MessageParticipantWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-participant.workspace-entity';
 import { type OpportunityMilestoneWorkspaceEntity } from 'src/modules/opportunity/standard-objects/opportunity-milestone.workspace-entity';
 import { type OpportunityWorkspaceEntity } from 'src/modules/opportunity/standard-objects/opportunity.workspace-entity';
@@ -54,14 +52,6 @@ registerEnumType(WorkspaceMemberDateFormatEnum, {
     'Date format as Month first, Day first, Year first or system as default',
 });
 
-const NAME_FIELD_NAME = 'name';
-const USER_EMAIL_FIELD_NAME = 'userEmail';
-
-export const SEARCH_FIELDS_FOR_WORKSPACE_MEMBER: FieldTypeAndNameMetadata[] = [
-  { name: NAME_FIELD_NAME, type: FieldMetadataType.FULL_NAME },
-  { name: USER_EMAIL_FIELD_NAME, type: FieldMetadataType.TEXT },
-];
-
 export class WorkspaceMemberWorkspaceEntity extends BaseWorkspaceEntity {
   position: number;
   name: FullNameMetadata;
@@ -78,7 +68,6 @@ export class WorkspaceMemberWorkspaceEntity extends BaseWorkspaceEntity {
   assignedMilestones: Relation<OpportunityMilestoneWorkspaceEntity[]>;
   accountOwnerForCompanies: Relation<CompanyWorkspaceEntity[]>;
   authoredAttachments: Relation<AttachmentWorkspaceEntity[]>;
-  connectedAccounts: Relation<ConnectedAccountWorkspaceEntity[]>;
   messageParticipants: Relation<MessageParticipantWorkspaceEntity[]>;
   blocklist: Relation<BlocklistWorkspaceEntity[]>;
   calendarEventParticipants: Relation<

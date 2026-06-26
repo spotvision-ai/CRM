@@ -1,12 +1,14 @@
 import { msg, t } from '@lingui/core/macro';
 import { type ALL_METADATA_NAME } from 'twenty-shared/metadata';
-import { FieldMetadataType, ViewType } from 'twenty-shared/types';
+import { FieldMetadataType, RelationType, ViewType } from 'twenty-shared/types';
 import { isDefined, isFieldMetadataDateKind } from 'twenty-shared/utils';
 
-import { findFlatEntityByUniversalIdentifier } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-universal-identifier.util';
 import { type MetadataUniversalFlatEntityAndRelatedFlatEntityMapsForValidation } from 'src/engine/metadata-modules/flat-entity/types/metadata-flat-entity-and-related-flat-entity-maps-for-validation.type';
-import { type UniversalFlatView } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-view.type';
+import { findFlatEntityByUniversalIdentifier } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-universal-identifier.util';
+import { isMorphOrRelationUniversalFlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/utils/is-morph-or-relation-flat-field-metadata.util';
 import { ViewExceptionCode } from 'src/engine/metadata-modules/view/exceptions/view.exception';
+import { type UniversalFlatFieldMetadata } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-field-metadata.type';
+import { type UniversalFlatView } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-view.type';
 import { type FailedFlatEntityValidation } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-builder/builders/types/failed-flat-entity-validation.type';
 import { getEmptyFlatEntityValidationError } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-builder/builders/utils/get-flat-entity-validation-error.util';
 import { type FlatEntityUpdateValidationArgs } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-builder/types/universal-flat-entity-update-validation-args.type';
@@ -243,6 +245,28 @@ const collectRoadmapValidationErrors = ({
 export class FlatViewValidatorService {
   constructor() {}
 
+  private isAllowedKanbanMainGroupByField({
+    mainGroupByFieldMetadata,
+  }: {
+    mainGroupByFieldMetadata: UniversalFlatFieldMetadata;
+  }): boolean {
+    if (mainGroupByFieldMetadata.type === FieldMetadataType.SELECT) {
+      return true;
+    }
+
+    if (
+      !isMorphOrRelationUniversalFlatFieldMetadata(mainGroupByFieldMetadata)
+    ) {
+      return false;
+    }
+
+    return (
+      mainGroupByFieldMetadata.type === FieldMetadataType.RELATION &&
+      mainGroupByFieldMetadata.universalSettings?.relationType ===
+        RelationType.MANY_TO_ONE
+    );
+  }
+
   public validateFlatViewUpdate({
     universalIdentifier,
     flatEntityUpdate,
@@ -333,11 +357,15 @@ export class FlatViewValidatorService {
           message: t`Kanban main group by field metadata not found`,
           userFriendlyMessage: msg`Kanban main group by field metadata not found`,
         });
-      } else if (mainGroupByFieldMetadata.type !== FieldMetadataType.SELECT) {
+      } else if (
+        !this.isAllowedKanbanMainGroupByField({
+          mainGroupByFieldMetadata,
+        })
+      ) {
         validationResult.errors.push({
           code: ViewExceptionCode.INVALID_VIEW_DATA,
-          message: t`Kanban main group by field must be a SELECT field`,
-          userFriendlyMessage: msg`Kanban main group by field must be a select field`,
+          message: t`Kanban main group by field must be a SELECT or a many-to-one relation field`,
+          userFriendlyMessage: msg`Kanban main group by field must be a select or a many-to-one relation field`,
         });
       }
     }
@@ -362,11 +390,15 @@ export class FlatViewValidatorService {
           message: t`Kanban main group by field metadata not found`,
           userFriendlyMessage: msg`Kanban main group by field metadata not found`,
         });
-      } else if (mainGroupByFieldMetadata.type !== FieldMetadataType.SELECT) {
+      } else if (
+        !this.isAllowedKanbanMainGroupByField({
+          mainGroupByFieldMetadata,
+        })
+      ) {
         validationResult.errors.push({
           code: ViewExceptionCode.INVALID_VIEW_DATA,
-          message: t`Kanban main group by field must be a SELECT field`,
-          userFriendlyMessage: msg`Kanban main group by field must be a select field`,
+          message: t`Kanban main group by field must be a SELECT or a many-to-one relation field`,
+          userFriendlyMessage: msg`Kanban main group by field must be a select or a many-to-one relation field`,
         });
       }
     }
@@ -557,11 +589,15 @@ export class FlatViewValidatorService {
           message: t`Kanban main group by field metadata not found`,
           userFriendlyMessage: msg`Kanban main group by field metadata not found`,
         });
-      } else if (mainGroupByFieldMetadata.type !== FieldMetadataType.SELECT) {
+      } else if (
+        !this.isAllowedKanbanMainGroupByField({
+          mainGroupByFieldMetadata,
+        })
+      ) {
         validationResult.errors.push({
           code: ViewExceptionCode.INVALID_VIEW_DATA,
-          message: t`Kanban main group by field must be a SELECT field`,
-          userFriendlyMessage: msg`Kanban main group by field must be a select field`,
+          message: t`Kanban main group by field must be a SELECT or a many-to-one relation field`,
+          userFriendlyMessage: msg`Kanban main group by field must be a select or a many-to-one relation field`,
         });
       }
     }

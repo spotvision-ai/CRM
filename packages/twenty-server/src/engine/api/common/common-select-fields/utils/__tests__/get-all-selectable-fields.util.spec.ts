@@ -65,7 +65,6 @@ describe('getAllSelectableFields', () => {
       namePlural: 'testObjects',
       labelSingular: 'Test Object',
       labelPlural: 'Test Objects',
-      isCustom: false,
       isRemote: false,
       isActive: true,
       isSystem: false,

@@ -2,10 +2,10 @@ import { isDefined } from 'class-validator';
 import { STANDARD_OBJECTS } from 'twenty-shared/metadata';
 import {
   type AggregateOperations,
-  type ViewKey,
+  ViewKey,
   ViewOpenRecordIn,
   type ViewRoadmapZoom,
-  type ViewType,
+  ViewType,
   ViewVisibility,
 } from 'twenty-shared/types';
 
@@ -199,6 +199,7 @@ export const createStandardViewFlatMetadata = <
     kanbanAggregateOperationFieldMetadataId,
     mainGroupByFieldMetadataId,
     shouldHideEmptyGroups: false,
+    kanbanColumnWidth: null,
     calendarLayout: null,
     calendarFieldMetadataId,
     roadmapDefaultZoom,
@@ -235,6 +236,11 @@ export const createStandardViewFlatMetadata = <
     anyFieldFilterValue: null,
     visibility: ViewVisibility.WORKSPACE,
     createdByUserWorkspaceId: null,
+    isActive: true,
+    isSystemSideEffect:
+      key === ViewKey.INDEX || type === ViewType.FIELDS_WIDGET,
+    overrides: null,
+    universalOverrides: null,
     viewFieldIds: [],
     viewFieldUniversalIdentifiers: [],
     viewFieldGroupIds: [],

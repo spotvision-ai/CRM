@@ -128,6 +128,9 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
               shouldCopyFiltersAndSortsAndAggregate
                 ? sourceView.kanbanAggregateOperationFieldMetadataId
                 : undefined,
+            kanbanColumnWidth: shouldCopyFiltersAndSortsAndAggregate
+              ? sourceView.kanbanColumnWidth
+              : undefined,
             mainGroupByFieldMetadataId: shouldCopyFiltersAndSortsAndAggregate
               ? sourceView.mainGroupByFieldMetadataId
               : mainGroupByFieldMetadataId,
@@ -223,6 +226,8 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
               viewFilterGroupId: viewFilter.viewFilterGroupId,
               positionInViewFilterGroup: viewFilter.positionInViewFilterGroup,
               subFieldName: viewFilter.subFieldName ?? null,
+              relationTargetFieldMetadataId:
+                viewFilter.relationTargetFieldMetadataId ?? null,
             },
           }),
         );

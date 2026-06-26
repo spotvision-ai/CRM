@@ -87,11 +87,9 @@ export class CommonGroupByQueryRunnerService extends CommonBaseQueryRunnerServic
       authContext,
     } = queryRunnerContext;
 
-    const objectMetadataNameSingular = flatObjectMetadata.nameSingular;
+    const objectAlias = getObjectAlias(flatObjectMetadata);
 
-    let queryBuilder = repository.createQueryBuilder(
-      objectMetadataNameSingular,
-    );
+    let queryBuilder = repository.createQueryBuilder(objectAlias);
 
     const groupByFields =
       this.groupByArgProcessor.validateAndTransformGroupByFieldsOrThrow({
@@ -100,8 +98,6 @@ export class CommonGroupByQueryRunnerService extends CommonBaseQueryRunnerServic
         flatObjectMetadataMaps,
         flatFieldMetadataMaps,
       });
-
-    const objectAlias = getObjectAlias(flatObjectMetadata);
 
     this.addJoinForGroupByOnRelationFields({
       queryBuilder,
@@ -126,12 +122,12 @@ export class CommonGroupByQueryRunnerService extends CommonBaseQueryRunnerServic
     ProcessAggregateHelper.addSelectedAggregatedFieldsQueriesToQueryBuilder({
       selectedAggregatedFields: args.selectedFieldsResult.aggregate,
       queryBuilder,
-      objectMetadataNameSingular,
+      objectMetadataNameSingular: objectAlias,
     });
 
     const groupByDefinitions = getGroupByDefinitions({
       groupByFields,
-      objectMetadataNameSingular,
+      objectMetadataNameSingular: objectAlias,
     });
 
     groupByDefinitions.forEach((groupByColumn, index) => {
@@ -256,37 +252,12 @@ export class CommonGroupByQueryRunnerService extends CommonBaseQueryRunnerServic
       options: field.options as PartialFieldMetadataItemOption[],
     }));
 
-    // Relation-traversal filters reference target fields on related objects
-    // that aren't in the source object's field list above. Resolve and add
-    // them so the shared dispatcher can look them up by id.
-    const relationTargetFieldsFromFilters = recordFilters
-      .map((filter) => filter.relationTargetFieldMetadataId)
-      .filter(isDefined)
-      .filter((id) => !fields.some((field) => field.id === id))
-      .map((id) => {
-        const field = findFlatEntityByIdInFlatEntityMaps({
-          flatEntityId: id,
-          flatEntityMaps: flatFieldMetadataMaps,
-        });
-
-        if (!field) return null;
-
-        return {
-          id: field.id,
-          name: field.name,
-          type: field.type,
-          label: field.label,
-          options: field.options as PartialFieldMetadataItemOption[],
-        };
-      })
-      .filter(isDefined);
-
-    fields.push(...relationTargetFieldsFromFilters);
-
     const filtersFromView = computeRecordGqlOperationFilter({
       recordFilters,
       recordFilterGroups: recordFilterGroups,
-      fields,
+      fieldMetadataItems: Object.values(
+        flatFieldMetadataMaps.byUniversalIdentifier,
+      ).filter(isDefined),
       filterValueDependencies: {
         timeZone: 'UTC', // TODO: see if we use workspace member timezone here
       },
@@ -333,7 +304,7 @@ export class CommonGroupByQueryRunnerService extends CommonBaseQueryRunnerServic
     workspaceId: string;
     commonQueryParser: GraphqlQueryParser;
   }): Promise<void> {
-    const objectMetadataNameSingular = flatObjectMetadata.nameSingular;
+    const objectAlias = getObjectAlias(flatObjectMetadata);
 
     if (args.viewId) {
       appliedFilters = await this.addFiltersFromView({
@@ -347,7 +318,7 @@ export class CommonGroupByQueryRunnerService extends CommonBaseQueryRunnerServic
 
     commonQueryParser.applyFilterToBuilder(
       queryBuilder,
-      objectMetadataNameSingular,
+      objectAlias,
       appliedFilters,
     );
 

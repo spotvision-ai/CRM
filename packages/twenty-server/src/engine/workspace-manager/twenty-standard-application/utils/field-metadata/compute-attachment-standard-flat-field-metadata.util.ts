@@ -16,7 +16,7 @@ import {
 } from 'src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/create-standard-field-flat-metadata.util';
 import { createStandardRelationFieldFlatMetadata } from 'src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/create-standard-relation-field-flat-metadata.util';
 import { getTsVectorColumnExpressionFromFields } from 'src/engine/workspace-manager/utils/get-ts-vector-column-expression.util';
-import { SEARCH_FIELDS_FOR_ATTACHMENT } from 'src/modules/attachment/standard-objects/attachment.workspace-entity';
+import { SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME } from 'src/engine/workspace-manager/twenty-standard-application/constants/search-fields-by-standard-object-name.constant';
 
 export const buildAttachmentStandardFlatFieldMetadatas = ({
   now,
@@ -41,7 +41,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       icon: 'Icon123',
       isSystem: true,
       isNullable: false,
-      isUIReadOnly: true,
+      isUIEditable: false,
       defaultValue: 'uuid',
     },
     standardObjectMetadataRelatedEntityIds,
@@ -60,7 +60,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       icon: 'IconCalendar',
       isSystem: true,
       isNullable: false,
-      isUIReadOnly: true,
+      isUIEditable: false,
       defaultValue: 'now',
       settings: {
         displayFormat: DateDisplayFormat.RELATIVE,
@@ -82,7 +82,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       icon: 'IconCalendarClock',
       isSystem: true,
       isNullable: false,
-      isUIReadOnly: true,
+      isUIEditable: false,
       defaultValue: 'now',
       settings: {
         displayFormat: DateDisplayFormat.RELATIVE,
@@ -104,7 +104,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       icon: 'IconCalendarMinus',
       isSystem: true,
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       settings: {
         displayFormat: DateDisplayFormat.RELATIVE,
       },
@@ -126,7 +126,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment name`),
       icon: 'IconFileUpload',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
     },
     standardObjectMetadataRelatedEntityIds,
     dependencyFlatEntityMaps,
@@ -143,7 +143,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment file`),
       icon: 'IconFileUpload',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       settings: {
         maxNumberOfValues: 1,
       },
@@ -165,7 +165,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       icon: 'IconLink',
       isSystem: true,
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
     },
     standardObjectMetadataRelatedEntityIds,
     dependencyFlatEntityMaps,
@@ -184,7 +184,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       icon: 'IconList',
       isSystem: true,
       isNullable: false,
-      isUIReadOnly: true,
+      isUIEditable: false,
       defaultValue: "'OTHER'",
       options: [
         {
@@ -260,7 +260,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`The creator of the record`),
       icon: 'IconCreativeCommonsSa',
       isSystem: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       isNullable: false,
       defaultValue: {
         source: "'MANUAL'",
@@ -285,7 +285,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       ),
       icon: 'IconUserCircle',
       isSystem: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       isNullable: false,
       defaultValue: {
         source: "'MANUAL'",
@@ -330,7 +330,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       settings: {
         generatedType: 'STORED',
         asExpression: getTsVectorColumnExpressionFromFields(
-          SEARCH_FIELDS_FOR_ATTACHMENT,
+          SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME[objectName],
         ),
       },
     },
@@ -352,7 +352,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'task',
       targetFieldName: 'attachments',
       settings: {
@@ -377,7 +377,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'note',
       targetFieldName: 'attachments',
       settings: {
@@ -402,7 +402,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'person',
       targetFieldName: 'attachments',
       settings: {
@@ -427,7 +427,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'company',
       targetFieldName: 'attachments',
       settings: {
@@ -452,7 +452,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'opportunity',
       targetFieldName: 'attachments',
       settings: {
@@ -502,7 +502,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'dashboard',
       targetFieldName: 'attachments',
       settings: {
@@ -527,7 +527,7 @@ export const buildAttachmentStandardFlatFieldMetadatas = ({
       description: i18nLabel(msg`Attachment target`),
       icon: 'IconArrowUpRight',
       isNullable: true,
-      isUIReadOnly: true,
+      isUIEditable: false,
       targetObjectName: 'workflow',
       targetFieldName: 'attachments',
       settings: {

@@ -1,20 +1,25 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { isDefined } from 'twenty-shared/utils';
 
+import {
+  type EncryptedConnectionParameters,
+  type EncryptedImapSmtpCaldavParams,
+  type PlaintextConnectionParameters,
+  type PlaintextImapSmtpCaldavParams,
+} from 'src/engine/core-modules/imap-smtp-caldav-connection/types/imap-smtp-caldav-connection.type';
+import { type EncryptedString } from 'src/engine/core-modules/secret-encryption/branded-strings/encrypted-string.type';
+import { type PlaintextString } from 'src/engine/core-modules/secret-encryption/branded-strings/plaintext-string.type';
+import { SECRET_ENCRYPTION_ENVELOPE_PREFIX } from 'src/engine/core-modules/secret-encryption/constants/secret-encryption.constant';
 import {
   SecretEncryptionException,
   SecretEncryptionExceptionCode,
 } from 'src/engine/core-modules/secret-encryption/exceptions/secret-encryption.exception';
 import { SecretEncryptionService } from 'src/engine/core-modules/secret-encryption/secret-encryption.service';
-import { parseSecretEncryptionEnvelopeOrThrow } from 'src/engine/core-modules/secret-encryption/utils/parse-secret-encryption-envelope-or-throw.util';
+import { ACCOUNT_TYPES } from 'twenty-shared/constants';
 
 @Injectable()
 export class ConnectedAccountTokenEncryptionService {
-  private readonly logger = new Logger(
-    ConnectedAccountTokenEncryptionService.name,
-  );
-
   constructor(
     private readonly secretEncryptionService: SecretEncryptionService,
   ) {}
@@ -23,9 +28,9 @@ export class ConnectedAccountTokenEncryptionService {
     plaintext,
     workspaceId,
   }: {
-    plaintext: string;
+    plaintext: PlaintextString;
     workspaceId: string;
-  }): string {
+  }): EncryptedString {
     if (this.looksLikeCiphertext(plaintext)) {
       throw new SecretEncryptionException(
         'ConnectedAccountTokenEncryptionService.encrypt received an already-encrypted envelope. This indicates a double-encryption bug — the caller is encrypting ciphertext.',
@@ -42,9 +47,9 @@ export class ConnectedAccountTokenEncryptionService {
     plaintext,
     workspaceId,
   }: {
-    plaintext: string | null;
+    plaintext: PlaintextString | null;
     workspaceId: string;
-  }): string | null {
+  }): EncryptedString | null {
     if (!isDefined(plaintext)) {
       return null;
     }
@@ -52,27 +57,21 @@ export class ConnectedAccountTokenEncryptionService {
     return this.encrypt({ plaintext, workspaceId });
   }
 
-  // v2.4.0 rollout-window tolerance: rows written before the encryption
-  // backfill ran may still be plaintext. Returning them as-is lets the slow
-  // command finish; once it has run everywhere this branch can throw.
   decrypt({
     ciphertext,
     workspaceId,
   }: {
-    ciphertext: string;
+    ciphertext: EncryptedString;
     workspaceId: string;
-  }): string {
-    const parsed = parseSecretEncryptionEnvelopeOrThrow({ value: ciphertext });
-
-    if (!isDefined(parsed.version)) {
-      this.logger.warn(
-        'Decrypted a legacy plaintext token. Expected during the rollout window until the slow instance command finishes backfilling.',
+  }): PlaintextString {
+    if (!ciphertext.startsWith(SECRET_ENCRYPTION_ENVELOPE_PREFIX)) {
+      throw new SecretEncryptionException(
+        'Received a plaintext value where ciphertext was expected. The encryption backfill migration may not have run.',
+        SecretEncryptionExceptionCode.MALFORMED_ENVELOPE,
       );
-
-      return ciphertext;
     }
 
-    return this.secretEncryptionService.decryptVersioned(ciphertext, {
+    return this.secretEncryptionService.decryptVersionedOrThrow(ciphertext, {
       workspaceId,
     });
   }
@@ -81,9 +80,9 @@ export class ConnectedAccountTokenEncryptionService {
     ciphertext,
     workspaceId,
   }: {
-    ciphertext: string | null;
+    ciphertext: EncryptedString | null;
     workspaceId: string;
-  }): string | null {
+  }): PlaintextString | null {
     if (!isDefined(ciphertext)) {
       return null;
     }
@@ -96,12 +95,12 @@ export class ConnectedAccountTokenEncryptionService {
     refreshToken,
     workspaceId,
   }: {
-    accessToken: string;
-    refreshToken: string | null;
+    accessToken: PlaintextString;
+    refreshToken: PlaintextString | null;
     workspaceId: string;
   }): {
-    encryptedAccessToken: string;
-    encryptedRefreshToken: string | null;
+    encryptedAccessToken: EncryptedString;
+    encryptedRefreshToken: EncryptedString | null;
   } {
     return {
       encryptedAccessToken: this.encrypt({
@@ -116,12 +115,72 @@ export class ConnectedAccountTokenEncryptionService {
   }
 
   private looksLikeCiphertext(value: string): boolean {
-    try {
-      const parsed = parseSecretEncryptionEnvelopeOrThrow({ value });
+    return value.startsWith(SECRET_ENCRYPTION_ENVELOPE_PREFIX);
+  }
 
-      return parsed.version === 2;
-    } catch {
-      return false;
+  encryptConnectionParameters({
+    connectionParameters,
+    workspaceId,
+  }: {
+    connectionParameters: PlaintextImapSmtpCaldavParams;
+    workspaceId: string;
+  }): EncryptedImapSmtpCaldavParams {
+    const result: EncryptedImapSmtpCaldavParams = {};
+
+    for (const protocol of ACCOUNT_TYPES) {
+      const params = connectionParameters[protocol];
+
+      if (!isDefined(params)) {
+        continue;
+      }
+
+      result[protocol] = {
+        ...params,
+        password: this.encrypt({ plaintext: params.password, workspaceId }),
+      };
     }
+
+    return result;
+  }
+
+  decryptConnectionParameters({
+    connectionParameters,
+    workspaceId,
+  }: {
+    connectionParameters: EncryptedImapSmtpCaldavParams;
+    workspaceId: string;
+  }): PlaintextImapSmtpCaldavParams {
+    const result: PlaintextImapSmtpCaldavParams = {};
+
+    for (const protocol of ACCOUNT_TYPES) {
+      const params = connectionParameters[protocol];
+
+      if (!isDefined(params)) {
+        continue;
+      }
+
+      result[protocol] = this.decryptProtocolPassword({
+        protocolParams: params,
+        workspaceId,
+      });
+    }
+
+    return result;
+  }
+
+  decryptProtocolPassword({
+    protocolParams,
+    workspaceId,
+  }: {
+    protocolParams: EncryptedConnectionParameters;
+    workspaceId: string;
+  }): PlaintextConnectionParameters {
+    return {
+      ...protocolParams,
+      password: this.decrypt({
+        ciphertext: protocolParams.password,
+        workspaceId,
+      }),
+    };
   }
 }

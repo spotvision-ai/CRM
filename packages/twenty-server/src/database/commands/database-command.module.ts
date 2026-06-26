@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkspaceIteratorModule } from 'src/database/commands/command-runners/workspace-iterator.module';
 import { CronRegisterAllCommand } from 'src/database/commands/cron-register-all.command';
 import { DataSeedWorkspaceCommand } from 'src/database/commands/data-seed-dev-workspace.command';
+import { SecretEncryptionRotationModule } from 'src/database/commands/secret-encryption-rotation/secret-encryption-rotation.module';
 import { GenerateInstanceCommandCommand } from 'src/database/commands/generate-instance-command.command';
 import { InstallPreInstalledAppsCommand } from 'src/database/commands/install-pre-installed-apps.command';
 import { InstanceCommandGenerationService } from 'src/database/commands/instance-command-generation.service';
@@ -25,6 +26,7 @@ import { EnterpriseKeyValidationCronCommand } from 'src/engine/core-modules/ente
 import { EnterpriseModule } from 'src/engine/core-modules/enterprise/enterprise.module';
 import { EventLogCleanupModule } from 'src/engine/core-modules/event-logs/cleanup/event-log-cleanup.module';
 import { FeatureFlagModule } from 'src/engine/core-modules/feature-flag/feature-flag.module';
+import { RotateSigningKeysCronCommand } from 'src/engine/core-modules/jwt/crons/commands/rotate-signing-keys.cron.command';
 import { FileModule } from 'src/engine/core-modules/file/file.module';
 import { PublicDomainModule } from 'src/engine/core-modules/public-domain/public-domain.module';
 import { TwentyConfigModule } from 'src/engine/core-modules/twenty-config/twenty-config.module';
@@ -34,6 +36,9 @@ import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.ent
 import { WorkspaceModule } from 'src/engine/core-modules/workspace/workspace.module';
 import { FieldMetadataModule } from 'src/engine/metadata-modules/field-metadata/field-metadata.module';
 import { ObjectMetadataModule } from 'src/engine/metadata-modules/object-metadata/object-metadata.module';
+import { RoleEntity } from 'src/engine/metadata-modules/role/role.entity';
+import { provideWorkspaceScopedRepository } from 'src/engine/twenty-orm/workspace-scoped-repository/provide-workspace-scoped-repository';
+import { CodeInterpreterSessionCleanupModule } from 'src/engine/core-modules/code-interpreter/crons/code-interpreter-session-cleanup.module';
 import { TrashCleanupModule } from 'src/engine/trash-cleanup/trash-cleanup.module';
 import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
 import { WorkspaceCacheModule } from 'src/engine/workspace-cache/workspace-cache.module';
@@ -50,7 +55,7 @@ import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/au
 @Module({
   imports: [
     UpgradeVersionCommandModule,
-    TypeOrmModule.forFeature([WorkspaceEntity]),
+    TypeOrmModule.forFeature([WorkspaceEntity, RoleEntity]),
     WorkspaceExportModule,
     // Cron command dependencies
     MessagingImportManagerModule,
@@ -71,6 +76,7 @@ import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/au
     WorkspaceCleanerModule,
     WorkspaceMigrationModule,
     TrashCleanupModule,
+    CodeInterpreterSessionCleanupModule,
     PublicDomainModule,
     EventLogCleanupModule,
     EnterpriseModule,
@@ -84,6 +90,7 @@ import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/au
     WorkspaceCacheModule,
     WorkspaceVersionModule,
     UpgradeModule,
+    SecretEncryptionRotationModule,
   ],
   providers: [
     DataSeedWorkspaceCommand,
@@ -94,10 +101,12 @@ import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/au
     RunInstanceCommandsCommand,
     ListOrphanedWorkspaceEntitiesCommand,
     EnterpriseKeyValidationCronCommand,
+    RotateSigningKeysCronCommand,
     GenerateApiKeyCommand,
     UpgradeStatusCommand,
     RebuildApplicationDefaultDepsCommand,
     InstallPreInstalledAppsCommand,
+    provideWorkspaceScopedRepository(RoleEntity),
   ],
 })
 export class DatabaseCommandModule {}
