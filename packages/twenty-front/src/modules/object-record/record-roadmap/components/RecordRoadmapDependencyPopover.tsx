@@ -1,6 +1,6 @@
 import { styled } from '@linaria/react';
 import { useEffect, useRef, useState } from 'react';
-import { IconTrash } from 'twenty-ui/display';
+import { IconTrash } from 'twenty-ui/icon';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 import { type RoadmapDependency } from '@/object-record/record-roadmap/hooks/useRecordRoadmapDependencies';

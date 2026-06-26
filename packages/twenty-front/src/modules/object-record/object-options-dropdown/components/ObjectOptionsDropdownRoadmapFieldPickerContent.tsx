@@ -13,7 +13,7 @@ import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
 import { FieldMetadataType } from 'twenty-shared/types';
 import { isFieldMetadataDateKind } from 'twenty-shared/utils';
-import { IconChevronLeft, useIcons } from 'twenty-ui/display';
+import { IconChevronLeft, useIcons } from 'twenty-ui/icon';
 import { MenuItemSelect } from 'twenty-ui/navigation';
 
 import { recordIndexRoadmapFieldBlockedByIdState } from '@/object-record/record-index/states/recordIndexRoadmapFieldBlockedByIdState';

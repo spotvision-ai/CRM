@@ -22,7 +22,7 @@ export const VIEW_PICKER_TYPE_SELECT_OPTIONS = [
   },
   {
     value: ViewType.ROADMAP,
-    label: msg`Roadmap`,
+    label: VIEW_TYPE_LABELS[ViewType.ROADMAP],
     Icon: viewTypeIconMapping(ViewType.ROADMAP),
   },
 ];
