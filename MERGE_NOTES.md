@@ -511,3 +511,25 @@ These files auto-merged with **no conflict markers** but broke against v2.16.1 t
 - `database:reset` ✅ — all migrations + metadata sync + seed apply on a fresh DB. Verified in DB: `ROADMAP` view-type enum value, 13 `roadmap*` columns on `core.view`, `opportunityMilestone`/`opportunityMilestoneDependency` tables.
 - Runtime ✅ — backend (`:3000`, GraphQL 200), worker (BullMQ jobs processing), frontend (`:3001`, Vite serving) all healthy.
 - ⚠️ **Not verified locally: the production upgrade path.** `database:reset` exercises a *fresh* install. The in-place upgrade (prod `crm.spotvision.ai` at ~2.5.x → 2.16.x via the 2.6→2.16 + fork instance commands) must be validated against a prod-snapshot/staging DB before deploying.
+
+### Prod 2.16 upgrade — incident + resilience fix (validated against a prod copy)
+
+First prod deploy of `v2.16.0` broke login: prod runs with `DISABLE_DB_MIGRATIONS=true`, so `docker compose up -d` (all the deploy workflow does) never runs the version upgrade — the v2.16 container booted against the 2.5 schema (`column connectedAccount.archivedAt does not exist`, etc.). Rolled back to `v2.5.7` (clean — DB untouched). See memory `project_prod_deploy_upgrade_gotcha`.
+
+Root cause of why the in-place upgrade then could not complete: the prod workspace's metadata has **drifted** from the standard definition (custom / cross-application view fields on standard views; legacy field defaults newer validators reject). The fork's 2.5-era `ResyncTwentyStandardApplicationSpvV25Command` runs a **full** twenty-standard re-sync that fails on this drift, and had been failing for **9 attempts** — permanently blocking the upgrade cursor at that step.
+
+**Fix (PR #4, `fix(spv): make 2.16 upgrade resilient to drifted workspace metadata`):**
+- `ResyncTwentyStandardApplicationSpvV25Command` — re-sync failure is now **non-fatal** (try/catch + warn). Its effect (taskTarget↔opportunityMilestone relation) is already satisfied on existing workspaces; standard metadata is kept current by the 2.6→2.16 commands + boot sync.
+- `FlatViewFieldValidatorService` — tolerate view fields absent from the standard-scoped maps (skip in the label-uniqueness + equivalence checks) instead of throwing.
+
+**Validated end-to-end against a 160MB `pg_dump` copy of prod (`crm` DB) restored locally:** full 2.5→2.16 `command:prod upgrade` completes (cursor 192 completed / 0 failed; resync skipped non-fatally), the previously-missing columns now exist (`connectedAccount.archivedAt`, role-permission-flag chain, all 2.16 instance commands), and the **v2.16 server boots clean** against the upgraded copy (healthz/GraphQL 200, no missing-column errors).
+
+**Prod execution procedure (maintenance window — deploy does NOT migrate):**
+1. Take a fresh RDS snapshot of `database-psql-vxpro-shared-server` (recovery point).
+2. Tag `v2.16.1` (this fix) → build-push to ECR.
+3. Deploy `v2.16.1` (compose up -d) — login is down from here until step 4 (schema↔code mismatch window).
+4. SSH to the VM and run the upgrade explicitly (visible pass/fail, not the entrypoint's swallowed one):
+   `docker compose -f docker-compose.prod.spv.yaml exec -T server sh -c 'yarn command:prod cache:flush && yarn command:prod upgrade && yarn command:prod cache:flush'`
+5. Verify `https://crm.spotvision.ai/healthz` 200 + real login.
+- The upgrade only touches the `crm` database on the shared RDS (other tenants' DBs are separate databases the command cannot reach); main impact risk to co-tenants is resource contention from the slow backfills → run off-peak.
+- Follow-up (separate, non-blocking): reconcile the workspace's metadata application-scoping drift so the standard-app re-sync passes cleanly again (currently skipped non-fatally).

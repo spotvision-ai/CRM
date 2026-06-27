@@ -47,12 +47,29 @@ export class ResyncTwentyStandardApplicationSpvV25Command extends ActiveOrSuspen
       `Re-syncing twenty-standard application for workspace ${workspaceId}`,
     );
 
-    await this.twentyStandardApplicationService.synchronizeTwentyStandardApplicationOrThrow(
-      { workspaceId },
-    );
+    // SPV: this 2.5-era one-off triggers a FULL twenty-standard re-sync. On
+    // workspaces whose metadata has drifted from the standard definition
+    // (custom / cross-application view fields, legacy field defaults that the
+    // newer validators reject), that full re-sync fails and permanently blocks
+    // the upgrade pipeline at this step. The command's actual purpose — making
+    // the taskTarget <-> opportunityMilestone relation exist — is already
+    // satisfied on existing workspaces, and standard metadata is kept current
+    // by the 2.6 -> 2.16 upgrade commands and the boot-time sync. Treat a
+    // re-sync failure as non-fatal so the rest of the upgrade can proceed.
+    try {
+      await this.twentyStandardApplicationService.synchronizeTwentyStandardApplicationOrThrow(
+        { workspaceId },
+      );
 
-    this.logger.log(
-      `Re-synced twenty-standard application for workspace ${workspaceId}`,
-    );
+      this.logger.log(
+        `Re-synced twenty-standard application for workspace ${workspaceId}`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Skipping twenty-standard re-sync for workspace ${workspaceId} (non-fatal): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 }
