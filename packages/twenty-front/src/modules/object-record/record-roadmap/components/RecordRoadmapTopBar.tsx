@@ -51,13 +51,14 @@ const StyledHiddenCounter = styled.span`
   font-size: ${themeCssVariables.font.size.sm};
 `;
 
-// MONTH remains in the enum for back-compat with views persisted with that
-// default zoom, but the UI only exposes the three groupings the PRD calls
-// out: day (individual days), week (7-day buckets), quarter (months under
-// Q1–Q4).
+// Expose all four zoom levels (Notion parity). MONTH is the default zoom
+// (ROADMAP_DEFAULT_ZOOM); it must have a button or the active-state highlight
+// shows nothing selected on first load. Day = individual days, Week = 7-day
+// buckets, Month = day grid under a month band, Quarter = months under Q1–Q4.
 const ZOOM_OPTIONS: { value: ViewRoadmapZoom; label: string }[] = [
   { value: ViewRoadmapZoom.DAY, label: 'Day' },
   { value: ViewRoadmapZoom.WEEK, label: 'Week' },
+  { value: ViewRoadmapZoom.MONTH, label: 'Month' },
   { value: ViewRoadmapZoom.QUARTER, label: 'Quarter' },
 ];
 

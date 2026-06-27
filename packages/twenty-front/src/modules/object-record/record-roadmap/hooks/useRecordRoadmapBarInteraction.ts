@@ -1,6 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { type Temporal } from 'temporal-polyfill';
 
+import {
+  clearRoadmapDropTargetHighlight,
+  findRoadmapRowRecordIdAtPoint,
+  updateRoadmapDropTargetHighlight,
+} from '@/object-record/record-roadmap/utils/recordRoadmapRowDragDom';
+
 type BarInteractionMode = 'move' | 'resize-start' | 'resize-end';
 
 type UseRecordRoadmapBarInteractionArgs = {
@@ -30,7 +36,6 @@ type UseRecordRoadmapBarInteractionArgs = {
 // pointer-up resolves the target swimlane via elementFromPoint rather than
 // maintaining row-to-swimlane maps in React state.
 const SWIMLANE_DATA_ATTR = 'data-roadmap-swimlane-key';
-const ROW_DATA_ATTR = 'data-roadmap-record-id';
 
 const findSwimlaneKeyAtPoint = (
   clientX: number,
@@ -43,61 +48,11 @@ const findSwimlaneKeyAtPoint = (
   return swimlane.getAttribute(SWIMLANE_DATA_ATTR);
 };
 
-const findRowRecordIdAtPoint = (
-  clientX: number,
-  clientY: number,
-): string | null => {
-  const element = document.elementFromPoint(clientX, clientY);
-  if (element === null) return null;
-  const row = element.closest(`[${ROW_DATA_ATTR}]`);
-  if (row === null) return null;
-  return row.getAttribute(ROW_DATA_ATTR);
-};
-
 type InProgressDrag = {
   mode: BarInteractionMode;
   initialClientX: number;
   initialClientY: number;
   pointerId: number;
-};
-
-const DROP_TARGET_DATA_ATTR = 'data-roadmap-drop-target';
-
-// Paints the blue drop indicator on the row currently under the cursor and
-// clears it from the previous one. Runs on every pointermove so the target
-// tracks fluidly; DOM-mutation-only to avoid re-rendering every row on a
-// 500-record swimlane.
-const updateDropTargetHighlight = ({
-  previousElement,
-  clientX,
-  clientY,
-  sourceRecordId,
-}: {
-  previousElement: Element | null;
-  clientX: number;
-  clientY: number;
-  sourceRecordId: string;
-}): Element | null => {
-  const hit = document.elementFromPoint(clientX, clientY);
-  const row = hit?.closest('[data-roadmap-record-id]') ?? null;
-  const rowRecordId = row?.getAttribute('data-roadmap-record-id') ?? null;
-  const nextElement =
-    row !== null && rowRecordId !== null && rowRecordId !== sourceRecordId
-      ? row
-      : null;
-  if (previousElement !== null && previousElement !== nextElement) {
-    previousElement.removeAttribute(DROP_TARGET_DATA_ATTR);
-  }
-  if (nextElement !== null) {
-    nextElement.setAttribute(DROP_TARGET_DATA_ATTR, '');
-  }
-  return nextElement;
-};
-
-const clearDropTargetHighlight = (element: Element | null) => {
-  if (element !== null) {
-    element.removeAttribute(DROP_TARGET_DATA_ATTR);
-  }
 };
 
 // Encapsulates the pointer-down → move → up lifecycle for a single roadmap
@@ -140,7 +95,7 @@ export const useRecordRoadmapBarInteraction = ({
       // just stretching an end.
       if (dragRef.current.mode === 'move') {
         setDeltaYPx(event.clientY - dragRef.current.initialClientY);
-        dropTargetRef.current = updateDropTargetHighlight({
+        dropTargetRef.current = updateRoadmapDropTargetHighlight({
           previousElement: dropTargetRef.current,
           clientX: event.clientX,
           clientY: event.clientY,
@@ -161,7 +116,7 @@ export const useRecordRoadmapBarInteraction = ({
     setDeltaDays(0);
     setDeltaYPx(0);
     setMode(null);
-    clearDropTargetHighlight(dropTargetRef.current);
+    clearRoadmapDropTargetHighlight(dropTargetRef.current);
     dropTargetRef.current = null;
   }, []);
 
@@ -181,7 +136,7 @@ export const useRecordRoadmapBarInteraction = ({
         event.clientX,
         event.clientY,
       );
-      const droppedRowRecordId = findRowRecordIdAtPoint(
+      const droppedRowRecordId = findRoadmapRowRecordIdAtPoint(
         event.clientX,
         event.clientY,
       );

@@ -83,7 +83,10 @@ const MONTH_LABELS_SHORT = [
 const groupIntoBand = (
   days: Temporal.PlainDate[],
   keyFn: (day: Temporal.PlainDate) => string,
-  labelFn: (firstDay: Temporal.PlainDate, lastDay: Temporal.PlainDate) => string,
+  labelFn: (
+    firstDay: Temporal.PlainDate,
+    lastDay: Temporal.PlainDate,
+  ) => string,
 ): HeaderBandCell[] => {
   const bands: { firstDay: Temporal.PlainDate; lastDay: Temporal.PlainDate }[] =
     [];
@@ -100,8 +103,7 @@ const groupIntoBand = (
   }
 
   return bands.map(({ firstDay, lastDay }) => {
-    const daySpan =
-      firstDay.until(lastDay, { largestUnit: 'days' }).days + 1;
+    const daySpan = firstDay.until(lastDay, { largestUnit: 'days' }).days + 1;
     return { firstDay, daySpan, label: labelFn(firstDay, lastDay) };
   });
 };
@@ -172,7 +174,10 @@ const computeBands = (
       };
     case ViewRoadmapZoom.MONTH:
     default:
-      return { upper: computeMonthBand(days), lower: [] };
+      // MONTH is the default zoom — give it a populated lower tier (weeks)
+      // so the header isn't half-empty on first load. Month band on top,
+      // week ranges below (denser than WEEK zoom since days are narrower).
+      return { upper: computeMonthBand(days), lower: computeWeekBand(days) };
   }
 };
 

@@ -17,6 +17,7 @@ type RecordRoadmapRowProps = {
   viewportStart: Temporal.PlainDate;
   dayWidthPx: number;
   color: string | null;
+  statusChip?: { label: string; color: string | null } | null;
   currentSwimlaneKey?: string | null;
   readOnly?: boolean;
   onCommit: (args: {
@@ -63,6 +64,7 @@ export const RecordRoadmapRow = ({
   viewportStart,
   dayWidthPx,
   color,
+  statusChip,
   currentSwimlaneKey,
   readOnly,
   onCommit,
@@ -84,6 +86,7 @@ export const RecordRoadmapRow = ({
       viewportStart={viewportStart}
       dayWidthPx={dayWidthPx}
       color={color}
+      statusChip={statusChip}
       currentSwimlaneKey={currentSwimlaneKey}
       readOnly={readOnly}
       onCommit={onCommit}

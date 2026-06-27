@@ -188,9 +188,7 @@ export const RecordRoadmapDependencyConnectors = ({
                 }}
                 onPointerEnter={() => setHoveredId(dependency.id)}
                 onPointerLeave={() =>
-                  setHoveredId((prev) =>
-                    prev === dependency.id ? null : prev,
-                  )
+                  setHoveredId((prev) => (prev === dependency.id ? null : prev))
                 }
                 onClick={(event) => {
                   event.stopPropagation();

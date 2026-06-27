@@ -162,9 +162,7 @@ export const ObjectOptionsDropdownRoadmapFieldPickerContent = ({
     field.label.toLowerCase().includes(searchInput.toLowerCase()),
   );
 
-  const persistFieldId = async (
-    fieldId: string | null,
-  ): Promise<void> => {
+  const persistFieldId = async (fieldId: string | null): Promise<void> => {
     switch (role) {
       case 'start':
         if (fieldId === null) return;

@@ -402,17 +402,11 @@ export const ObjectOptionsDropdownLayoutContent = () => {
                 </SelectableListItem>
                 <SelectableListItem
                   itemId="RoadmapPlannedStartField"
-                  onEnter={() =>
-                    onContentChange('roadmapPlannedStartField')
-                  }
+                  onEnter={() => onContentChange('roadmapPlannedStartField')}
                 >
                   <MenuItem
-                    focused={
-                      selectedItemId === 'RoadmapPlannedStartField'
-                    }
-                    onClick={() =>
-                      onContentChange('roadmapPlannedStartField')
-                    }
+                    focused={selectedItemId === 'RoadmapPlannedStartField'}
+                    onClick={() => onContentChange('roadmapPlannedStartField')}
                     LeftIcon={IconArrowRight}
                     text={t`Planned start field`}
                     contextualText={roadmapPlannedStartFieldMetadata?.label}

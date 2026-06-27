@@ -2,9 +2,14 @@ import { styled } from '@linaria/react';
 import { Temporal } from 'temporal-polyfill';
 import { FieldMetadataType } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
+import { ChipVariant } from 'twenty-ui/data-display';
+import { IconGripVertical } from 'twenty-ui/icon';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
+import { RecordChip } from '@/object-record/components/RecordChip';
+import { useRecordRoadmapRowReorderInteraction } from '@/object-record/record-roadmap/hooks/useRecordRoadmapRowReorderInteraction';
+import { type ObjectRecord } from '@/object-record/types/ObjectRecord';
 import { recordIndexRoadmapShowDeviationState } from '@/object-record/record-index/states/recordIndexRoadmapShowDeviationState';
 import {
   ROADMAP_HEADER_HEIGHT,
@@ -113,9 +118,53 @@ const StyledNameRow = styled.div`
   display: flex;
   font-size: ${themeCssVariables.font.size.sm};
   height: ${ROADMAP_ROW_HEIGHT}px;
+  position: relative;
 
   &:hover {
     background-color: ${themeCssVariables.background.secondary};
+  }
+
+  /* The grip handle only appears on row hover (Notion convention) so it
+     doesn't clutter the column at rest. */
+  &:hover [data-roadmap-drag-handle] {
+    opacity: 1;
+  }
+
+  /* Inset shadow (not a top border) marks the drop target so the row height
+     doesn't shift while the indicator is active — mirrors the canvas rows. */
+  &[data-roadmap-drop-target] {
+    background-color: ${themeCssVariables.tag.background.sky};
+    box-shadow:
+      inset 0 2px 0 0 ${themeCssVariables.tag.text.blue},
+      inset 0 -2px 0 0 ${themeCssVariables.tag.text.blue};
+  }
+`;
+
+// Notion-style reorder grip pinned to the row's left gutter. Absolutely
+// positioned so it never changes the row width (which would desync the name
+// column from the arithmetic-aligned canvas). 16px matches the name cell's
+// left padding, so the label text sits flush to the handle's right edge.
+const StyledDragHandle = styled.button`
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: ${themeCssVariables.font.color.light};
+  cursor: grab;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  opacity: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  touch-action: none;
+  transition: opacity 80ms ease-out;
+  width: 16px;
+  z-index: 1;
+
+  &:active {
+    cursor: grabbing;
   }
 `;
 
@@ -124,7 +173,7 @@ const StyledNameCell = styled.div`
   box-sizing: border-box;
   display: flex;
   overflow: hidden;
-  padding: 0 ${themeCssVariables.spacing[2]};
+  padding: 0 ${themeCssVariables.spacing[2]} 0 ${themeCssVariables.spacing[4]};
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
@@ -161,6 +210,10 @@ const StyledMutedText = styled.span`
 type FieldCellProps = {
   field: FieldMetadataItem;
   record: RoadmapPlacedRecord['record'];
+  // Pre-resolved related-record label (the recordId→fieldId map lives in the
+  // Timeline). Present only for RELATION fields; lets the cell show the
+  // related record's name instead of its UUID.
+  relationLabel?: string;
 };
 
 // Maps SELECT option `color` tokens (theme color names like 'blue', 'red')
@@ -193,10 +246,11 @@ const SELECT_CHIP_TEXT_COLORS: Record<string, string> = {
 };
 
 // Best-effort cell renderer keyed by FieldMetadataType. The Roadmap fetch
-// hook already requests the visible view-fields' values in the GQL response
-// (and `{id,name}` for RELATION), so reading `record[field.name]` here is
-// safe. Anything we can't recognize falls back to a stringified value.
-const FieldCell = ({ field, record }: FieldCellProps) => {
+// hook requests the visible view-fields' values in the GQL response, so
+// reading `record[field.name]` here is safe. RELATION fields use the
+// pre-resolved `relationLabel` (the related object's labelIdentifier);
+// anything we can't recognize falls back to a stringified value.
+const FieldCell = ({ field, record, relationLabel }: FieldCellProps) => {
   const value = record[field.name];
 
   if (!isDefined(value) || value === '') {
@@ -256,16 +310,33 @@ const FieldCell = ({ field, record }: FieldCellProps) => {
   }
 
   if (field.type === FieldMetadataType.RELATION) {
-    if (typeof value !== 'object' || value === null) {
-      return <StyledMutedText>—</StyledMutedText>;
+    // Render the related record as a chip — avatar/logo + label — exactly like
+    // the Table does, so a Company shows its logo, a Person their avatar, etc.
+    // RecordChip resolves the image via the precomputed chip generator for the
+    // target object (the GQL fetch already requests its image identifier).
+    // Display-only (forceDisableClick) so the row's click-to-open wins.
+    const targetNameSingular =
+      field.relation?.targetObjectMetadata?.nameSingular;
+    if (
+      isDefined(targetNameSingular) &&
+      typeof value === 'object' &&
+      value !== null
+    ) {
+      return (
+        <RecordChip
+          objectNameSingular={targetNameSingular}
+          record={value as ObjectRecord}
+          variant={ChipVariant.Transparent}
+          forceDisableClick
+        />
+      );
     }
-    const related = value as { name?: unknown; id?: unknown };
+    // Fallback to the Timeline-resolved label text (handles FULL_NAME and
+    // non-`name` identifiers) — never the raw UUID, which was the original bug.
     const text =
-      typeof related.name === 'string' && related.name.length > 0
-        ? related.name
-        : typeof related.id === 'string'
-          ? related.id
-          : '—';
+      typeof relationLabel === 'string' && relationLabel.length > 0
+        ? relationLabel
+        : '—';
     return <span title={text}>{text}</span>;
   }
 
@@ -302,25 +373,45 @@ type RecordRoadmapNameColumnProps = {
   swimlanes: RoadmapSwimlane[];
   onOpenRecord?: (recordId: string) => void;
   extraFields?: FieldMetadataItem[];
+  // recordId → fieldId → resolved related-record label, pre-computed in the
+  // Timeline so RELATION cells show a name instead of a UUID.
+  relationLabels?: Record<string, Record<string, string>>;
+  readOnly?: boolean;
+  // Reorder-by-position commit fired when a grip handle is dropped on another
+  // row. Owned by the Timeline (shared with the bar-drag reorder path).
+  onReorder?: (args: { recordId: string; targetRowRecordId: string }) => void;
+  // User-resizable width of the "Name" column (the divider lives in the
+  // Timeline). Defaults to the shared constant.
+  nameColumnWidth?: number;
 };
 
 export const RecordRoadmapNameColumn = ({
   swimlanes,
   onOpenRecord,
   extraFields = [],
+  relationLabels = {},
+  readOnly = false,
+  onReorder,
+  nameColumnWidth = ROADMAP_NAME_COLUMN_WIDTH,
 }: RecordRoadmapNameColumnProps) => {
-  const recordIndexRoadmapShowDeviation = useAtomStateValue(recordIndexRoadmapShowDeviationState);
+  const { onPointerDown: onReorderPointerDown } =
+    useRecordRoadmapRowReorderInteraction({
+      onReorder: onReorder ?? (() => {}),
+    });
+  const canReorder = !readOnly && isDefined(onReorder);
+  const recordIndexRoadmapShowDeviation = useAtomStateValue(
+    recordIndexRoadmapShowDeviationState,
+  );
   // Compute today once for all swimlane headers — avoids each placed record
   // reading the wall clock independently and keeps the badge stable across
   // the same render pass.
   const today = Temporal.Now.plainDateISO();
   const totalWidth =
-    ROADMAP_NAME_COLUMN_WIDTH +
-    extraFields.length * ROADMAP_NAME_COLUMN_FIELD_WIDTH;
+    nameColumnWidth + extraFields.length * ROADMAP_NAME_COLUMN_FIELD_WIDTH;
   return (
     <StyledColumn style={{ width: totalWidth }}>
       <StyledHeaderRow>
-        <StyledHeaderCell style={{ width: ROADMAP_NAME_COLUMN_WIDTH }}>
+        <StyledHeaderCell style={{ width: nameColumnWidth }}>
           Name
         </StyledHeaderCell>
         {extraFields.map((field) => (
@@ -365,11 +456,25 @@ export const RecordRoadmapNameColumn = ({
             {swimlane.records.map((placed) => (
               <StyledNameRow
                 key={placed.record.id}
+                data-roadmap-record-id={placed.record.id}
                 onClick={() => onOpenRecord?.(placed.record.id)}
               >
+                {canReorder && (
+                  <StyledDragHandle
+                    type="button"
+                    data-roadmap-drag-handle
+                    title="Drag to reorder"
+                    onPointerDown={(event) =>
+                      onReorderPointerDown(event, placed.record.id)
+                    }
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <IconGripVertical size={14} />
+                  </StyledDragHandle>
+                )}
                 <StyledNameCell
                   title={placed.label}
-                  style={{ width: ROADMAP_NAME_COLUMN_WIDTH }}
+                  style={{ width: nameColumnWidth }}
                 >
                   {placed.label}
                 </StyledNameCell>
@@ -378,7 +483,13 @@ export const RecordRoadmapNameColumn = ({
                     key={field.id}
                     style={{ width: ROADMAP_NAME_COLUMN_FIELD_WIDTH }}
                   >
-                    <FieldCell field={field} record={placed.record} />
+                    <FieldCell
+                      field={field}
+                      record={placed.record}
+                      relationLabel={
+                        relationLabels[placed.record.id]?.[field.id]
+                      }
+                    />
                   </StyledFieldCell>
                 ))}
               </StyledNameRow>

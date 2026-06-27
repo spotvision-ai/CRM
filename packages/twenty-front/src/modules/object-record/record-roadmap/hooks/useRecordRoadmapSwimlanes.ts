@@ -44,6 +44,10 @@ export const ROADMAP_UNCATEGORIZED_SWIMLANE_KEY = '__uncategorized__';
 
 type UseRecordRoadmapSwimlanesArgs = {
   placedRecords: RoadmapPlacedRecord[];
+  // When true a view sort is active and `placedRecords` already arrives in the
+  // server's sort order — the hook then preserves that order instead of
+  // re-sorting each lane by `position`.
+  hasActiveSort: boolean;
 };
 
 type UseRecordRoadmapSwimlanesResult = {
@@ -68,6 +72,7 @@ type UseRecordRoadmapSwimlanesResult = {
 // is null.
 export const useRecordRoadmapSwimlanes = ({
   placedRecords,
+  hasActiveSort,
 }: UseRecordRoadmapSwimlanesArgs): UseRecordRoadmapSwimlanesResult => {
   const { objectMetadataItem } = useRecordRoadmapContextOrThrow();
   const recordIndexRoadmapFieldGroupId = useAtomStateValue(
@@ -92,35 +97,42 @@ export const useRecordRoadmapSwimlanes = ({
     objectMetadataItem,
   ]);
 
-  // Records inside each swimlane are sorted ascending by the record's
-  // `position` field so vertical-drag reorders persist across reloads.
-  // Ties (or missing position on freshly-created records) fall back to the
-  // label for deterministic rendering. Fields are fetched by
-  // `useRelevantRecordsGqlFields` when the object exposes `position`.
-  const sortByPositionThenLabel = (
-    a: RoadmapPlacedRecord,
-    b: RoadmapPlacedRecord,
-  ) => {
-    const aPosition =
-      typeof a.record.position === 'number'
-        ? a.record.position
-        : Number.POSITIVE_INFINITY;
-    const bPosition =
-      typeof b.record.position === 'number'
-        ? b.record.position
-        : Number.POSITIVE_INFINITY;
-    if (aPosition !== bPosition) return aPosition - bPosition;
-    return a.label.localeCompare(b.label);
-  };
-
   return useMemo<UseRecordRoadmapSwimlanesResult>(() => {
+    // Records inside each swimlane are sorted ascending by the record's
+    // `position` field so vertical-drag reorders persist across reloads.
+    // Ties (or missing position on freshly-created records) fall back to the
+    // label for deterministic rendering. Defined inside the memo so it isn't
+    // a reactive dependency.
+    const sortByPositionThenLabel = (
+      a: RoadmapPlacedRecord,
+      b: RoadmapPlacedRecord,
+    ) => {
+      const aPosition =
+        typeof a.record.position === 'number'
+          ? a.record.position
+          : Number.POSITIVE_INFINITY;
+      const bPosition =
+        typeof b.record.position === 'number'
+          ? b.record.position
+          : Number.POSITIVE_INFINITY;
+      if (aPosition !== bPosition) return aPosition - bPosition;
+      return a.label.localeCompare(b.label);
+    };
+
+    // When a view sort is active the records arrive already ordered by the
+    // server; returning 0 preserves that order (Array.sort is stable). With no
+    // active sort we fall back to manual `position` ordering so drag-reorders
+    // persist across reloads.
+    const compareRecords = (a: RoadmapPlacedRecord, b: RoadmapPlacedRecord) =>
+      hasActiveSort ? 0 : sortByPositionThenLabel(a, b);
+
     if (groupField === null) {
       return {
         swimlanes: [
           {
             key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
             label: 'All records',
-            records: placedRecords.slice().sort(sortByPositionThenLabel),
+            records: placedRecords.slice().sort(compareRecords),
           },
         ],
         groupFieldName: null,
@@ -154,7 +166,8 @@ export const useRecordRoadmapSwimlanes = ({
         ) {
           const relatedId = (rawValue as { id: string }).id;
           const relatedName =
-            'name' in rawValue && typeof (rawValue as { name: unknown }).name === 'string'
+            'name' in rawValue &&
+            typeof (rawValue as { name: unknown }).name === 'string'
               ? (rawValue as { name: string }).name
               : relatedId;
           const bucket = byRelationId.get(relatedId) ?? {
@@ -173,14 +186,14 @@ export const useRecordRoadmapSwimlanes = ({
         .map(([relatedId, bucket]) => ({
           key: relatedId,
           label: bucket.label,
-          records: bucket.records.slice().sort(sortByPositionThenLabel),
+          records: bucket.records.slice().sort(compareRecords),
         }));
 
       if (uncategorized.length > 0) {
         swimlanes.push({
           key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
           label: 'Uncategorized',
-          records: uncategorized.slice().sort(sortByPositionThenLabel),
+          records: uncategorized.slice().sort(compareRecords),
         });
       }
 
@@ -198,7 +211,7 @@ export const useRecordRoadmapSwimlanes = ({
           {
             key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
             label: groupField.label ?? 'Group',
-            records: placedRecords.slice().sort(sortByPositionThenLabel),
+            records: placedRecords.slice().sort(compareRecords),
           },
         ],
         groupFieldName: groupField.name,
@@ -232,16 +245,14 @@ export const useRecordRoadmapSwimlanes = ({
         key: option.value,
         label: option.label,
         color: option.color,
-        records: (byValue.get(option.value) ?? [])
-          .slice()
-          .sort(sortByPositionThenLabel),
+        records: (byValue.get(option.value) ?? []).slice().sort(compareRecords),
       }));
 
     if (uncategorized.length > 0) {
       swimlanes.push({
         key: ROADMAP_UNCATEGORIZED_SWIMLANE_KEY,
         label: 'Uncategorized',
-        records: uncategorized.slice().sort(sortByPositionThenLabel),
+        records: uncategorized.slice().sort(compareRecords),
       });
     }
 
@@ -250,5 +261,5 @@ export const useRecordRoadmapSwimlanes = ({
       groupFieldName: groupField.name,
       supportsCrossSwimlaneDrop,
     };
-  }, [groupField, placedRecords]);
+  }, [groupField, placedRecords, hasActiveSort]);
 };

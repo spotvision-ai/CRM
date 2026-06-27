@@ -59,14 +59,15 @@ export const computeRoadmapDeviation = ({
   // the planned end, even if today hasn't reached it yet) with classic
   // overdue (today > planned). Both contribute to deviationDays; only the
   // second flips isOverdue (the bar's red-border signal).
-  const isOverdue =
-    Temporal.PlainDate.compare(today, plannedEndDate) > 0;
+  const isOverdue = Temporal.PlainDate.compare(today, plannedEndDate) > 0;
 
   // The "effective" end is whichever is later between actual and today —
   // a future actualEnd surfaces as forecasted slip, a past today wins
   // when actual hasn't been set or is in the past.
   const effectiveEnd =
-    Temporal.PlainDate.compare(actualEndDate, today) >= 0 ? actualEndDate : today;
+    Temporal.PlainDate.compare(actualEndDate, today) >= 0
+      ? actualEndDate
+      : today;
 
   const cmp = Temporal.PlainDate.compare(effectiveEnd, plannedEndDate);
   if (cmp <= 0) {
