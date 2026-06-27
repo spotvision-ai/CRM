@@ -190,7 +190,9 @@ export const MilestonesCard = () => {
       <StyledInner>
         <ActivityList>
           {records.map((milestone) => {
-            const descriptionPreview = isDefined(milestone.description?.markdown)
+            const descriptionPreview = isDefined(
+              milestone.description?.markdown,
+            )
               ? stripMarkdownLite(milestone.description.markdown)
               : '';
             return (
@@ -208,12 +210,15 @@ export const MilestonesCard = () => {
                       <StyledTitle>
                         {milestone.name || t`Untitled milestone`}
                       </StyledTitle>
-                      {isDefined(milestone.status) && milestone.status !== '' && (
-                        <StyledStatus>{milestone.status}</StyledStatus>
-                      )}
+                      {isDefined(milestone.status) &&
+                        milestone.status !== '' && (
+                          <StyledStatus>{milestone.status}</StyledStatus>
+                        )}
                     </StyledTitleRow>
                     {descriptionPreview !== '' && (
-                      <StyledDescription>{descriptionPreview}</StyledDescription>
+                      <StyledDescription>
+                        {descriptionPreview}
+                      </StyledDescription>
                     )}
                   </StyledLeftSide>
                   <StyledRightSide>

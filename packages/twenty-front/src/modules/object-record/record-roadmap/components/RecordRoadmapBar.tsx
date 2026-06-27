@@ -1,5 +1,6 @@
 import { styled } from '@linaria/react';
 import { Temporal } from 'temporal-polyfill';
+import { isDefined } from 'twenty-shared/utils';
 import { type ThemeColor } from 'twenty-ui/theme';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { IconLock } from 'twenty-ui/icon';
@@ -33,7 +34,7 @@ const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
       props.hasError
         ? themeCssVariables.border.color.danger
         : themeCssVariables.tag.text.blue};
-  border-radius: 4px;
+  border-radius: 6px;
   /* border-box is non-negotiable for the connection-port dots and the
      dependency arrow geometry: timeline math gives us widthPx as the
      visual span the bar should occupy on the day grid. With the default
@@ -56,8 +57,12 @@ const StyledBar = styled.div<{ hasError: boolean; isDragging: boolean }>`
   user-select: none;
   white-space: nowrap;
 
+  /* box-shadow reads on every bar (including SELECT-colored ones whose fill
+     comes from inline styles), so the hover lift is universal even though the
+     bg swap only shows on the default blue bars. */
   &:hover {
     background-color: ${themeCssVariables.tag.background.sky};
+    box-shadow: ${themeCssVariables.boxShadow.light};
   }
 
   &:active {
@@ -96,6 +101,41 @@ const StyledLabel = styled.span`
   overflow: hidden;
   pointer-events: none;
   text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+// Compact SELECT pill drawn inside wide bars so a key property (status) reads
+// at a glance without opening the record. `flex-shrink: 0` keeps it intact —
+// the label truncates first. Colors come from the SELECT option's theme token
+// (resolved via getColorTokensFor) so it matches chips elsewhere.
+const StyledBarChip = styled.span`
+  border-radius: 999px;
+  flex-shrink: 0;
+  font-size: ${themeCssVariables.font.size.xs};
+  font-weight: ${themeCssVariables.font.weight.medium};
+  margin-left: ${themeCssVariables.spacing[1]};
+  max-width: 45%;
+  overflow: hidden;
+  padding: 0 ${themeCssVariables.spacing[1]};
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+// Muted start–end range rendered to the RIGHT of the bar (Notion convention).
+// Absolutely positioned as a sibling of the bar so it never enters the bar's
+// overflow:hidden box nor perturbs the connection-port / dependency-arrow
+// geometry that keys off `widthPx`. Hidden at coarse zooms where bars sit too
+// close for the text to read.
+const StyledBarDateLabel = styled.div`
+  align-items: center;
+  color: ${themeCssVariables.font.color.tertiary};
+  display: flex;
+  font-size: ${themeCssVariables.font.size.xs};
+  height: ${ROADMAP_BAR_HEIGHT}px;
+  pointer-events: none;
+  position: absolute;
+  top: ${ROADMAP_BAR_VERTICAL_PADDING}px;
   white-space: nowrap;
 `;
 
@@ -214,6 +254,10 @@ type RecordRoadmapBarProps = {
   /** SELECT-option color name (e.g. 'blue'). Null when the view has no
       color field or the record's value doesn't match an option. */
   color: string | null;
+  /** Resolved SELECT pill (label + color token) for the configured status
+      field, drawn inside the bar at Day/Week zoom when there's room. Null
+      when no status field is configured or the record has no value. */
+  statusChip?: { label: string; color: string | null } | null;
   currentSwimlaneKey?: string | null;
   readOnly?: boolean;
   onCommit: (args: {
@@ -260,6 +304,7 @@ export const RecordRoadmapBar = ({
   viewportStart,
   dayWidthPx,
   color,
+  statusChip,
   currentSwimlaneKey,
   readOnly = false,
   onCommit,
@@ -414,9 +459,13 @@ export const RecordRoadmapBar = ({
         colorTokens?.accent ??
         themeCssVariables.tag.text.blue);
 
-  const tooltipParts = [`${label} (${previewStart.toString()} → ${previewEnd.toString()})`];
+  const tooltipParts = [
+    `${label} (${previewStart.toString()} → ${previewEnd.toString()})`,
+  ];
   if (isOverdue) {
-    tooltipParts.push(`${deviationDays} day${deviationDays === 1 ? '' : 's'} overdue`);
+    tooltipParts.push(
+      `${deviationDays} day${deviationDays === 1 ? '' : 's'} overdue`,
+    );
   }
   if (blockedBy && blockedBy !== 'NONE') {
     tooltipParts.push(`Blocked by: ${blockedBy}`);
@@ -424,6 +473,34 @@ export const RecordRoadmapBar = ({
   const tooltipText = hasError
     ? `End date is before start date (${previewStart.toString()} → ${previewEnd.toString()})`
     : tooltipParts.join(' — ');
+
+  // Notion-style visible date range to the right of the bar. Shown only at
+  // Day/Week zoom (dayWidthPx >= 24) where bars are spaced enough to read it;
+  // at Month/Quarter the dates would collide with neighbouring rows' bars.
+  const showDateLabel = dayWidthPx >= 24 && !hasError;
+  const formatBarDate = (date: Temporal.PlainDate) =>
+    date.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+  const dateRangeText = `${formatBarDate(previewStart)} – ${formatBarDate(
+    previewEnd,
+  )}`;
+
+  // Status pill inside the bar — only at Day/Week zoom and when the bar is
+  // wide enough to fit it next to the (truncating) label.
+  const showBarChip =
+    isDefined(statusChip) && dayWidthPx >= 24 && widthPx >= 96 && !hasError;
+  const barChipTokens = isDefined(statusChip)
+    ? getColorTokensFor(statusChip.color)
+    : null;
+  const barChipStyle =
+    barChipTokens !== null
+      ? {
+          backgroundColor: barChipTokens.background,
+          color: barChipTokens.accent,
+        }
+      : {
+          backgroundColor: themeCssVariables.tag.background.gray,
+          color: themeCssVariables.tag.text.gray,
+        };
 
   return (
     <>
@@ -478,10 +555,24 @@ export const RecordRoadmapBar = ({
           </StyledLockIcon>
         )}
         <StyledLabel>{label}</StyledLabel>
+        {showBarChip && isDefined(statusChip) && (
+          <StyledBarChip style={barChipStyle}>{statusChip.label}</StyledBarChip>
+        )}
         {!readOnly && (
           <StyledResizeHandleRight onPointerDown={onPointerDownResizeEnd} />
         )}
       </StyledBar>
+      {showDateLabel && (
+        <StyledBarDateLabel
+          aria-hidden
+          style={{
+            left: leftPx + widthPx + ROADMAP_CONNECTION_DOT_DIAMETER,
+            ...(isMoveDrag ? { transform: `translateY(${deltaYPx}px)` } : {}),
+          }}
+        >
+          {dateRangeText}
+        </StyledBarDateLabel>
+      )}
       {/* Connection-point dots. Vertically centered on the bar's left
           and right edges so dependency arrows visually attach to a
           defined port. Click to begin authoring a dependency; click a

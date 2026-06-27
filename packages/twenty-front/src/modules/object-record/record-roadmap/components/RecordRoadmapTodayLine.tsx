@@ -2,6 +2,8 @@ import { styled } from '@linaria/react';
 import { Temporal } from 'temporal-polyfill';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
+import { ROADMAP_HEADER_HEIGHT } from '@/object-record/record-roadmap/constants/RoadmapDimensions';
+
 type RecordRoadmapTodayLineProps = {
   viewportStart: Temporal.PlainDate;
   dayWidthPx: number;
@@ -22,16 +24,18 @@ const StyledColumn = styled.div`
   z-index: 0;
 `;
 
+// Pinned just under the sticky header so the "Today" pill is actually
+// visible (at top:-18px it sat above the canvas, hidden behind the header).
 const StyledLabel = styled.div`
   background-color: ${themeCssVariables.accent.secondary};
-  border-radius: 2px;
+  border-radius: 4px;
   color: ${themeCssVariables.font.color.inverted};
   font-size: ${themeCssVariables.font.size.xs};
   font-weight: ${themeCssVariables.font.weight.medium};
   left: 0;
-  padding: 0 ${themeCssVariables.spacing[1]};
+  padding: 1px ${themeCssVariables.spacing[1]};
   position: absolute;
-  top: -18px;
+  top: ${ROADMAP_HEADER_HEIGHT + 4}px;
   white-space: nowrap;
   z-index: 3;
 `;

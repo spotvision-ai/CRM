@@ -25,7 +25,10 @@ import { RecordRoadmapSwimlane } from '@/object-record/record-roadmap/components
 import { RecordRoadmapTimeHeader } from '@/object-record/record-roadmap/components/RecordRoadmapTimeHeader';
 import { RecordRoadmapTodayLine } from '@/object-record/record-roadmap/components/RecordRoadmapTodayLine';
 import { RecordRoadmapWeekendsOverlay } from '@/object-record/record-roadmap/components/RecordRoadmapWeekendsOverlay';
-import { ROADMAP_DAY_WIDTH_BY_ZOOM } from '@/object-record/record-roadmap/constants/RoadmapZoomLevels';
+import {
+  ROADMAP_DAY_WIDTH_BY_ZOOM,
+  ROADMAP_DEFAULT_ZOOM,
+} from '@/object-record/record-roadmap/constants/RoadmapZoomLevels';
 import { useRecordRoadmapContextOrThrow } from '@/object-record/record-roadmap/contexts/RecordRoadmapContext';
 import {
   ROADMAP_NAME_COLUMN_FIELD_WIDTH,
@@ -52,6 +55,7 @@ import { recordIndexRoadmapFieldStatusIdState } from '@/object-record/record-ind
 import { recordIndexRoadmapShowTodayState } from '@/object-record/record-index/states/recordIndexRoadmapShowTodayState';
 import { recordIndexRoadmapShowWeekendsState } from '@/object-record/record-index/states/recordIndexRoadmapShowWeekendsState';
 import { recordRoadmapPendingConnectionState } from '@/object-record/record-roadmap/states/recordRoadmapPendingConnectionState';
+import { recordRoadmapNameColumnWidthComponentState } from '@/object-record/record-roadmap/states/recordRoadmapNameColumnWidthComponentState';
 import { recordRoadmapViewportStartComponentState } from '@/object-record/record-roadmap/states/recordRoadmapViewportStartComponentState';
 import { recordRoadmapZoomComponentState } from '@/object-record/record-roadmap/states/recordRoadmapZoomComponentState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
@@ -66,6 +70,14 @@ import { computeRoadmapViewportDays } from '@/object-record/record-roadmap/utils
 import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
 import { parseRoadmapDateValue } from '@/object-record/record-roadmap/utils/computeRoadmapBarPosition';
 import { computeNewPositionOfDraggedRecord } from '@/object-record/utils/computeNewPositionOfDraggedRecord';
+import { resolveRoadmapRelationLabel } from '@/object-record/record-roadmap/utils/resolveRoadmapRelationLabel';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
+import { FieldMetadataType } from 'twenty-shared/types';
+import { RecordIndexRemoveSortingModal } from '@/object-record/record-index/components/RecordIndexRemoveSortingModal';
+import { RECORD_INDEX_REMOVE_SORTING_MODAL_ID } from '@/object-record/record-index/constants/RecordIndexRemoveSortingModalId';
+import { useModal } from '@/ui/layout/modal/hooks/useModal';
+import { isModalOpenedComponentState } from '@/ui/layout/modal/states/isModalOpenedComponentState';
+import { useUpdateCurrentView } from '@/views/hooks/useUpdateCurrentView';
 
 const StyledTimelineContainer = styled.div`
   background-color: ${themeCssVariables.background.primary};
@@ -92,6 +104,33 @@ const StyledNameColumnScroller = styled.div`
   flex-shrink: 0;
   overflow-x: hidden;
   overflow-y: hidden;
+`;
+
+// Drag-divider sitting on the name-pane / canvas boundary. Lives in
+// StyledScrollRow (not the scroller, which clips overflow) so it isn't cut off.
+// Dragging it resizes the Name column; the canvas is flex:1 and reflows.
+const StyledColumnResizer = styled.div`
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  top: 0;
+  touch-action: none;
+  width: 7px;
+  z-index: 4;
+
+  &::after {
+    background-color: transparent;
+    content: '';
+    height: 100%;
+    left: 3px;
+    position: absolute;
+    transition: background-color 80ms ease-out;
+    width: 1px;
+  }
+
+  &:hover::after {
+    background-color: ${themeCssVariables.tag.text.blue};
+  }
 `;
 
 const StyledTimelineCanvas = styled.div`
@@ -133,9 +172,10 @@ export const RecordRoadmapTimeline = () => {
 
   const [recordRoadmapViewportStart, setRecordRoadmapViewportStart] =
     useAtomComponentState(recordRoadmapViewportStartComponentState);
-  const recordRoadmapZoom = useAtomComponentStateValue(
+  const [recordRoadmapZoom, setRecordRoadmapZoom] = useAtomComponentState(
     recordRoadmapZoomComponentState,
   );
+  const { updateCurrentView } = useUpdateCurrentView();
 
   const recordIndexRoadmapShowToday = useAtomStateValue(
     recordIndexRoadmapShowTodayState,
@@ -202,8 +242,67 @@ export const RecordRoadmapTimeline = () => {
 
   const canvasWidthPx = days.length * dayWidthPx;
 
-  const { records, startFieldMetadataItem, endFieldMetadataItem } =
-    useRecordRoadmapFetchRecords();
+  const {
+    records,
+    startFieldMetadataItem,
+    endFieldMetadataItem,
+    hasActiveSort,
+  } = useRecordRoadmapFetchRecords();
+
+  const { objectMetadataItems } = useObjectMetadataItems();
+  const { openModal } = useModal();
+  const isModalOpened = useAtomComponentStateValue(
+    isModalOpenedComponentState,
+    RECORD_INDEX_REMOVE_SORTING_MODAL_ID,
+  );
+
+  const [recordRoadmapNameColumnWidth, setRecordRoadmapNameColumnWidth] =
+    useAtomComponentState(recordRoadmapNameColumnWidthComponentState);
+  // oxlint-disable-next-line twenty/no-state-useref
+  const columnResizeRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
+  const handleColumnResizePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      columnResizeRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startWidth: recordRoadmapNameColumnWidth,
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [recordRoadmapNameColumnWidth],
+  );
+
+  const handleColumnResizePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = columnResizeRef.current;
+      if (drag === null || event.pointerId !== drag.pointerId) return;
+      // Clamp so the column can't collapse past readability or eat the canvas.
+      const next = Math.min(
+        Math.max(drag.startWidth + (event.clientX - drag.startX), 160),
+        560,
+      );
+      setRecordRoadmapNameColumnWidth(next);
+    },
+    [setRecordRoadmapNameColumnWidth],
+  );
+
+  const handleColumnResizePointerUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = columnResizeRef.current;
+      if (drag === null) return;
+      event.currentTarget.releasePointerCapture?.(drag.pointerId);
+      columnResizeRef.current = null;
+    },
+    [],
+  );
 
   const { updateDates } = useRecordRoadmapUpdateDates();
   const { createAtDay } = useRecordRoadmapCreateOnDoubleClick();
@@ -217,6 +316,9 @@ export const RecordRoadmapTimeline = () => {
   );
 
   useRecordRoadmapWheelZoom(canvasRef);
+  // Ctrl/Cmd + wheel over the name column zooms too (and stops the browser
+  // page-zoom there); plain wheel is forwarded to the canvas scroll below.
+  useRecordRoadmapWheelZoom(nameColumnScrollerRef);
 
   const labelFieldMetadataItem = useMemo(() => {
     if (isDefined(recordIndexRoadmapFieldLabelId)) {
@@ -228,6 +330,19 @@ export const RecordRoadmapTimeline = () => {
       (field) => field.id === objectMetadataItem.labelIdentifierFieldMetadataId,
     );
   }, [recordIndexRoadmapFieldLabelId, objectMetadataItem]);
+
+  // When the label field is a RELATION we resolve the related object's
+  // metadata so its labelIdentifier (company `name`, person FULL_NAME, …)
+  // drives the displayed text instead of the raw related-record object.
+  const labelFieldTarget = useMemo(() => {
+    if (labelFieldMetadataItem?.type !== FieldMetadataType.RELATION) {
+      return undefined;
+    }
+    return objectMetadataItems.find(
+      (item) =>
+        item.id === labelFieldMetadataItem.relation?.targetObjectMetadata?.id,
+    );
+  }, [labelFieldMetadataItem, objectMetadataItems]);
 
   // Color field is a SELECT: we match each record's value against the
   // field's `options` array and surface the option's `color` (already a
@@ -269,6 +384,16 @@ export const RecordRoadmapTimeline = () => {
     );
   }, [recordIndexRoadmapFieldBlockedById, objectMetadataItem]);
 
+  // Resolve each status SELECT value to a {label,color} chip for the on-bar
+  // pill (Fase 3.2). Built once per render from the field's options.
+  const statusOptionByValue = useMemo(() => {
+    const map = new Map<string, { label: string; color: string | null }>();
+    for (const option of statusFieldMetadataItem?.options ?? []) {
+      map.set(option.value, { label: option.label, color: option.color });
+    }
+    return map;
+  }, [statusFieldMetadataItem]);
+
   const placedRecords = useMemo(() => {
     if (
       !isDefined(startFieldMetadataItem) ||
@@ -300,10 +425,18 @@ export const RecordRoadmapTimeline = () => {
         if (startDate === null || endDate === null) {
           return null;
         }
-        const label =
-          labelFieldMetadataItem !== undefined
-            ? String(record[labelFieldMetadataItem.name] ?? record.id)
-            : record.id;
+        let label: string;
+        if (labelFieldMetadataItem === undefined) {
+          label = record.id;
+        } else if (labelFieldMetadataItem.type === FieldMetadataType.RELATION) {
+          label =
+            resolveRoadmapRelationLabel({
+              rawValue: record[labelFieldMetadataItem.name],
+              targetObjectMetadataItem: labelFieldTarget,
+            }) ?? record.id;
+        } else {
+          label = String(record[labelFieldMetadataItem.name] ?? record.id);
+        }
         let color: string | null = null;
         if (colorFieldMetadataItem !== undefined) {
           const rawValue = record[colorFieldMetadataItem.name];
@@ -315,15 +448,11 @@ export const RecordRoadmapTimeline = () => {
         }
         const plannedStartDate =
           plannedStartFieldMetadataItem !== undefined
-            ? parseRoadmapDateValue(
-                record[plannedStartFieldMetadataItem.name],
-              )
+            ? parseRoadmapDateValue(record[plannedStartFieldMetadataItem.name])
             : null;
         const plannedEndDate =
           plannedEndFieldMetadataItem !== undefined
-            ? parseRoadmapDateValue(
-                record[plannedEndFieldMetadataItem.name],
-              )
+            ? parseRoadmapDateValue(record[plannedEndFieldMetadataItem.name])
             : null;
         const status =
           statusFieldMetadataItem !== undefined
@@ -357,6 +486,7 @@ export const RecordRoadmapTimeline = () => {
     startFieldMetadataItem,
     endFieldMetadataItem,
     labelFieldMetadataItem,
+    labelFieldTarget,
     colorFieldMetadataItem,
     plannedStartFieldMetadataItem,
     plannedEndFieldMetadataItem,
@@ -365,9 +495,69 @@ export const RecordRoadmapTimeline = () => {
   ]);
 
   const { swimlanes, groupFieldName, supportsCrossSwimlaneDrop } =
-    useRecordRoadmapSwimlanes({ placedRecords });
+    useRecordRoadmapSwimlanes({ placedRecords, hasActiveSort });
 
   const { currentView } = useGetCurrentViewOnly();
+  const currentViewId = currentView?.id;
+
+  // --- Persist viewing preferences so they survive reloads ---
+
+  // Zoom → view.roadmapDefaultZoom (the column already exists). Seed the live
+  // zoom from the saved default once the view has loaded, then persist user
+  // changes back, debounced so ctrl+wheel zoom bursts don't spam the mutation.
+  // oxlint-disable-next-line twenty/no-state-useref
+  const hasSeededZoomRef = useRef(false);
+  useEffect(() => {
+    if (hasSeededZoomRef.current || !isDefined(currentView)) return;
+    hasSeededZoomRef.current = true;
+    setRecordRoadmapZoom(
+      currentView.roadmapDefaultZoom ?? ROADMAP_DEFAULT_ZOOM,
+    );
+  }, [currentView, setRecordRoadmapZoom]);
+
+  useEffect(() => {
+    if (!hasSeededZoomRef.current) return;
+    const savedZoom = currentView?.roadmapDefaultZoom ?? ROADMAP_DEFAULT_ZOOM;
+    if (recordRoadmapZoom === savedZoom) return;
+    const timeout = setTimeout(() => {
+      void updateCurrentView({ roadmapDefaultZoom: recordRoadmapZoom });
+    }, 600);
+    return () => clearTimeout(timeout);
+  }, [recordRoadmapZoom, currentView, updateCurrentView]);
+
+  // Name-column width → localStorage, keyed per view (a client-side viewing
+  // preference; there's no view column for it). Re-hydrate when the view
+  // changes; persist on resize, debounced so a drag writes once on settle.
+  // oxlint-disable-next-line twenty/no-state-useref
+  const hasHydratedWidthRef = useRef(false);
+  useEffect(() => {
+    hasHydratedWidthRef.current = false;
+  }, [currentViewId]);
+  useEffect(() => {
+    if (!isDefined(currentViewId)) return;
+    const storageKey = `roadmap:nameColumnWidth:${currentViewId}`;
+    if (!hasHydratedWidthRef.current) {
+      hasHydratedWidthRef.current = true;
+      const stored = Number.parseInt(
+        localStorage.getItem(storageKey) ?? '',
+        10,
+      );
+      setRecordRoadmapNameColumnWidth(
+        Number.isFinite(stored)
+          ? Math.min(Math.max(stored, 160), 560)
+          : ROADMAP_NAME_COLUMN_WIDTH,
+      );
+      return;
+    }
+    const timeout = setTimeout(() => {
+      localStorage.setItem(storageKey, String(recordRoadmapNameColumnWidth));
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [
+    currentViewId,
+    recordRoadmapNameColumnWidth,
+    setRecordRoadmapNameColumnWidth,
+  ]);
 
   // Visible view-fields define the columns the name column renders next to
   // each milestone label. Skip the configured `start`/`end` (rendered as the
@@ -403,6 +593,46 @@ export const RecordRoadmapTimeline = () => {
     objectMetadataItem.fields,
   ]);
 
+  // Pre-resolve RELATION extra-fields shown in the name column to the related
+  // record's label (same labelIdentifier logic as the bar label) so the column
+  // shows "Acme Corp" instead of a UUID. Keyed recordId → fieldId; FieldCell
+  // stays pure and just reads this map.
+  const nameColumnRelationLabels = useMemo(() => {
+    const relationFields = nameColumnFields.filter(
+      (field) => field.type === FieldMetadataType.RELATION,
+    );
+    if (relationFields.length === 0) {
+      return {} as Record<string, Record<string, string>>;
+    }
+    const targetByFieldId = new Map(
+      relationFields.map((field) => [
+        field.id,
+        objectMetadataItems.find(
+          (item) => item.id === field.relation?.targetObjectMetadata?.id,
+        ),
+      ]),
+    );
+    const result: Record<string, Record<string, string>> = {};
+    for (const placed of placedRecords) {
+      for (const field of relationFields) {
+        const resolved = resolveRoadmapRelationLabel({
+          rawValue: placed.record[field.name],
+          targetObjectMetadataItem: targetByFieldId.get(field.id),
+        });
+        if (resolved !== null) {
+          (result[placed.record.id] ??= {})[field.id] = resolved;
+        }
+      }
+    }
+    return result;
+  }, [nameColumnFields, placedRecords, objectMetadataItems]);
+
+  // Total width of the left pane = user-resizable Name column + fixed-width
+  // extra field columns. Drives both the scroller width and the divider's x.
+  const nameColumnTotalWidth =
+    recordRoadmapNameColumnWidth +
+    nameColumnFields.length * ROADMAP_NAME_COLUMN_FIELD_WIDTH;
+
   // Bar layouts indexed by recordId. Mirrors the deterministic vertical
   // stacking the swimlane CSS uses, so the SVG connector overlay aligns
   // pixel-for-pixel with the bars without DOM measurement.
@@ -435,9 +665,8 @@ export const RecordRoadmapTimeline = () => {
   // anchor; clicking another bar's dot commits the dependency edge. The
   // preview line follows the cursor in inner-canvas coordinates while
   // pending. Escape (or click on the empty canvas) clears the state.
-  const [recordRoadmapPendingConnection, setRecordRoadmapPendingConnection] = useAtomState(
-    recordRoadmapPendingConnectionState,
-  );
+  const [recordRoadmapPendingConnection, setRecordRoadmapPendingConnection] =
+    useAtomState(recordRoadmapPendingConnectionState);
   const [connectionCursor, setConnectionCursor] = useState<{
     xPx: number;
     yPx: number;
@@ -477,7 +706,9 @@ export const RecordRoadmapTimeline = () => {
     } catch (error) {
       enqueueErrorSnackBar({
         message:
-          error instanceof Error ? error.message : 'Could not delete dependency',
+          error instanceof Error
+            ? error.message
+            : 'Could not delete dependency',
       });
     } finally {
       setSelectedDependency(null);
@@ -525,14 +756,17 @@ export const RecordRoadmapTimeline = () => {
       // dot's center so the preview line shoots out from where the
       // cursor was when the user pressed down.
       const anchorXPx =
-        port === 'start'
-          ? layout.leftPx
-          : layout.leftPx + layout.widthPx;
+        port === 'start' ? layout.leftPx : layout.leftPx + layout.widthPx;
       const anchorYPx = layout.topPx + layout.heightPx / 2;
 
       // First click — capture the origin port.
       if (recordRoadmapPendingConnection === null) {
-        setRecordRoadmapPendingConnection({ recordId, port, anchorXPx, anchorYPx });
+        setRecordRoadmapPendingConnection({
+          recordId,
+          port,
+          anchorXPx,
+          anchorYPx,
+        });
         setConnectionCursor({ xPx: anchorXPx, yPx: anchorYPx });
         return;
       }
@@ -715,6 +949,22 @@ export const RecordRoadmapTimeline = () => {
     }
   }, []);
 
+  // The name column is overflow-hidden and only mirrors the canvas scrollTop,
+  // so a wheel over the labels would otherwise do nothing. Forward plain wheel
+  // (vertical + horizontal) to the canvas, which then mirrors back here — this
+  // lets the user scroll a tall roadmap from anywhere, not just over the bars.
+  // Ctrl/Cmd + wheel is left to the zoom hook above.
+  const handleNameColumnWheel = useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
+      if (event.ctrlKey || event.metaKey) return;
+      const canvas = canvasRef.current;
+      if (canvas === null) return;
+      canvas.scrollTop += event.deltaY;
+      canvas.scrollLeft += event.deltaX;
+    },
+    [],
+  );
+
   // Re-anchor the viewport to (earliest placed record - 7 days) only on the
   // first successful load. Zoom changes no longer re-snap — that used to
   // feel like an involuntary "Go today" every time the user switched
@@ -791,6 +1041,53 @@ export const RecordRoadmapTimeline = () => {
     ],
   );
 
+  // Shared reorder-by-position commit used by BOTH the bar vertical-drag and
+  // the name-column grip handle. A manual reorder writes `position`, but an
+  // active view sort would re-order the records right back on the next fetch —
+  // so we mirror the Table: ask the user to remove sorting first (modal)
+  // instead of silently fighting them. Position math is delegated to the
+  // shared Kanban helper so the intermediary-halves / first-last edge cases
+  // stay identical across views.
+  const handleRowReorder = useCallback(
+    ({
+      recordId,
+      targetRowRecordId,
+    }: {
+      recordId: string;
+      targetRowRecordId: string;
+    }) => {
+      if (recordId === targetRowRecordId) return;
+      if (hasActiveSort) {
+        openModal(RECORD_INDEX_REMOVE_SORTING_MODAL_ID);
+        return;
+      }
+      const sourceSwimlane = swimlanes.find((swimlane) =>
+        swimlane.records.some(({ record }) => record.id === recordId),
+      );
+      if (!isDefined(sourceSwimlane)) {
+        return;
+      }
+      const recordsWithPosition = sourceSwimlane.records
+        .map(({ record }) =>
+          typeof record.position === 'number'
+            ? { id: record.id, position: record.position }
+            : null,
+        )
+        .filter(isDefined);
+      if (!recordsWithPosition.some(({ id }) => id === targetRowRecordId)) {
+        return;
+      }
+      const newPosition = computeNewPositionOfDraggedRecord({
+        arrayOfRecordsWithPosition: recordsWithPosition,
+        idOfItemToMove: recordId,
+        idOfTargetItem: targetRowRecordId,
+        isDroppedAfterList: false,
+      });
+      void updateDates({ recordId, position: newPosition });
+    },
+    [hasActiveSort, openModal, swimlanes, updateDates],
+  );
+
   const handleBarCommit = useCallback(
     ({
       recordId,
@@ -805,37 +1102,10 @@ export const RecordRoadmapTimeline = () => {
       targetSwimlaneKey?: string | null;
       targetRowRecordId?: string | null;
     }) => {
-      // Reorder-by-position path. Resolve the swimlane the source currently
-      // lives in, pick records with a numeric `position`, and hand off to
-      // the shared Kanban helper so ordering math (intermediary halves,
-      // first/last edge cases) is identical across views.
+      // Reorder-by-position path (drop on a different row of the same
+      // swimlane) — delegate to the shared handler the grip handle also uses.
       if (isDefined(targetRowRecordId) && targetRowRecordId !== recordId) {
-        const sourceSwimlane = swimlanes.find((swimlane) =>
-          swimlane.records.some(({ record }) => record.id === recordId),
-        );
-        if (!isDefined(sourceSwimlane)) {
-          return;
-        }
-        const recordsWithPosition = sourceSwimlane.records
-          .map(({ record }) =>
-            typeof record.position === 'number'
-              ? { id: record.id, position: record.position }
-              : null,
-          )
-          .filter(isDefined);
-        const targetHasPosition = recordsWithPosition.some(
-          ({ id }) => id === targetRowRecordId,
-        );
-        if (!targetHasPosition) return;
-
-        const newPosition = computeNewPositionOfDraggedRecord({
-          arrayOfRecordsWithPosition: recordsWithPosition,
-          idOfItemToMove: recordId,
-          idOfTargetItem: targetRowRecordId,
-          isDroppedAfterList: false,
-        });
-
-        void updateDates({ recordId, position: newPosition });
+        handleRowReorder({ recordId, targetRowRecordId });
         return;
       }
 
@@ -864,7 +1134,7 @@ export const RecordRoadmapTimeline = () => {
       endFieldMetadataItem,
       supportsCrossSwimlaneDrop,
       groupFieldName,
-      swimlanes,
+      handleRowReorder,
     ],
   );
 
@@ -882,18 +1152,26 @@ export const RecordRoadmapTimeline = () => {
       <StyledScrollRow>
         <StyledNameColumnScroller
           ref={nameColumnScrollerRef}
-          style={{
-            width:
-              ROADMAP_NAME_COLUMN_WIDTH +
-              nameColumnFields.length * ROADMAP_NAME_COLUMN_FIELD_WIDTH,
-          }}
+          style={{ width: nameColumnTotalWidth }}
+          onWheel={handleNameColumnWheel}
         >
           <RecordRoadmapNameColumn
             swimlanes={swimlanes}
             onOpenRecord={handleOpenRecord}
             extraFields={nameColumnFields}
+            relationLabels={nameColumnRelationLabels}
+            readOnly={readOnly}
+            onReorder={handleRowReorder}
+            nameColumnWidth={recordRoadmapNameColumnWidth}
           />
         </StyledNameColumnScroller>
+        <StyledColumnResizer
+          style={{ left: nameColumnTotalWidth - 3 }}
+          onPointerDown={handleColumnResizePointerDown}
+          onPointerMove={handleColumnResizePointerMove}
+          onPointerUp={handleColumnResizePointerUp}
+          onPointerCancel={handleColumnResizePointerUp}
+        />
         <StyledTimelineCanvas
           ref={canvasRef}
           onScroll={handleCanvasScroll}
@@ -947,6 +1225,11 @@ export const RecordRoadmapTimeline = () => {
                       viewportStart={renderedDaysStart}
                       dayWidthPx={dayWidthPx}
                       color={color}
+                      statusChip={
+                        status !== null
+                          ? (statusOptionByValue.get(status) ?? null)
+                          : null
+                      }
                       currentSwimlaneKey={swimlane.key}
                       readOnly={readOnly}
                       onCommit={handleBarCommit}
@@ -971,9 +1254,7 @@ export const RecordRoadmapTimeline = () => {
                 barLayouts={barLayouts}
                 canvasWidthPx={canvasWidthPx}
                 canvasHeightPx={canvasHeightPx}
-                onDependencyClick={
-                  readOnly ? undefined : handleDependencyClick
-                }
+                onDependencyClick={readOnly ? undefined : handleDependencyClick}
               />
             )}
             {isMilestoneObject && (
@@ -1000,6 +1281,7 @@ export const RecordRoadmapTimeline = () => {
           </StyledTimelineInner>
         </StyledTimelineCanvas>
       </StyledScrollRow>
+      {isModalOpened && <RecordIndexRemoveSortingModal />}
     </StyledTimelineContainer>
   );
 };
