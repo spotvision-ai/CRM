@@ -14,7 +14,6 @@ import {
 } from 'src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/create-standard-field-flat-metadata.util';
 import { createStandardRelationFieldFlatMetadata } from 'src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/create-standard-relation-field-flat-metadata.util';
 import { i18nLabel } from 'src/engine/workspace-manager/twenty-standard-application/utils/i18n-label.util';
-import { getTsVectorColumnExpressionFromFields } from 'src/engine/workspace-manager/utils/get-ts-vector-column-expression.util';
 
 export const buildOpportunityMilestoneDependencyStandardFlatFieldMetadatas = ({
   now,
@@ -211,13 +210,6 @@ export const buildOpportunityMilestoneDependencyStandardFlatFieldMetadatas = ({
       icon: 'IconUser',
       isSystem: true,
       isNullable: true,
-      settings: {
-        generatedType: 'STORED',
-        // No searchable text fields on the edge — we still need the
-        // generated column to exist so the object passes the system-
-        // field-presence validator that runs on every standard object.
-        asExpression: getTsVectorColumnExpressionFromFields([]),
-      },
     },
     standardObjectMetadataRelatedEntityIds,
     dependencyFlatEntityMaps,

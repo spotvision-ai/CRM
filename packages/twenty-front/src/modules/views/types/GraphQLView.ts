@@ -36,6 +36,7 @@ export type GraphQLView = {
   anyFieldFilterValue?: string | null;
   calendarLayout?: ViewCalendarLayout | null;
   calendarFieldMetadataId?: string | null;
+  calendarEndFieldMetadataId?: string | null;
   roadmapFieldStartId?: string | null;
   roadmapFieldEndId?: string | null;
   roadmapFieldGroupId?: string | null;

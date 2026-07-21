@@ -7,8 +7,8 @@ import {
   FindManyViewsDocument,
 } from '~/generated-metadata/graphql';
 
-import { useMetadataErrorHandler } from '@/metadata-error-handler/hooks/useMetadataErrorHandler';
 import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
+import { useMetadataErrorHandler } from '@/metadata-error-handler/hooks/useMetadataErrorHandler';
 import { useUpdateMetadataStoreDraft } from '@/metadata-store/hooks/useUpdateMetadataStoreDraft';
 import { type FlatFieldMetadataItem } from '@/metadata-store/types/FlatFieldMetadataItem';
 import { type FlatObjectMetadataItem } from '@/metadata-store/types/FlatObjectMetadataItem';
@@ -126,6 +126,8 @@ export const useCreateOneObjectMetadataItem = () => {
         invalidateMetadataStore();
 
         await loadCurrentUser();
+
+        invalidateMetadataStore();
       }
 
       return {

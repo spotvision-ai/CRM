@@ -560,3 +560,34 @@ Also **documents a feature that was previously absent from this log**: vertical 
 - **Name-column width persists** — per-view in `localStorage` (`roadmap:nameColumnWidth:<viewId>`), debounced; re-hydrated on view change. No view column exists for it — promote to a `roadmapNameColumnWidth` view column (schema migration) if cross-device sync is ever needed.
 
 Shipped as **v2.17.0** (frontend-only; no DB migration, so the prod `command:prod upgrade` step is N/A — plain image rebuild + `docker compose up -d` via `cd-deploy-spv.yaml`).
+
+---
+
+## Sync v2.17.0 → v2.22.1 (branch `chore/sync-v2.22.1`)
+
+Merge of upstream tag `twenty/v2.22.1` onto `origin/main` (our v2.17.0 line). 44 conflicted files. The dominant collision: **upstream v2.22.1 added a "calendar end field" feature** (`calendarEndFieldMetadataId` / `calendarEndFieldMetadata` / `calendarEndViews` / `calendarEndViewIds` / `calendarEndViewUniversalIdentifiers`, plus `calendarEndFieldName` on view tools) in exactly the lists/objects/type-unions where our fork threads the 9 `roadmap*` view FKs. **Resolution rule for those: keep BOTH sides** (upstream's `calendarEnd*` first, then our `roadmap*`), preserving list/brace/type-union syntax. Applies to view.entity, field-metadata.entity, the flat-entity constants, universal-flat-entity types, flat-field-metadata converters/mocks, standard-application create utils, view-tools factory, flat-view-validator, GraphQLView + the front view hooks/pickers/dropdowns, and the exhaustive spec fixtures.
+
+### Non-mechanical resolutions (need attention on the next rebase)
+
+| Path | Resolution |
+| --- | --- |
+| `packages/twenty-shared/src/types/FeatureFlagKey.ts` | Upstream **removed** `IS_CALL_RECORDING_ENABLED` and `IS_MESSAGING_CALENDAR_WEBHOOK_ENABLED` (call-recording graduated via the 2-17 upgrade command). Adopted upstream's enum + kept only our `IS_ROADMAP_VIEW_ENABLED`. The `featureFlagsMap` fixture in `workspace-entity-manager.spec.ts` was trimmed to match (a `Record<FeatureFlagKey, boolean>` must be exhaustive — extra keys break typecheck). |
+| `packages/twenty-shared/src/metadata/constants/standard-object.constant.ts` (`taskTarget`) | Upstream's `buildStandardObjectSystemFields()` now generates `createdBy/updatedBy/position/searchVector/deletedAt`, so the explicit per-object entries were dropped as redundant; kept only our fork-only `targetOpportunityMilestone`. |
+| `packages/twenty-server/.../instance-commands.constant.ts` | Import block conflict. Our HEAD-side 2-16 imports were **duplicates** (upstream already imports the same 2-16 commands elsewhere in the file) — dropped them. Kept our two fork-only 2-5 imports (`AddMilestonesToPageLayoutWidgetTypeEnum`, `AddMarkdownToPageLayoutWidgetTypeEnum`) + all of upstream's 2-19→2-22 imports. Verified: 116 imports, no dup/missing/unused vs the (auto-merged) `INSTANCE_COMMANDS` array. Our fork commands (1-23 milestone/roadmap-planned-start, 2-5 page-layout) live outside the conflict region and were untouched. |
+| SPV workspace upgrade commands: `2-1/*-sync-*`, `2-1/*-resync-*`, `2-5/*-resync-*` | Upstream renamed the base runner `ActiveOrSuspendedWorkspaceCommandRunner` → **`ProvisionedWorkspaceCommandRunner`** (path `command-runners/provisioned-workspace.command-runner`). `PROVISIONED_WORKSPACE_ACTIVATION_STATUSES = [CREATED, ACTIVE, SUSPENDED]` is a superset of the old `[ACTIVE, SUSPENDED]`, so re-pointing the `extends`/import is a safe drop-in. The rest of each class already used the new `runOnWorkspace(RunOnWorkspaceArgs)` API. |
+| `object-metadata/utils/build-name-flat-field-metadata-for-custom-object.util.ts` | Upstream centralized custom-object default fields here (deleting our fork-edited `build-default-flat-field-metadatas-for-custom-object.util.ts`, #22594). Added the 9 `roadmap*ViewUniversalIdentifiers: []` aggregators next to upstream's `calendarEndViewUniversalIdentifiers` to satisfy the extended `UniversalFlatFieldMetadata` type. |
+| `compute-opportunity-milestone{,-dependency}-standard-flat-field-metadata.util.ts` | Upstream moved TS_VECTOR search-vector generation into the new `flat-search-field-metadata` module driven by `SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME`. Removed the fork's manual `settings: { generatedType, asExpression: getTsVectorColumnExpressionFromFields(...) }` from the `searchVector` field (the new `FieldMetadataSettings<TS_VECTOR>` type rejects it) + dropped the now-unused imports. `SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME` already carries `opportunityMilestone`/`opportunityMilestoneDependency` entries. |
+
+### Deleted upstream files we had modified (accepted deletion — no remaining references)
+
+- `flat-field-metadata/__mocks__/get-morph-or-relation-target-flat-field-metadata-mock.ts` (removed as unused, #22581) — our only change was the mechanical roadmap-aggregator additions.
+- `object-metadata/utils/build-default-flat-field-metadatas-for-custom-object.util.ts` (logic centralized, #22594) — same.
+
+### Regenerated (not hand-merged)
+
+- `packages/twenty-front/src/generated-metadata/graphql.ts` — regenerated via `twenty-front:graphql:generate` against the merged schema (hand-merge unsafe: the `PageLayoutWidgetFragment` compiled doc mixed our Markdown/Milestones widget configs with upstream's marketplace overhaul incl. the `isFeatured`→`isVetted` rename).
+- 4 server snapshot files (`*.snap`) — regenerated with `jest -u`.
+
+### Environment note
+
+Upstream bumped **Node engine to `^24.5.0`** (`.nvmrc` 24.16.0; prod Dockerfile `node:24.18.0`). Local tooling for this sync ran on Node 24.14.1 (nvm). Node 22 fails the postinstall engine check.

@@ -76,6 +76,7 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
         icon,
         mainGroupByFieldMetadataId,
         calendarFieldMetadataId,
+        calendarEndFieldMetadataId,
         roadmapFieldStartId,
         roadmapFieldEndId,
         type,
@@ -88,6 +89,7 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
           | 'icon'
           | 'mainGroupByFieldMetadataId'
           | 'calendarFieldMetadataId'
+          | 'calendarEndFieldMetadataId'
           | 'roadmapFieldStartId'
           | 'roadmapFieldEndId'
           | 'type'
@@ -145,6 +147,10 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
             calendarFieldMetadataId:
               viewType === ViewType.CALENDAR
                 ? calendarFieldMetadataId
+                : undefined,
+            calendarEndFieldMetadataId:
+              viewType === ViewType.CALENDAR
+                ? calendarEndFieldMetadataId
                 : undefined,
             roadmapFieldStartId:
               viewType === ViewType.ROADMAP ? roadmapFieldStartId : undefined,

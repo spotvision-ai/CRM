@@ -17,20 +17,20 @@ import {
 } from 'twenty-ui/icon';
 import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
 
-type ApplicationInfo = {
-  name: string;
-};
-
-type MarketplaceAppInfo = {
-  logo?: string | null;
-};
-
 type SettingsToolIconProps = {
   icon?: string | null;
   toolName?: string;
   objectName?: string;
   application?: ApplicationInfo;
   marketplaceApp?: MarketplaceAppInfo;
+};
+
+type ApplicationInfo = {
+  name: string;
+};
+
+type MarketplaceAppInfo = {
+  logo?: string | null;
 };
 
 const getOperationIcon = (toolName: string): IconComponent | null => {
@@ -45,7 +45,7 @@ const getOperationIcon = (toolName: string): IconComponent | null => {
 
 const StyledCompositeContainer = styled.div`
   align-items: center;
-  border-radius: 4px;
+  border-radius: ${themeCssVariables.border.radius.sm};
   box-sizing: border-box;
   display: flex;
   flex-shrink: 0;
@@ -63,7 +63,7 @@ const StyledMainIconWrapper = styled.div<{
   background-color: ${({ $backgroundColor }) => $backgroundColor};
   border: ${({ $borderColor }) =>
     $borderColor ? `1px solid ${$borderColor}` : 'none'};
-  border-radius: 4px;
+  border-radius: ${themeCssVariables.border.radius.sm};
   box-sizing: border-box;
   display: flex;
   inset: 0;
@@ -74,7 +74,7 @@ const StyledMainIconWrapper = styled.div<{
 const StyledOperationOverlay = styled.div`
   align-items: center;
   background-color: ${themeCssVariables.grayScale.gray4};
-  border-radius: 4px;
+  border-radius: ${themeCssVariables.border.radius.sm};
   bottom: -5px;
   display: flex;
   height: 14px;
@@ -95,11 +95,10 @@ export const SettingsToolIcon = ({
   const { theme } = useContext(ThemeContext);
   const { objectMetadataItems } = useObjectMetadataItems();
 
-  // Custom tools: application/marketplace icons
   if (isDefined(application) && isDefined(marketplaceApp?.logo)) {
     return (
       <Avatar
-        avatarUrl={getAbsoluteImageUrl(marketplaceApp?.logo ?? null)}
+        avatarUrl={getAbsoluteImageUrl(marketplaceApp.logo)}
         placeholder={application.name}
         placeholderColorSeed={application.name}
         type="squared"
@@ -119,7 +118,6 @@ export const SettingsToolIcon = ({
     );
   }
 
-  // System tools: icon from server, color derived from object metadata
   const MainIcon = isDefined(icon) ? getIcon(icon) : IconCode;
   const OperationIcon = isDefined(toolName) ? getOperationIcon(toolName) : null;
 

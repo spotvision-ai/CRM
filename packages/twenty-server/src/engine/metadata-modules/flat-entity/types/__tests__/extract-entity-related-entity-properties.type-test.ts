@@ -11,9 +11,9 @@ type Assertions = [
   // FieldMetadataEntity has both ManyToOne and OneToMany relations
   // ManyToOne: object, workspace, application, relationTargetFieldMetadata, relationTargetObjectMetadata
   // OneToMany: indexFieldMetadatas, fieldPermissions, viewFields, viewFilters,
-  //            kanbanAggregateOperationViews, calendarViews,
-  //            roadmap{Start,End,Group,Color,Label}Views,
-  //            mainGroupByFieldMetadataViews, viewSorts
+  //            kanbanAggregateOperationViews, calendarViews, calendarEndViews,
+  //            roadmap{Start,End,Group,Color,Label,PlannedStart,PlannedEnd,Status,BlockedBy}Views,
+  //            mainGroupByFieldMetadataViews, viewSorts, searchFieldMetadatas
   Expect<
     Equal<
       FieldMetadataRelatedProperties,
@@ -28,6 +28,7 @@ type Assertions = [
       | 'viewFilters'
       | 'kanbanAggregateOperationViews'
       | 'calendarViews'
+      | 'calendarEndViews'
       | 'roadmapStartViews'
       | 'roadmapEndViews'
       | 'roadmapGroupViews'
@@ -39,6 +40,7 @@ type Assertions = [
       | 'roadmapBlockedByViews'
       | 'mainGroupByFieldMetadataViews'
       | 'viewSorts'
+      | 'searchFieldMetadatas'
     >
   >,
 ];

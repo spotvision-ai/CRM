@@ -30,6 +30,7 @@ export type CreateStandardViewOptions<O extends AllStandardObjectName> = {
   kanbanAggregateOperationFieldName?: AllStandardObjectFieldName<O>;
   mainGroupByFieldName?: AllStandardObjectFieldName<O>;
   calendarFieldName?: AllStandardObjectFieldName<O>;
+  calendarEndFieldName?: AllStandardObjectFieldName<O>;
   // Roadmap config — only honoured when `type === ViewType.ROADMAP`. Each
   // field name is resolved against `STANDARD_OBJECTS[objectName].fields`
   // to its universalIdentifier + against the workspace ID map to its real
@@ -75,6 +76,7 @@ export const createStandardViewFlatMetadata = <
     kanbanAggregateOperationFieldName,
     mainGroupByFieldName,
     calendarFieldName,
+    calendarEndFieldName,
     roadmapDefaultZoom = null,
     roadmapShowToday = true,
     roadmapShowWeekends = true,
@@ -126,6 +128,12 @@ export const createStandardViewFlatMetadata = <
       ].id
     : null;
 
+  const calendarEndFieldMetadataId = calendarEndFieldName
+    ? standardObjectMetadataRelatedEntityIds[objectName].fields[
+        calendarEndFieldName
+      ].id
+    : null;
+
   const kanbanAggregateOperationFieldMetadataUniversalIdentifier =
     kanbanAggregateOperationFieldName
       ? // @ts-expect-error ignore
@@ -142,6 +150,12 @@ export const createStandardViewFlatMetadata = <
   const calendarFieldMetadataUniversalIdentifier = calendarFieldName
     ? // @ts-expect-error ignore
       STANDARD_OBJECTS[objectName].fields[calendarFieldName].universalIdentifier
+    : null;
+
+  const calendarEndFieldMetadataUniversalIdentifier = calendarEndFieldName
+    ? // @ts-expect-error ignore
+      STANDARD_OBJECTS[objectName].fields[calendarEndFieldName]
+        .universalIdentifier
     : null;
 
   // Roadmap field resolvers — same pattern as calendarField, repeated 8 times.
@@ -177,6 +191,7 @@ export const createStandardViewFlatMetadata = <
 
   return {
     calendarFieldMetadataUniversalIdentifier,
+    calendarEndFieldMetadataUniversalIdentifier,
     kanbanAggregateOperationFieldMetadataUniversalIdentifier,
     mainGroupByFieldMetadataUniversalIdentifier,
     objectMetadataUniversalIdentifier,
@@ -202,6 +217,7 @@ export const createStandardViewFlatMetadata = <
     kanbanColumnWidth: null,
     calendarLayout: null,
     calendarFieldMetadataId,
+    calendarEndFieldMetadataId,
     roadmapDefaultZoom,
     roadmapShowToday,
     roadmapShowWeekends,

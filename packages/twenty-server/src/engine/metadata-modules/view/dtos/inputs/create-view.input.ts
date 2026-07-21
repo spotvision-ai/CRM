@@ -115,6 +115,11 @@ export class CreateViewInput {
   @IsOptional()
   @IsUUID()
   @Field(() => UUIDScalarType, { nullable: true })
+  calendarEndFieldMetadataId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
   mainGroupByFieldMetadataId?: string;
 
   @IsOptional()

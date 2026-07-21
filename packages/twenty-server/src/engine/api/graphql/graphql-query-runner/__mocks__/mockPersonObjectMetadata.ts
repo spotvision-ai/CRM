@@ -199,7 +199,7 @@ export const mockPersonFlatObjectMetadata = (
   updatedAt: new Date().toISOString(),
   shortcut: null,
   description: null,
-  standardOverrides: null,
+  overrides: null,
   isUIEditable: true,
   isUICreatable: true,
   applicationUniversalIdentifier: 'test-application-id',

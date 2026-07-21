@@ -33,6 +33,7 @@ export type View = {
   shouldHideEmptyGroups: boolean;
   kanbanColumnWidth?: number | null;
   calendarFieldMetadataId?: string | null;
+  calendarEndFieldMetadataId?: string | null;
   calendarLayout?: ViewCalendarLayout | null;
   roadmapFieldStartId?: string | null;
   roadmapFieldEndId?: string | null;

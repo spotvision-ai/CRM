@@ -1,14 +1,14 @@
-import { defineLogicFunction } from 'twenty-sdk/define';
+import { defineLogicFunction, STANDARD_OBJECT_UNIVERSAL_IDENTIFIERS } from 'twenty-sdk/define';
 
 import { UPDATE_FIELDS_OPTION_VALUES } from 'src/constants/update-fields-option-values';
-import { PDL_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIERS } from 'src/constants/universal-identifiers';
+import { PDL_LOGIC_FUNCTION_CONSTANTS } from 'src/constants/universal-identifiers';
 import { enrichPersonCore } from 'src/logic-functions/handlers/enrich-person';
 import { type SingleEnrichInput } from 'src/types/single-enrich-input';
 
 const handler = (input: SingleEnrichInput) => enrichPersonCore({ input });
 
 export default defineLogicFunction({
-  universalIdentifier: PDL_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIERS.enrichPerson,
+  universalIdentifier: PDL_LOGIC_FUNCTION_CONSTANTS.enrichPerson.universalIdentifier,
   name: 'enrich-person',
   description:
     'Enrich a single Person record with People Data Labs data (job, location, social profiles, etc.) given its record id.',
@@ -22,7 +22,9 @@ export default defineLogicFunction({
         type: 'object',
         properties: {
           recordId: {
-            type: 'string',
+            type: 'record',
+            objectUniversalIdentifier:
+              STANDARD_OBJECT_UNIVERSAL_IDENTIFIERS.person.universalIdentifier,
             label: 'Record',
           },
           updateFields: {

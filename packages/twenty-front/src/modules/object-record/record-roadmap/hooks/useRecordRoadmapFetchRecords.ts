@@ -127,7 +127,7 @@ export const useRecordRoadmapFetchRecords = () => {
 
   const relevantRecordGqlFields = useRelevantRecordsGqlFields({
     objectMetadataItem,
-    additionalFieldMetadataId: recordIndexRoadmapFieldStartId,
+    additionalFieldMetadataIds: [recordIndexRoadmapFieldStartId],
   });
 
   // The shared `useRelevantRecordsGqlFields` only opts one "additional" field

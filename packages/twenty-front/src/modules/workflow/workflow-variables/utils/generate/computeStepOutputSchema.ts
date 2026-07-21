@@ -218,7 +218,35 @@ export const computeStepOutputSchema = ({
       return generateFormOutputSchema(formFields, objectMetadataItems);
     }
 
-    case 'SEND_EMAIL':
+    case 'SEND_EMAIL': {
+      return {
+        success: {
+          isLeaf: true,
+          type: FieldMetadataType.BOOLEAN,
+          label: 'Success',
+          value: true,
+        },
+        headerMessageId: {
+          isLeaf: true,
+          type: FieldMetadataType.TEXT,
+          label: 'Message-ID header',
+          value: '',
+        },
+        messageId: {
+          isLeaf: true,
+          type: FieldMetadataType.TEXT,
+          label: 'Message record ID',
+          value: '',
+        },
+        messageThreadId: {
+          isLeaf: true,
+          type: FieldMetadataType.TEXT,
+          label: 'Message thread ID',
+          value: '',
+        },
+      };
+    }
+
     case 'DRAFT_EMAIL': {
       return {
         success: {
@@ -226,6 +254,35 @@ export const computeStepOutputSchema = ({
           type: FieldMetadataType.BOOLEAN,
           label: 'Success',
           value: true,
+        },
+      };
+    }
+
+    case 'CREATE_CALENDAR_EVENT': {
+      return {
+        success: {
+          isLeaf: true,
+          type: FieldMetadataType.BOOLEAN,
+          label: 'Success',
+          value: true,
+        },
+        iCalUid: {
+          isLeaf: true,
+          type: FieldMetadataType.TEXT,
+          label: 'iCal UID',
+          value: '',
+        },
+        externalEventId: {
+          isLeaf: true,
+          type: FieldMetadataType.TEXT,
+          label: 'External Event ID',
+          value: '',
+        },
+        conferenceLink: {
+          isLeaf: true,
+          type: FieldMetadataType.TEXT,
+          label: 'Conference Link',
+          value: '',
         },
       };
     }

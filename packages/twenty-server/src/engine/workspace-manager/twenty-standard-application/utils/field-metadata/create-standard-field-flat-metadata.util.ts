@@ -88,7 +88,7 @@ export const createStandardFieldFlatMetadata = <
     isUnique,
     isUIEditable,
     isLabelSyncedWithName: false,
-    standardOverrides: null,
+    overrides: null,
     defaultValue: defaultValue ?? null,
     settings: settings ?? null,
     options: fieldOptions ?? null,
@@ -100,6 +100,7 @@ export const createStandardFieldFlatMetadata = <
     fieldPermissionIds: [],
     kanbanAggregateOperationViewIds: [],
     calendarViewIds: [],
+    calendarEndViewIds: [],
     roadmapStartViewIds: [],
     roadmapEndViewIds: [],
     roadmapGroupViewIds: [],
@@ -123,6 +124,7 @@ export const createStandardFieldFlatMetadata = <
     fieldPermissionUniversalIdentifiers: [],
     kanbanAggregateOperationViewUniversalIdentifiers: [],
     calendarViewUniversalIdentifiers: [],
+    calendarEndViewUniversalIdentifiers: [],
     roadmapStartViewUniversalIdentifiers: [],
     roadmapEndViewUniversalIdentifiers: [],
     roadmapGroupViewUniversalIdentifiers: [],
@@ -135,6 +137,8 @@ export const createStandardFieldFlatMetadata = <
     mainGroupByFieldMetadataViewUniversalIdentifiers: [],
     viewSortIds: [],
     viewSortUniversalIdentifiers: [],
+    searchFieldMetadataIds: [],
+    searchFieldMetadataUniversalIdentifiers: [],
     universalSettings: settings ?? null,
   };
 };

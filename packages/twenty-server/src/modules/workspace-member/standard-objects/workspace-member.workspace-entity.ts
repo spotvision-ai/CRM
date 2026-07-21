@@ -59,6 +59,7 @@ export class WorkspaceMemberWorkspaceEntity extends BaseWorkspaceEntity {
   locale: keyof typeof APP_LOCALES;
   avatarUrl: string | null;
   userEmail: string | null;
+  jobTitle: string | null;
   calendarStartDay: number;
   userId: string;
   timeZone: string;

@@ -71,6 +71,12 @@ export const ALL_ONE_TO_MANY_METADATA_RELATIONS = {
       universalFlatEntityForeignKeyAggregator:
         'calendarViewUniversalIdentifiers',
     },
+    calendarEndViews: {
+      metadataName: 'view',
+      flatEntityForeignKeyAggregator: 'calendarEndViewIds',
+      universalFlatEntityForeignKeyAggregator:
+        'calendarEndViewUniversalIdentifiers',
+    },
     roadmapStartViews: {
       metadataName: 'view',
       flatEntityForeignKeyAggregator: 'roadmapStartViewIds',
@@ -130,6 +136,12 @@ export const ALL_ONE_TO_MANY_METADATA_RELATIONS = {
       flatEntityForeignKeyAggregator: 'mainGroupByFieldMetadataViewIds',
       universalFlatEntityForeignKeyAggregator:
         'mainGroupByFieldMetadataViewUniversalIdentifiers',
+    },
+    searchFieldMetadatas: {
+      metadataName: 'searchFieldMetadata',
+      flatEntityForeignKeyAggregator: 'searchFieldMetadataIds',
+      universalFlatEntityForeignKeyAggregator:
+        'searchFieldMetadataUniversalIdentifiers',
     },
   },
   objectMetadata: {

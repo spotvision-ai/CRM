@@ -106,7 +106,7 @@ export const createStandardRelationFieldFlatMetadata = <
     isUnique: false,
     isUIEditable,
     isLabelSyncedWithName: false,
-    standardOverrides: null,
+    overrides: null,
     defaultValue,
     settings,
     options: fieldOptions,
@@ -119,6 +119,7 @@ export const createStandardRelationFieldFlatMetadata = <
     fieldPermissionIds: [],
     kanbanAggregateOperationViewIds: [],
     calendarViewIds: [],
+    calendarEndViewIds: [],
     roadmapStartViewIds: [],
     roadmapEndViewIds: [],
     roadmapGroupViewIds: [],
@@ -144,6 +145,7 @@ export const createStandardRelationFieldFlatMetadata = <
     fieldPermissionUniversalIdentifiers: [],
     kanbanAggregateOperationViewUniversalIdentifiers: [],
     calendarViewUniversalIdentifiers: [],
+    calendarEndViewUniversalIdentifiers: [],
     roadmapStartViewUniversalIdentifiers: [],
     roadmapEndViewUniversalIdentifiers: [],
     roadmapGroupViewUniversalIdentifiers: [],
@@ -156,6 +158,8 @@ export const createStandardRelationFieldFlatMetadata = <
     mainGroupByFieldMetadataViewUniversalIdentifiers: [],
     viewSortIds: [],
     viewSortUniversalIdentifiers: [],
+    searchFieldMetadataIds: [],
+    searchFieldMetadataUniversalIdentifiers: [],
     universalSettings: {
       ...settings,
       ...(junctionTargetFieldUniversalIdentifier && {
