@@ -1,6 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { IDField } from '@ptc-org/nestjs-query-graphql';
 import { ViewKey, ViewRoadmapZoom, ViewType } from 'twenty-shared/types';
 
 import { UUIDScalarType } from 'src/engine/api/graphql/workspace-schema-builder/graphql-types/scalars';
