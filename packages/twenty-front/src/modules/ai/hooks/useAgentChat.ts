@@ -1,5 +1,6 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { useApolloClient } from '@apollo/client/react';
+import { t } from '@lingui/core/macro';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { type ExtendedUIMessage } from 'twenty-shared/ai';
@@ -16,12 +17,14 @@ import { STOP_AGENT_CHAT_STREAM } from '@/ai/graphql/mutations/stopAgentChatStre
 import { useAgentChatModelId } from '@/ai/hooks/useAgentChatModelId';
 import { useGetBrowsingContext } from '@/ai/hooks/useBrowsingContext';
 import { useOptimisticallyUnarchiveOnSend } from '@/ai/hooks/useOptimisticallyUnarchiveOnSend';
+import { useWorkspaceAiModelAvailability } from '@/ai/hooks/useWorkspaceAiModelAvailability';
 import {
   AGENT_CHAT_NEW_THREAD_DRAFT_KEY,
   agentChatDraftsByThreadIdState,
 } from '@/ai/states/agentChatDraftsByThreadIdState';
 import { agentChatErrorComponentFamilyState } from '@/ai/states/agentChatErrorComponentFamilyState';
 import { agentChatInputState } from '@/ai/states/agentChatInputState';
+import { agentChatIsAwaitingFirstChunkComponentFamilyState } from '@/ai/states/agentChatIsAwaitingFirstChunkComponentFamilyState';
 import { agentChatLastSentBrowsingContextFamilyState } from '@/ai/states/agentChatLastSentBrowsingContextFamilyState';
 import { agentChatMessagesComponentFamilyState } from '@/ai/states/agentChatMessagesComponentFamilyState';
 import { agentChatSelectedFilesState } from '@/ai/states/agentChatSelectedFilesState';
@@ -37,6 +40,7 @@ export const useAgentChat = (
   ensureThreadIdForSend: () => Promise<string | null>,
 ) => {
   const { modelIdForRequest } = useAgentChatModelId();
+  const { enabledModels } = useWorkspaceAiModelAvailability();
   const { getBrowsingContext } = useGetBrowsingContext();
   const { applyOptimisticUnarchive } = useOptimisticallyUnarchiveOnSend();
   const apolloClient = useApolloClient();
@@ -67,6 +71,14 @@ export const useAgentChat = (
         : store.get(agentChatInputState.atom).trim();
 
     if (contentToSend === '') {
+      return;
+    }
+
+    if (enabledModels.length === 0) {
+      enqueueErrorSnackBar({
+        message: t`No AI models are enabled in this workspace.`,
+      });
+
       return;
     }
 
@@ -134,11 +146,17 @@ export const useAgentChat = (
       instanceId: AGENT_CHAT_INSTANCE_ID,
       familyKey: { threadId },
     });
+    const isAwaitingFirstChunkAtom =
+      agentChatIsAwaitingFirstChunkComponentFamilyState.atomFamily({
+        instanceId: AGENT_CHAT_INSTANCE_ID,
+        familyKey: { threadId },
+      });
 
     const currentMessages = store.get(messagesAtom);
 
     store.set(messagesAtom, [...currentMessages, optimisticUserMessage]);
     store.set(errorAtom, null);
+    store.set(isAwaitingFirstChunkAtom, true);
 
     const fileAttachments = agentChatUploadedFiles.map((file) => ({
       id: file.fileId,
@@ -179,6 +197,7 @@ export const useAgentChat = (
           messagesAtom,
           latestMessages.filter((message) => message.id !== messageId),
         );
+        store.set(isAwaitingFirstChunkAtom, false);
       }
 
       dispatchBrowserEvent(AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME);
@@ -205,6 +224,7 @@ export const useAgentChat = (
         latestMessages.filter((message) => message.id !== messageId),
       );
 
+      store.set(isAwaitingFirstChunkAtom, false);
       store.set(
         errorAtom,
         CombinedGraphQLErrors.is(error) || error instanceof Error
@@ -225,6 +245,8 @@ export const useAgentChat = (
     setAgentChatUploadedFiles,
     setAgentChatDraftsByThreadId,
     modelIdForRequest,
+    enabledModels,
+    enqueueErrorSnackBar,
     setCurrentAiChatThread,
     apolloClient,
     applyOptimisticUnarchive,
@@ -241,6 +263,14 @@ export const useAgentChat = (
     if (!isDefined(threadId) || !isValidUuid(threadId)) {
       return;
     }
+
+    store.set(
+      agentChatIsAwaitingFirstChunkComponentFamilyState.atomFamily({
+        instanceId: AGENT_CHAT_INSTANCE_ID,
+        familyKey: { threadId },
+      }),
+      false,
+    );
 
     try {
       await apolloClient.mutate({

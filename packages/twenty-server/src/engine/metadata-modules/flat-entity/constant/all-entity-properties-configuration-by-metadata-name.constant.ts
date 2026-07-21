@@ -40,6 +40,7 @@ type MetadataEntityPropertyConfiguration<
         : boolean;
     toCompare: boolean;
     isOverridable?: boolean;
+    translatable?: boolean;
   };
 };
 
@@ -59,8 +60,15 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toCompare: true,
       toStringify: false,
       universalProperty: undefined,
+      isOverridable: true,
+      translatable: true,
     },
-    icon: { toCompare: true, toStringify: false, universalProperty: undefined },
+    icon: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: undefined,
+      isOverridable: true,
+    },
     isActive: {
       toCompare: true,
       toStringify: false,
@@ -86,6 +94,8 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toCompare: true,
       toStringify: false,
       universalProperty: undefined,
+      isOverridable: true,
+      translatable: true,
     },
     name: { toCompare: true, toStringify: false, universalProperty: undefined },
     options: {
@@ -93,7 +103,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toStringify: true,
       universalProperty: undefined,
     },
-    standardOverrides: {
+    overrides: {
       toCompare: true,
       toStringify: true,
       universalProperty: undefined,
@@ -124,7 +134,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       universalProperty: undefined,
     },
     isNullable: {
-      toCompare: false,
+      toCompare: true,
       toStringify: false,
       universalProperty: undefined,
     },
@@ -164,13 +174,21 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toCompare: true,
       toStringify: false,
       universalProperty: undefined,
+      isOverridable: true,
     },
     description: {
       toCompare: true,
       toStringify: false,
       universalProperty: undefined,
+      isOverridable: true,
+      translatable: true,
     },
-    icon: { toCompare: true, toStringify: false, universalProperty: undefined },
+    icon: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: undefined,
+      isOverridable: true,
+    },
     isActive: {
       toCompare: true,
       toStringify: false,
@@ -185,11 +203,15 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toCompare: true,
       toStringify: false,
       universalProperty: undefined,
+      isOverridable: true,
+      translatable: true,
     },
     labelSingular: {
       toCompare: true,
       toStringify: false,
       universalProperty: undefined,
+      isOverridable: true,
+      translatable: true,
     },
     namePlural: {
       toCompare: true,
@@ -207,7 +229,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       // @ts-expect-error remove once https://github.com/twentyhq/core-team-issues/issues/2172 has been resolved
       universalProperty: 'labelIdentifierFieldMetadataUniversalIdentifier',
     },
-    standardOverrides: {
+    overrides: {
       toCompare: true,
       toStringify: true,
       universalProperty: undefined,
@@ -257,6 +279,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toStringify: false,
       // @ts-expect-error remove once https://github.com/twentyhq/core-team-issues/issues/2172 has been resolved
       universalProperty: 'imageIdentifierFieldMetadataUniversalIdentifier',
+      isOverridable: true,
     },
     targetTableName: {
       toCompare: false,
@@ -356,6 +379,12 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toCompare: true,
       toStringify: false,
       universalProperty: 'calendarFieldMetadataUniversalIdentifier',
+      isOverridable: true,
+    },
+    calendarEndFieldMetadataId: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: 'calendarEndFieldMetadataUniversalIdentifier',
       isOverridable: true,
     },
     roadmapDefaultZoom: {
@@ -520,7 +549,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toStringify: false,
     },
     viewId: {
-      toCompare: false,
+      toCompare: true,
       universalProperty: 'viewUniversalIdentifier',
       toStringify: false,
     },
@@ -587,7 +616,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       universalProperty: 'fieldMetadataUniversalIdentifier',
     },
     viewId: {
-      toCompare: false,
+      toCompare: true,
       toStringify: false,
       universalProperty: 'viewUniversalIdentifier',
     },
@@ -635,7 +664,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       universalProperty: undefined,
     },
     viewId: {
-      toCompare: false,
+      toCompare: true,
       toStringify: false,
       universalProperty: 'viewUniversalIdentifier',
     },
@@ -1804,6 +1833,16 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toStringify: false,
       universalProperty: undefined,
     },
+    type: {
+      toCompare: true,
+      toStringify: false,
+      universalProperty: undefined,
+    },
+    options: {
+      toCompare: true,
+      toStringify: true,
+      universalProperty: undefined,
+    },
     createdAt: {
       toCompare: false,
       toStringify: false,
@@ -1840,6 +1879,11 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
     },
   },
   searchFieldMetadata: {
+    isSystemSideEffect: {
+      toCompare: false,
+      toStringify: false,
+      universalProperty: undefined,
+    },
     objectMetadataId: {
       toCompare: false,
       toStringify: false,
@@ -1849,6 +1893,11 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
       toCompare: false,
       toStringify: false,
       universalProperty: 'fieldMetadataUniversalIdentifier',
+    },
+    tsVectorFieldMetadataId: {
+      toCompare: false,
+      toStringify: false,
+      universalProperty: 'tsVectorFieldMetadataUniversalIdentifier',
     },
     position: {
       toCompare: true,
@@ -1888,5 +1937,14 @@ type FilterOverridableKeys<TConfig> = {
 
 export type MetadataEntityOverridablePropertyName<T extends AllMetadataName> =
   FilterOverridableKeys<
+    (typeof ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME)[T]
+  >;
+
+type FilterTranslatableKeys<TConfig> = {
+  [P in keyof TConfig]: TConfig[P] extends { translatable: true } ? P : never;
+}[keyof TConfig];
+
+export type MetadataEntityTranslatablePropertyName<T extends AllMetadataName> =
+  FilterTranslatableKeys<
     (typeof ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME)[T]
   >;

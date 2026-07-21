@@ -47,7 +47,7 @@ describe('addUniversalFlatEntityToUniversalFlatEntityAndRelatedEntityMapsThrough
       namePlural: 'defaultflatObjectMetadataNamePlural',
       nameSingular: 'defaultflatObjectMetadataNameSingular',
       shortcut: 'shortcut',
-      standardOverrides: null,
+      overrides: null,
       targetTableName: '',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
@@ -67,6 +67,7 @@ describe('addUniversalFlatEntityToUniversalFlatEntityAndRelatedEntityMapsThrough
       viewFieldUniversalIdentifiers: [],
       viewFilterUniversalIdentifiers: [],
       calendarViewUniversalIdentifiers: [],
+      calendarEndViewUniversalIdentifiers: [],
       roadmapStartViewUniversalIdentifiers: [],
       roadmapEndViewUniversalIdentifiers: [],
       roadmapGroupViewUniversalIdentifiers: [],
@@ -95,7 +96,7 @@ describe('addUniversalFlatEntityToUniversalFlatEntityAndRelatedEntityMapsThrough
       isUIEditable: true,
       isLabelSyncedWithName: false,
       isSystem: false,
-      standardOverrides: null,
+      overrides: null,
       relationTargetObjectMetadataUniversalIdentifier: null,
       relationTargetFieldMetadataUniversalIdentifier: null,
     };
@@ -108,6 +109,8 @@ describe('addUniversalFlatEntityToUniversalFlatEntityAndRelatedEntityMapsThrough
       viewGroupUniversalIdentifiers: [],
       applicationUniversalIdentifier,
       calendarFieldMetadataUniversalIdentifier:
+        fieldMetadataUniversalIdentifier,
+      calendarEndFieldMetadataUniversalIdentifier:
         fieldMetadataUniversalIdentifier,
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
@@ -185,6 +188,7 @@ describe('addUniversalFlatEntityToUniversalFlatEntityAndRelatedEntityMapsThrough
 
     expect(updatedFieldMetadata).toMatchObject({
       calendarViewUniversalIdentifiers: [viewUniversalIdentifier],
+      calendarEndViewUniversalIdentifiers: [viewUniversalIdentifier],
     });
   });
 

@@ -2,7 +2,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Command } from 'nest-commander';
 import { DataSource, type QueryRunner } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { ProvisionedWorkspaceCommandRunner } from 'src/database/commands/command-runners/provisioned-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { RegisteredWorkspaceCommand } from 'src/engine/core-modules/upgrade/decorators/registered-workspace-command.decorator';
@@ -28,7 +28,7 @@ import { TwentyStandardApplicationService } from 'src/engine/workspace-manager/t
   description:
     'Sync the twenty-standard application across existing workspaces so new SPV standard objects (OpportunityMilestone, dependencies) appear without a re-init.',
 })
-export class SyncTwentyStandardApplicationSpvCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
+export class SyncTwentyStandardApplicationSpvCommand extends ProvisionedWorkspaceCommandRunner {
   // Latched once per process so the schema repair doesn't fire N times when
   // the iterator visits N workspaces. The DDL is idempotent either way; the
   // flag just keeps logs clean and avoids needless transactions.

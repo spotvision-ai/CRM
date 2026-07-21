@@ -36,6 +36,8 @@ export const fromViewManifestToUniversalFlatView = ({
     calendarLayout: viewManifest.calendarLayout ?? null,
     calendarFieldMetadataUniversalIdentifier:
       viewManifest.calendarFieldMetadataUniversalIdentifier ?? null,
+    calendarEndFieldMetadataUniversalIdentifier:
+      viewManifest.calendarEndFieldMetadataUniversalIdentifier ?? null,
     mainGroupByFieldMetadataUniversalIdentifier:
       viewManifest.mainGroupByFieldMetadataUniversalIdentifier ?? null,
     roadmapDefaultZoom: null,
@@ -53,7 +55,7 @@ export const fromViewManifestToUniversalFlatView = ({
     roadmapShowDeviation: false,
     shouldHideEmptyGroups: viewManifest.shouldHideEmptyGroups ?? false,
     kanbanColumnWidth: viewManifest.kanbanColumnWidth ?? null,
-    anyFieldFilterValue: null,
+    anyFieldFilterValue: viewManifest.anyFieldFilterValue ?? null,
     createdByUserWorkspaceId: null,
     isActive: true,
     isSystemSideEffect: false,

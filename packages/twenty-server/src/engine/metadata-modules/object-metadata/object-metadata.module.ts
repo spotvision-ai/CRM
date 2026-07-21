@@ -9,6 +9,7 @@ import {
 import { NestjsQueryTypeOrmModule } from '@ptc-org/nestjs-query-typeorm';
 
 import { TypeORMModule } from 'src/database/typeorm/typeorm.module';
+import { ApplicationTranslationModule } from 'src/engine/core-modules/application/application-translation/application-translation.module';
 import { ApplicationModule } from 'src/engine/core-modules/application/application.module';
 import { TokenModule } from 'src/engine/core-modules/auth/token/token.module';
 import { FeatureFlagEntity } from 'src/engine/core-modules/feature-flag/feature-flag.entity';
@@ -46,6 +47,8 @@ import { WorkspaceMigrationModule } from 'src/engine/workspace-manager/workspace
     WorkspaceCacheStorageModule,
     FeatureFlagModule,
     ApplicationModule,
+    ApplicationTranslationModule,
+    WorkspaceManyOrAllFlatEntityMapsCacheModule,
     NestjsQueryGraphQLModule.forFeature({
       imports: [
         TypeORMModule,

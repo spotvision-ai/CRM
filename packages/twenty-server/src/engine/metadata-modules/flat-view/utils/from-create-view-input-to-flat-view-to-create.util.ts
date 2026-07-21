@@ -45,6 +45,7 @@ export const fromCreateViewInputToFlatViewToCreate = ({
   const {
     objectMetadataUniversalIdentifier,
     calendarFieldMetadataUniversalIdentifier,
+    calendarEndFieldMetadataUniversalIdentifier,
     kanbanAggregateOperationFieldMetadataUniversalIdentifier,
     mainGroupByFieldMetadataUniversalIdentifier,
     roadmapFieldStartUniversalIdentifier,
@@ -61,6 +62,7 @@ export const fromCreateViewInputToFlatViewToCreate = ({
     foreignKeyValues: {
       objectMetadataId,
       calendarFieldMetadataId: createViewInput.calendarFieldMetadataId,
+      calendarEndFieldMetadataId: createViewInput.calendarEndFieldMetadataId,
       kanbanAggregateOperationFieldMetadataId:
         createViewInput.kanbanAggregateOperationFieldMetadataId,
       mainGroupByFieldMetadataId: createViewInput.mainGroupByFieldMetadataId,
@@ -90,6 +92,7 @@ export const fromCreateViewInputToFlatViewToCreate = ({
     isCustom: true,
     anyFieldFilterValue: createViewInput.anyFieldFilterValue ?? null,
     calendarFieldMetadataUniversalIdentifier,
+    calendarEndFieldMetadataUniversalIdentifier,
     calendarLayout: createViewInput.calendarLayout ?? null,
     roadmapDefaultZoom: createViewInput.roadmapDefaultZoom ?? null,
     roadmapShowToday: createViewInput.roadmapShowToday ?? true,

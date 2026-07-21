@@ -1,4 +1,7 @@
-import { TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER } from 'twenty-shared/application';
+import {
+  getSearchFieldUniversalIdentifier,
+  TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
+} from 'twenty-shared/application';
 import { FieldMetadataType } from 'twenty-shared/types';
 
 import { buildSearchFieldMetadataBackfillOperations } from 'src/database/commands/upgrade-version-command/2-16/utils/build-search-field-metadata-backfill-operations.util';
@@ -11,8 +14,10 @@ import {
 } from 'src/engine/metadata-modules/flat-object-metadata/__mocks__/get-flat-object-metadata.mock';
 import { type FlatObjectMetadata } from 'src/engine/metadata-modules/flat-object-metadata/types/flat-object-metadata.type';
 import { type FlatSearchFieldMetadata } from 'src/engine/metadata-modules/flat-search-field-metadata/types/flat-search-field-metadata.type';
+import { SEARCH_VECTOR_FIELD } from 'src/engine/metadata-modules/search-field-metadata/constants/search-vector-field.constants';
 
-const CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER = 'custom-application-uid';
+const CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER =
+  'c0c1c2c3-c4c5-4000-8000-000000000001';
 const CUSTOM_APPLICATION_ID = 'custom-application-id';
 
 const buildUniversalIdentifiersByApplicationId = (
@@ -100,6 +105,8 @@ const buildSearchFieldMetadata = ({
   fieldMetadataUniversalIdentifier,
   applicationUniversalIdentifier,
   position = 0,
+  tsVectorFieldMetadataId = 'ts-vector-field-metadata-id',
+  tsVectorFieldMetadataUniversalIdentifier = 'ts-vector-field-metadata-universal-identifier',
 }: {
   id: string;
   universalIdentifier: string;
@@ -109,6 +116,8 @@ const buildSearchFieldMetadata = ({
   fieldMetadataUniversalIdentifier: string;
   applicationUniversalIdentifier: string;
   position?: number;
+  tsVectorFieldMetadataId?: string;
+  tsVectorFieldMetadataUniversalIdentifier?: string;
 }): FlatSearchFieldMetadata => {
   const createdAt = '2024-01-01T00:00:00.000Z';
 
@@ -119,14 +128,36 @@ const buildSearchFieldMetadata = ({
     fieldMetadataId,
     objectMetadataUniversalIdentifier,
     fieldMetadataUniversalIdentifier,
+    tsVectorFieldMetadataId,
+    tsVectorFieldMetadataUniversalIdentifier,
     applicationId: 'unused-application-id',
     applicationUniversalIdentifier,
     position,
+    isSystemSideEffect: true,
     workspaceId: 'workspace-id',
     createdAt,
     updatedAt: createdAt,
   };
 };
+
+const buildSearchVectorField = ({
+  objectMetadataId,
+  objectMetadataUniversalIdentifier,
+  applicationUniversalIdentifier,
+}: {
+  objectMetadataId: string;
+  objectMetadataUniversalIdentifier: string;
+  applicationUniversalIdentifier: string;
+}): FlatFieldMetadata =>
+  getFlatFieldMetadataMock({
+    id: `${objectMetadataId}-search-vector-field-id`,
+    universalIdentifier: `${objectMetadataUniversalIdentifier}-search-vector-field-uid`,
+    objectMetadataId,
+    objectMetadataUniversalIdentifier,
+    type: FieldMetadataType.TS_VECTOR,
+    name: SEARCH_VECTOR_FIELD.name,
+    applicationUniversalIdentifier,
+  });
 
 // Custom object with a searchable `name` field plus a TEXT field whose name
 // overlaps it by prefix (name / nameDescription). Only the `name` field should
@@ -158,6 +189,12 @@ const buildCustomObjectFixture = () => {
     applicationUniversalIdentifier: CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER,
   });
 
+  const searchVectorField = buildSearchVectorField({
+    objectMetadataId: customObjectId,
+    objectMetadataUniversalIdentifier: customObjectUniversalIdentifier,
+    applicationUniversalIdentifier: CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER,
+  });
+
   const customObject = getFlatObjectMetadataMock({
     id: customObjectId,
     universalIdentifier: customObjectUniversalIdentifier,
@@ -168,15 +205,16 @@ const buildCustomObjectFixture = () => {
     fieldUniversalIdentifiers: [
       nameField.universalIdentifier,
       nameDescriptionField.universalIdentifier,
+      searchVectorField.universalIdentifier,
     ],
   });
 
-  return { customObject, nameField, nameDescriptionField };
+  return { customObject, nameField, nameDescriptionField, searchVectorField };
 };
 
 describe('buildSearchFieldMetadataBackfillOperations', () => {
   it('selects only the name field for a custom object, ignoring a prefix-overlapping field name', () => {
-    const { customObject, nameField, nameDescriptionField } =
+    const { customObject, nameField, nameDescriptionField, searchVectorField } =
       buildCustomObjectFixture();
 
     const { flatSearchFieldMetadatasToCreateByApplicationUniversalIdentifier } =
@@ -185,10 +223,12 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         flatFieldMetadataMaps: buildFlatFieldMetadataMaps([
           nameField,
           nameDescriptionField,
+          searchVectorField,
         ]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
-        standardFlatSearchFieldMetadataMaps:
-          buildFlatSearchFieldMetadataMaps([]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
         customApplicationId: CUSTOM_APPLICATION_ID,
       });
 
@@ -204,6 +244,10 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
     expect(customApplicationRows?.[0].objectMetadataUniversalIdentifier).toBe(
       customObject.universalIdentifier,
     );
+    // The row points at the object's searchVector field via the new FK.
+    expect(
+      customApplicationRows?.[0].tsVectorFieldMetadataUniversalIdentifier,
+    ).toBe(searchVectorField.universalIdentifier);
     // Custom object name field is seeded at position 0.
     expect(customApplicationRows?.[0].position).toBe(0);
     // No spurious row for the prefix-overlapping `nameDescription` field.
@@ -250,8 +294,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         flatObjectMetadataMaps: buildFlatObjectMetadataMaps([junctionObject]),
         flatFieldMetadataMaps: buildFlatFieldMetadataMaps([idField]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
-        standardFlatSearchFieldMetadataMaps:
-          buildFlatSearchFieldMetadataMaps([]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
         customApplicationId: CUSTOM_APPLICATION_ID,
       });
 
@@ -263,7 +308,7 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
   });
 
   it('groups rows per application: standard-object rows under the standard application, custom-object rows under the custom application', () => {
-    const { customObject, nameField, nameDescriptionField } =
+    const { customObject, nameField, nameDescriptionField, searchVectorField } =
       buildCustomObjectFixture();
 
     const standardObjectId = 'standard-object-id';
@@ -282,12 +327,23 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
     });
 
+    const standardSearchVectorField = buildSearchVectorField({
+      objectMetadataId: standardObjectId,
+      objectMetadataUniversalIdentifier: standardObjectUniversalIdentifier,
+      applicationUniversalIdentifier:
+        TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
+    });
+
     const standardObject = getStandardFlatObjectMetadataMock({
       id: standardObjectId,
       universalIdentifier: standardObjectUniversalIdentifier,
       isSearchable: true,
       labelIdentifierFieldMetadataId: standardFieldId,
       fieldIds: [standardFieldId],
+      fieldUniversalIdentifiers: [
+        standardFieldUniversalIdentifier,
+        standardSearchVectorField.universalIdentifier,
+      ],
     });
 
     const standardSearchFieldMetadata = buildSearchFieldMetadata({
@@ -310,7 +366,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         flatFieldMetadataMaps: buildFlatFieldMetadataMaps([
           nameField,
           nameDescriptionField,
+          searchVectorField,
           standardField,
+          standardSearchVectorField,
         ]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
         standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([
@@ -339,6 +397,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
     expect(standardApplicationRows?.[0].fieldMetadataUniversalIdentifier).toBe(
       standardFieldUniversalIdentifier,
     );
+    expect(
+      standardApplicationRows?.[0].tsVectorFieldMetadataUniversalIdentifier,
+    ).toBe(standardSearchVectorField.universalIdentifier);
 
     const customApplicationRows =
       flatSearchFieldMetadatasToCreateByApplicationUniversalIdentifier[
@@ -349,6 +410,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
     expect(customApplicationRows?.[0].fieldMetadataUniversalIdentifier).toBe(
       nameField.universalIdentifier,
     );
+    expect(
+      customApplicationRows?.[0].tsVectorFieldMetadataUniversalIdentifier,
+    ).toBe(searchVectorField.universalIdentifier);
   });
 
   it('selects only the standard-set field on a standard object, never a prefix-overlapping sibling (phone vs phoneNumber)', () => {
@@ -386,12 +450,24 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
     });
 
+    const standardSearchVectorField = buildSearchVectorField({
+      objectMetadataId: standardObjectId,
+      objectMetadataUniversalIdentifier: standardObjectUniversalIdentifier,
+      applicationUniversalIdentifier:
+        TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
+    });
+
     const standardObject = getStandardFlatObjectMetadataMock({
       id: standardObjectId,
       universalIdentifier: standardObjectUniversalIdentifier,
       isSearchable: true,
       labelIdentifierFieldMetadataId: phoneFieldId,
       fieldIds: [phoneFieldId, phoneNumberFieldId],
+      fieldUniversalIdentifiers: [
+        phoneFieldUniversalIdentifier,
+        phoneNumberFieldUniversalIdentifier,
+        standardSearchVectorField.universalIdentifier,
+      ],
     });
 
     const phoneSearchFieldMetadata = buildSearchFieldMetadata({
@@ -411,6 +487,7 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         flatFieldMetadataMaps: buildFlatFieldMetadataMaps([
           phoneField,
           phoneNumberField,
+          standardSearchVectorField,
         ]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
         standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([
@@ -455,12 +532,23 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
     });
 
+    const standardSearchVectorField = buildSearchVectorField({
+      objectMetadataId: standardObjectId,
+      objectMetadataUniversalIdentifier: standardObjectUniversalIdentifier,
+      applicationUniversalIdentifier:
+        TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
+    });
+
     const standardObject = getStandardFlatObjectMetadataMock({
       id: standardObjectId,
       universalIdentifier: standardObjectUniversalIdentifier,
       isSearchable: true,
       labelIdentifierFieldMetadataId: emailsFieldId,
       fieldIds: [emailsFieldId],
+      fieldUniversalIdentifiers: [
+        emailsFieldUniversalIdentifier,
+        standardSearchVectorField.universalIdentifier,
+      ],
     });
 
     // The standard maps row sits at position 3 (e.g. SEARCH_FIELDS_FOR_PERSON order);
@@ -480,7 +568,10 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
     const { flatSearchFieldMetadatasToCreateByApplicationUniversalIdentifier } =
       buildSearchFieldMetadataBackfillOperations({
         flatObjectMetadataMaps: buildFlatObjectMetadataMaps([standardObject]),
-        flatFieldMetadataMaps: buildFlatFieldMetadataMaps([emailsField]),
+        flatFieldMetadataMaps: buildFlatFieldMetadataMaps([
+          emailsField,
+          standardSearchVectorField,
+        ]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
         standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([
           standardSearchFieldMetadata,
@@ -508,8 +599,7 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
       fieldMetadataId: nameField.id,
       objectMetadataUniversalIdentifier: customObject.universalIdentifier,
       fieldMetadataUniversalIdentifier: nameField.universalIdentifier,
-      applicationUniversalIdentifier:
-        CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER,
+      applicationUniversalIdentifier: CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER,
     });
 
     const { flatSearchFieldMetadatasToCreateByApplicationUniversalIdentifier } =
@@ -522,8 +612,57 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([
           existingSearchFieldMetadata,
         ]),
-        standardFlatSearchFieldMetadataMaps:
-          buildFlatSearchFieldMetadataMaps([]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
+        customApplicationId: CUSTOM_APPLICATION_ID,
+      });
+
+    expect(
+      Object.keys(
+        flatSearchFieldMetadatasToCreateByApplicationUniversalIdentifier,
+      ),
+    ).toHaveLength(0);
+  });
+
+  it('skips a row whose deterministic universal identifier already exists even when the existing row carries stale metadata ids', () => {
+    const { customObject, nameField, nameDescriptionField, searchVectorField } =
+      buildCustomObjectFixture();
+
+    // Simulates a retry after a partial run during a cross-version upgrade: the
+    // previously committed row still points at the ids the metadata had at insert
+    // time, while the object/field maps now expose new ids (id churn from earlier
+    // upgrade commands). The (objectMetadataId, fieldMetadataId) dedupe misses the
+    // pair, but the deterministic universal identifier is unchanged and must
+    // prevent re-emitting the row.
+    const existingSearchFieldMetadata = buildSearchFieldMetadata({
+      id: 'existing-search-field-id',
+      universalIdentifier: getSearchFieldUniversalIdentifier({
+        applicationUniversalIdentifier:
+          CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER,
+        fieldMetadataUniversalIdentifier: nameField.universalIdentifier,
+      }),
+      objectMetadataId: 'stale-object-metadata-id',
+      fieldMetadataId: 'stale-field-metadata-id',
+      objectMetadataUniversalIdentifier: customObject.universalIdentifier,
+      fieldMetadataUniversalIdentifier: nameField.universalIdentifier,
+      applicationUniversalIdentifier: CUSTOM_APPLICATION_UNIVERSAL_IDENTIFIER,
+    });
+
+    const { flatSearchFieldMetadatasToCreateByApplicationUniversalIdentifier } =
+      buildSearchFieldMetadataBackfillOperations({
+        flatObjectMetadataMaps: buildFlatObjectMetadataMaps([customObject]),
+        flatFieldMetadataMaps: buildFlatFieldMetadataMaps([
+          nameField,
+          nameDescriptionField,
+          searchVectorField,
+        ]),
+        flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([
+          existingSearchFieldMetadata,
+        ]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
         customApplicationId: CUSTOM_APPLICATION_ID,
       });
 
@@ -566,8 +705,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
         flatObjectMetadataMaps: buildFlatObjectMetadataMaps([customObject]),
         flatFieldMetadataMaps: buildFlatFieldMetadataMaps([relationNameField]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
-        standardFlatSearchFieldMetadataMaps:
-          buildFlatSearchFieldMetadataMaps([]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
         customApplicationId: CUSTOM_APPLICATION_ID,
       });
 
@@ -601,8 +741,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
           nameDescriptionField,
         ]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
-        standardFlatSearchFieldMetadataMaps:
-          buildFlatSearchFieldMetadataMaps([]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
         customApplicationId: CUSTOM_APPLICATION_ID,
       });
 
@@ -632,8 +773,9 @@ describe('buildSearchFieldMetadataBackfillOperations', () => {
           nameDescriptionField,
         ]),
         flatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps([]),
-        standardFlatSearchFieldMetadataMaps:
-          buildFlatSearchFieldMetadataMaps([]),
+        standardFlatSearchFieldMetadataMaps: buildFlatSearchFieldMetadataMaps(
+          [],
+        ),
         customApplicationId: CUSTOM_APPLICATION_ID,
       });
 

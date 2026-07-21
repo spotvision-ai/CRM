@@ -1,5 +1,6 @@
 import { ObjectOptionsDropdownAddRecordGroupContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownAddRecordGroupContent';
 import { ObjectOptionsDropdownCalendarFieldsContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownCalendarFieldsContent';
+import { ObjectOptionsDropdownCalendarEndFieldsContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownCalendarEndFieldsContent';
 import { ObjectOptionsDropdownCalendarViewContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownCalendarViewContent';
 import { ObjectOptionsDropdownFieldsContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownFieldsContent';
 import { ObjectOptionsDropdownHiddenFieldsContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownHiddenFieldsContent';
@@ -13,9 +14,14 @@ import { ObjectOptionsDropdownRecordGroupSortContent } from '@/object-record/obj
 import { ObjectOptionsDropdownRoadmapFieldPickerContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownRoadmapFieldPickerContent';
 import { ObjectOptionsDropdownVisibilityContent } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownVisibilityContent';
 import { useObjectOptionsDropdown } from '@/object-record/object-options-dropdown/hooks/useObjectOptionsDropdown';
+import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
+import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
 export const ObjectOptionsDropdownContent = () => {
   const { currentContentId } = useObjectOptionsDropdown();
+  const isCalendarWeekViewEnabled = useIsFeatureEnabled(
+    FeatureFlagKey.IS_CALENDAR_WEEK_VIEW_ENABLED,
+  );
 
   switch (currentContentId) {
     case 'layout':
@@ -40,6 +46,12 @@ export const ObjectOptionsDropdownContent = () => {
       return <ObjectOptionsDropdownCalendarViewContent />;
     case 'calendarFields':
       return <ObjectOptionsDropdownCalendarFieldsContent />;
+    case 'calendarEndFields':
+      return isCalendarWeekViewEnabled ? (
+        <ObjectOptionsDropdownCalendarEndFieldsContent />
+      ) : (
+        <ObjectOptionsDropdownMenuContent />
+      );
     case 'roadmapStartField':
       return <ObjectOptionsDropdownRoadmapFieldPickerContent role="start" />;
     case 'roadmapEndField':

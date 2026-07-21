@@ -132,6 +132,7 @@ export const fromUniversalFlatFieldMetadataToFlatFieldMetadata = ({
     viewFilterIds: [],
     fieldPermissionIds: [],
     calendarViewIds: [],
+    calendarEndViewIds: [],
     roadmapStartViewIds: [],
     roadmapEndViewIds: [],
     roadmapGroupViewIds: [],
@@ -144,6 +145,7 @@ export const fromUniversalFlatFieldMetadataToFlatFieldMetadata = ({
     mainGroupByFieldMetadataViewIds: [],
     kanbanAggregateOperationViewIds: [],
     viewSortIds: [],
+    searchFieldMetadataIds: [],
     ...emptyUniversalForeignKeyAggregators,
   };
 };

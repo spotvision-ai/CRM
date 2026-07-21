@@ -9,6 +9,7 @@ export type ObjectOptionsContentId =
   | 'recordGroupSort'
   | 'addRecordGroup'
   | 'calendarFields'
+  | 'calendarEndFields'
   | 'calendarView'
   | 'roadmapStartField'
   | 'roadmapEndField'

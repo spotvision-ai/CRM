@@ -90,7 +90,7 @@ const expectNoGraphQLErrors = (response: any) => {
 const expectPermissionDeniedError = (response: any) => {
   expect(response.body.errors).toBeDefined();
   expect(response.body.errors.length).toBeGreaterThan(0);
-  expect(response.body.errors[0].message).toBe(
+  expect(response.body.errors[0].message).toContain(
     PermissionsExceptionMessage.PERMISSION_DENIED,
   );
   expect(response.body.errors[0].extensions.code).toBe(ErrorCode.FORBIDDEN);
@@ -447,6 +447,38 @@ describe('Field permissions restrictions', () => {
     expect(response.body.errors).toBeUndefined();
     expect(response.body.data).toBeDefined();
     expect(response.body.data.companies.edges[0].node.id).toBeDefined();
+  });
+
+  it('should reject filters on fields without read permission', async () => {
+    await upsertFieldPermissions({
+      roleId: customRoleId,
+      fieldPermissions: [
+        {
+          objectMetadataId: personObjectId,
+          fieldMetadataId: restrictedPersonFieldId,
+          canReadFieldValue: false,
+          canUpdateFieldValue: null,
+        },
+      ],
+    });
+
+    const graphqlOperation = {
+      query: gql`
+        query People($filter: PersonFilterInput) {
+          people(filter: $filter, first: 0) {
+            totalCount
+          }
+        }
+      `,
+      variables: {
+        filter: { jobTitle: { like: 'Par%' } },
+      },
+    };
+
+    const response =
+      await makeGraphqlAPIRequestWithMemberRole(graphqlOperation);
+
+    expectPermissionDeniedError(response);
   });
 
   describe('Aggregate operations', () => {

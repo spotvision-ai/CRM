@@ -9,6 +9,8 @@ import {
   type Sentry,
   type Support,
 } from '~/generated-metadata/graphql';
+import { type EnterpriseInstanceType } from 'twenty-shared/constants';
+import { type OnboardingConfig } from '@/client-config/types/OnboardingConfig';
 
 export type ClientConfig = {
   appVersion?: string;
@@ -36,6 +38,7 @@ export type ClientConfig = {
   isCloudflareIntegrationEnabled: boolean;
   isClickHouseConfigured: boolean;
   isWorkspaceSchemaDDLLocked: boolean;
+  onboarding: OnboardingConfig;
   publicFeatureFlags: Array<PublicFeatureFlag>;
   sentry: Sentry;
   signInPrefilled: boolean;
@@ -43,4 +46,5 @@ export type ClientConfig = {
   isTwoFactorAuthenticationEnabled: boolean;
   allowRequestsToTwentyIcons: boolean;
   maintenance?: ClientConfigMaintenanceMode;
+  enterpriseInstanceType?: EnterpriseInstanceType;
 };

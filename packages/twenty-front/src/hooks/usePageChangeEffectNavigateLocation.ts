@@ -4,8 +4,9 @@ import { ONGOING_USER_CREATION_PATHS } from '@/auth/constants/OngoingUserCreatio
 import { useHasAccessTokenPair } from '@/auth/hooks/useHasAccessTokenPair';
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
 import { returnToPathState } from '@/auth/states/returnToPathState';
-import { calendarBookingPageIdState } from '@/client-config/states/calendarBookingPageIdState';
+import { billingState } from '@/client-config/states/billingState';
 import { useIsCurrentLocationOnAWorkspace } from '@/domain-manager/hooks/useIsCurrentLocationOnAWorkspace';
+import { isMinimalMetadataReadyState } from '@/metadata-store/states/isMinimalMetadataReadyState';
 import { useDefaultHomePagePath } from '@/navigation/hooks/useDefaultHomePagePath';
 import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
 import { useOnboardingStatus } from '@/onboarding/hooks/useOnboardingStatus';
@@ -41,7 +42,8 @@ export const usePageChangeEffectNavigateLocation = () => {
   );
   const { defaultHomePagePath } = useDefaultHomePagePath();
   const location = useLocation();
-  const calendarBookingPageId = useAtomStateValue(calendarBookingPageIdState);
+  const billing = useAtomStateValue(billingState);
+  const isBillingEnabled = billing?.isBillingEnabled ?? false;
 
   const someMatchingLocationOf = (appPaths: AppPath[]): boolean =>
     appPaths.some((appPath) => isMatchingLocation(location, appPath));
@@ -53,6 +55,7 @@ export const usePageChangeEffectNavigateLocation = () => {
   const objectMetadataItem = objectMetadataItems?.find(
     (objectMetadataItem) => objectMetadataItem.namePlural === objectNamePlural,
   );
+  const isMinimalMetadataReady = useAtomStateValue(isMinimalMetadataReadyState);
 
   const pageLayoutId = params.pageLayoutId;
   const isOnPageLayoutPage = isMatchingLocation(
@@ -92,7 +95,6 @@ export const usePageChangeEffectNavigateLocation = () => {
       AppPath.PlanRequired,
       AppPath.PlanRequiredSuccess,
       AppPath.BookCall,
-      AppPath.BookCallDecision,
     ])
   ) {
     if (
@@ -116,11 +118,7 @@ export const usePageChangeEffectNavigateLocation = () => {
 
   if (
     onboardingStatus === OnboardingStatus.WORKSPACE_ACTIVATION &&
-    !someMatchingLocationOf([
-      AppPath.WorkspaceActivation,
-      AppPath.BookCallDecision,
-      AppPath.BookCall,
-    ])
+    !isMatchingLocation(location, AppPath.WorkspaceActivation)
   ) {
     return AppPath.WorkspaceActivation;
   }
@@ -140,20 +138,26 @@ export const usePageChangeEffectNavigateLocation = () => {
   }
 
   if (
+    onboardingStatus === OnboardingStatus.APPS_INSTALLATION &&
+    !isMatchingLocation(location, AppPath.InstallApps)
+  ) {
+    return AppPath.InstallApps;
+  }
+
+  if (
     onboardingStatus === OnboardingStatus.INVITE_TEAM &&
     !isMatchingLocation(location, AppPath.InviteTeam)
   ) {
     return AppPath.InviteTeam;
   }
 
-  if (
-    onboardingStatus === OnboardingStatus.BOOK_ONBOARDING &&
-    !someMatchingLocationOf([AppPath.BookCallDecision, AppPath.BookCall])
-  ) {
-    if (!isDefined(calendarBookingPageId)) {
-      return defaultHomePagePath;
+  if (isBillingEnabled && onboardingStatus === OnboardingStatus.COMPLETED) {
+    if (isMatchingLocation(location, AppPath.InviteTeam)) {
+      return AppPath.PlanRequired;
     }
-    return AppPath.BookCallDecision;
+    if (isMatchingLocation(location, AppPath.PlanRequired)) {
+      return;
+    }
   }
 
   if (
@@ -174,6 +178,7 @@ export const usePageChangeEffectNavigateLocation = () => {
   }
 
   if (
+    isMinimalMetadataReady &&
     isMatchingLocation(location, AppPath.RecordIndexPage) &&
     !isDefined(objectMetadataItem)
   ) {

@@ -7,6 +7,8 @@ export default defineApplication({
   displayName: 'People Data Labs',
   description: 'Enrich People and Companies with People Data Labs data.',
   logoUrl: 'public/people-data-labs-icon.png',
+  category: 'Enrichment',
+  author: 'Twenty',
   screenshots: ['public/gallery/cover.png'],
   serverVariables: {
     PDL_API_KEY: {

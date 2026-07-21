@@ -7,12 +7,19 @@
 - **Recordings on every meeting**
 - **A Call Recording tab**
 - **A per-meeting on/off switch**
+- **AI meeting summaries**
 - **Built for AI & automation**
 
 ## 💳 Billing
 
-Metered: **1 credit per recording-hour**, prorated on the bot's actual recording
-time. No recording — opted out, canceled, or no-show — means no charge.
+Metered in Twenty credits based on the bot's actual recording time, prorated by
+duration — **$1.00 per recording-hour** (1 credit). No recording — opted out,
+canceled, or no-show — means no charge.
+
+AI summaries use workspace AI credits, billed on the model's token usage — the
+cost scales with how much was said in the meeting, typically **$0.02–$0.06 per
+meeting** on default models. Set the `CALL_RECORDER_SUMMARY_ENABLED` app
+variable to `false` to turn summaries off.
 
 ## 📌 Heads up
 
@@ -20,4 +27,3 @@ time. No recording — opted out, canceled, or no-show — means no charge.
   your Google, Outlook, or CalDAV calendar aren't recorded.
 - **Your copy is yours** — Twenty stores its own video, audio, and transcript,
   so they stay available after the source media expires.
-
