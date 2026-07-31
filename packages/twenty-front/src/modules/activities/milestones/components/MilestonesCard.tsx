@@ -1,39 +1,50 @@
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
-import { isDefined } from 'twenty-shared/utils';
-import { IconCalendar } from 'twenty-ui/icon';
+import { useState } from 'react';
+import { Temporal } from 'temporal-polyfill';
+import { Tag } from 'twenty-ui/data-display';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
-import { ActivityList } from '@/activities/components/ActivityList';
-import { ActivityRow } from '@/activities/components/ActivityRow';
-import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
+import { MilestoneRow } from '@/activities/milestones/components/MilestoneRow';
+import { useOpportunityMilestones } from '@/activities/milestones/hooks/useOpportunityMilestones';
+import { resolveMilestoneSelectChip } from '@/activities/milestones/utils/resolveMilestoneSelectChip';
+import { useRecordRoadmapDependencies } from '@/object-record/record-roadmap/hooks/useRecordRoadmapDependencies';
 import { useOpenRecordInSidePanel } from '@/side-panel/hooks/useOpenRecordInSidePanel';
 import { useTargetRecord } from '@/ui/layout/contexts/useTargetRecord';
-import { beautifyExactDate } from '~/utils/date-utils';
-
-type OpportunityMilestoneRecord = {
-  __typename: 'OpportunityMilestone';
-  id: string;
-  name: string | null;
-  status: string | null;
-  plannedStartDate: string | null;
-  plannedEndDate: string | null;
-  actualEndDate: string | null;
-  position: number | null;
-  opportunityId: string | null;
-  description: { markdown: string | null; blocknote: string | null } | null;
-};
 
 const StyledContainer = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+`;
+
+const StyledFilterBar = styled.div`
+  align-items: center;
+  border-bottom: 1px solid ${themeCssVariables.border.color.light};
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: ${themeCssVariables.spacing[1]};
+  padding: ${themeCssVariables.spacing[3]} ${themeCssVariables.spacing[4]};
+`;
+
+const StyledScrollArea = styled.div`
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 `;
 
-const StyledInner = styled.div`
-  padding: ${themeCssVariables.spacing[4]};
+const StyledList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${themeCssVariables.spacing[2]};
+  /* Extra bottom padding so the last card doesn't sit flush against the
+     scroll edge, which reads as a cut-off row. */
+  padding: ${themeCssVariables.spacing[4]} ${themeCssVariables.spacing[4]}
+    ${themeCssVariables.spacing[6]};
 `;
 
 const StyledEmpty = styled.div`
@@ -43,131 +54,52 @@ const StyledEmpty = styled.div`
   text-align: center;
 `;
 
-// Override ActivityRow default 48px height — rows that show a description need
-// two extra lines, and we want the empty-description rows to stay compact.
-const StyledRowAdapter = styled.div`
-  > div > div {
-    height: auto;
-    min-height: ${themeCssVariables.spacing[12]};
-    padding-bottom: ${themeCssVariables.spacing[2]};
-    padding-top: ${themeCssVariables.spacing[2]};
-  }
-`;
-
-const StyledLeftSide = styled.div`
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: ${themeCssVariables.spacing[1]};
-  min-width: 0;
-  overflow: hidden;
-`;
-
-const StyledTitleRow = styled.div`
-  align-items: center;
-  display: flex;
-  gap: ${themeCssVariables.spacing[2]};
-  min-width: 0;
-`;
-
-const StyledTitle = styled.div`
-  color: ${themeCssVariables.font.color.primary};
-  font-weight: ${themeCssVariables.font.weight.medium};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const StyledStatus = styled.span`
-  background: ${themeCssVariables.background.tertiary};
-  border-radius: ${themeCssVariables.border.radius.sm};
-  color: ${themeCssVariables.font.color.secondary};
-  flex-shrink: 0;
-  font-size: ${themeCssVariables.font.size.xs};
-  padding: 0 ${themeCssVariables.spacing[1]};
-  text-transform: uppercase;
-`;
-
-const StyledDescription = styled.div`
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  color: ${themeCssVariables.font.color.secondary};
-  display: -webkit-box;
-  font-size: ${themeCssVariables.font.size.sm};
-  line-clamp: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: pre-wrap;
-  word-break: break-word;
-`;
-
-const StyledRightSide = styled.div`
-  align-items: flex-end;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  font-size: ${themeCssVariables.font.size.sm};
-  gap: ${themeCssVariables.spacing[1]};
-  margin-left: ${themeCssVariables.spacing[3]};
-  white-space: nowrap;
-`;
-
-const StyledDateRow = styled.div`
-  align-items: center;
-  color: ${themeCssVariables.font.color.secondary};
-  display: inline-flex;
-  gap: ${themeCssVariables.spacing[1]};
-`;
-
-const StyledDateLabel = styled.span`
-  color: ${themeCssVariables.font.color.tertiary};
-  font-size: ${themeCssVariables.font.size.xs};
-  text-transform: uppercase;
-`;
-
-// Strip the most common markdown markers so the preview reads cleanly. The
-// goal is "looks like prose" — not a faithful render. Keeps the function
-// cheap and avoids pulling in a markdown parser just for two lines.
-const stripMarkdownLite = (raw: string): string =>
-  raw
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/^\s*#{1,6}\s*/gm, '')
-    .replace(/^\s*>\s?/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
-    .replace(/~~(.*?)~~/g, '$1')
-    .trim();
-
 export const MilestonesCard = () => {
   const targetRecord = useTargetRecord();
   const { openRecordInSidePanel } = useOpenRecordInSidePanel();
 
+  const [selectedStatusValues, setSelectedStatusValues] = useState<
+    string[] | null
+  >(null);
+
   const isOpportunity = targetRecord.targetObjectNameSingular === 'opportunity';
 
-  const { records: rawRecords, loading } =
-    useFindManyRecords<OpportunityMilestoneRecord>({
-      objectNameSingular: 'opportunityMilestone',
-      filter: isOpportunity
-        ? { opportunityId: { eq: targetRecord.id } }
-        : undefined,
-      orderBy: [{ actualEndDate: 'AscNullsLast' }],
-      skip: !isOpportunity,
-    });
+  const {
+    milestones,
+    loading,
+    statusOptions,
+    effectiveStatusValues,
+    statusFieldMetadataItem,
+    blockedByFieldMetadataItem,
+  } = useOpportunityMilestones({
+    opportunityId: targetRecord.id,
+    enabled: isOpportunity,
+    selectedStatusValues,
+  });
 
-  // Hide completed milestones. Filtering client-side because the `status`
-  // enum is workspace-configurable — sending `status: { neq: 'DONE' }`
-  // server-side throws "invalid input value for enum ..." on workspaces
-  // whose enum doesn't include the literal 'DONE' value. Match case-
-  // insensitively against the two common completed labels.
-  const completedStatuses = new Set(['DONE', 'COMPLETED']);
-  const records = rawRecords.filter(
-    (m) =>
-      !isDefined(m.status) || !completedStatuses.has(m.status.toUpperCase()),
-  );
+  const { dependencies } = useRecordRoadmapDependencies({
+    recordIds: milestones.map((milestone) => milestone.id),
+    enabled: isOpportunity,
+  });
+
+  const dependsOnCountByMilestoneId = dependencies.reduce<
+    Record<string, number>
+  >((counts, dependency) => {
+    counts[dependency.dependentMilestoneId] =
+      (counts[dependency.dependentMilestoneId] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  const today = Temporal.Now.plainDateISO();
+
+  const toggleStatusValue = (statusValue: string) => {
+    const currentValues = effectiveStatusValues ?? [];
+    setSelectedStatusValues(
+      currentValues.includes(statusValue)
+        ? currentValues.filter((value) => value !== statusValue)
+        : [...currentValues, statusValue],
+    );
+  };
 
   if (!isOpportunity) {
     return (
@@ -177,72 +109,80 @@ export const MilestonesCard = () => {
     );
   }
 
-  if (loading) {
-    return <StyledEmpty>{t`Loading milestones…`}</StyledEmpty>;
-  }
+  const renderListContent = () => {
+    if (loading) {
+      return <StyledEmpty>{t`Loading milestones…`}</StyledEmpty>;
+    }
 
-  if (records.length === 0) {
-    return <StyledEmpty>{t`No milestones yet for this deal.`}</StyledEmpty>;
-  }
+    if (milestones.length === 0) {
+      return (
+        <StyledEmpty>
+          {statusOptions.length > 0
+            ? t`No milestones match the selected statuses.`
+            : t`No milestones yet for this deal.`}
+        </StyledEmpty>
+      );
+    }
+
+    return (
+      <StyledList>
+        {milestones.map((milestone) => (
+          <MilestoneRow
+            key={milestone.id}
+            milestone={milestone}
+            statusChip={resolveMilestoneSelectChip(
+              statusFieldMetadataItem,
+              milestone.status,
+            )}
+            blockedByChip={
+              milestone.blockedBy?.toUpperCase() === 'NONE'
+                ? null
+                : resolveMilestoneSelectChip(
+                    blockedByFieldMetadataItem,
+                    milestone.blockedBy,
+                  )
+            }
+            dependsOnCount={dependsOnCountByMilestoneId[milestone.id] ?? 0}
+            today={today}
+            onClick={() => {
+              openRecordInSidePanel({
+                recordId: milestone.id,
+                objectNameSingular: 'opportunityMilestone',
+              });
+            }}
+          />
+        ))}
+      </StyledList>
+    );
+  };
 
   return (
     <StyledContainer>
-      <StyledInner>
-        <ActivityList>
-          {records.map((milestone) => {
-            const descriptionPreview = isDefined(
-              milestone.description?.markdown,
-            )
-              ? stripMarkdownLite(milestone.description.markdown)
-              : '';
+      {statusOptions.length > 0 && (
+        <StyledFilterBar>
+          {statusOptions.map((option) => {
+            const chip = resolveMilestoneSelectChip(
+              statusFieldMetadataItem,
+              option.value,
+            );
+            const isSelected =
+              effectiveStatusValues?.includes(option.value) === true;
+
             return (
-              <StyledRowAdapter key={milestone.id}>
-                <ActivityRow
-                  onClick={() => {
-                    openRecordInSidePanel({
-                      recordId: milestone.id,
-                      objectNameSingular: 'opportunityMilestone',
-                    });
-                  }}
-                >
-                  <StyledLeftSide>
-                    <StyledTitleRow>
-                      <StyledTitle>
-                        {milestone.name || t`Untitled milestone`}
-                      </StyledTitle>
-                      {isDefined(milestone.status) &&
-                        milestone.status !== '' && (
-                          <StyledStatus>{milestone.status}</StyledStatus>
-                        )}
-                    </StyledTitleRow>
-                    {descriptionPreview !== '' && (
-                      <StyledDescription>
-                        {descriptionPreview}
-                      </StyledDescription>
-                    )}
-                  </StyledLeftSide>
-                  <StyledRightSide>
-                    {isDefined(milestone.plannedEndDate) && (
-                      <StyledDateRow>
-                        <IconCalendar size={12} />
-                        <StyledDateLabel>{t`Planned`}</StyledDateLabel>
-                        {beautifyExactDate(milestone.plannedEndDate)}
-                      </StyledDateRow>
-                    )}
-                    {isDefined(milestone.actualEndDate) && (
-                      <StyledDateRow>
-                        <IconCalendar size={12} />
-                        <StyledDateLabel>{t`Actual`}</StyledDateLabel>
-                        {beautifyExactDate(milestone.actualEndDate)}
-                      </StyledDateRow>
-                    )}
-                  </StyledRightSide>
-                </ActivityRow>
-              </StyledRowAdapter>
+              <Tag
+                key={option.value}
+                color={isSelected ? (chip?.color ?? 'gray') : 'transparent'}
+                variant={isSelected ? 'solid' : 'border'}
+                weight={isSelected ? 'medium' : 'regular'}
+                text={chip?.label ?? option.value}
+                onClick={() => toggleStatusValue(option.value)}
+                preventShrink
+              />
             );
           })}
-        </ActivityList>
-      </StyledInner>
+        </StyledFilterBar>
+      )}
+      <StyledScrollArea>{renderListContent()}</StyledScrollArea>
     </StyledContainer>
   );
 };
