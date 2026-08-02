@@ -2,9 +2,11 @@ import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
 import { useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
+import { isDefined } from 'twenty-shared/utils';
 import { Tag } from 'twenty-ui/data-display';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
+import { AddMilestoneButton } from '@/activities/milestones/components/AddMilestoneButton';
 import { MilestoneRow } from '@/activities/milestones/components/MilestoneRow';
 import { useOpportunityMilestones } from '@/activities/milestones/hooks/useOpportunityMilestones';
 import { resolveMilestoneSelectChip } from '@/activities/milestones/utils/resolveMilestoneSelectChip';
@@ -21,14 +23,22 @@ const StyledContainer = styled.div`
   overflow: hidden;
 `;
 
-const StyledFilterBar = styled.div`
+const StyledHeaderBar = styled.div`
   align-items: center;
   border-bottom: 1px solid ${themeCssVariables.border.color.light};
   display: flex;
   flex-shrink: 0;
+  gap: ${themeCssVariables.spacing[2]};
+  justify-content: space-between;
+  padding: ${themeCssVariables.spacing[3]} ${themeCssVariables.spacing[4]};
+`;
+
+const StyledStatusFilters = styled.div`
+  align-items: center;
+  display: flex;
   flex-wrap: wrap;
   gap: ${themeCssVariables.spacing[1]};
-  padding: ${themeCssVariables.spacing[3]} ${themeCssVariables.spacing[4]};
+  min-width: 0;
 `;
 
 const StyledScrollArea = styled.div`
@@ -48,8 +58,12 @@ const StyledList = styled.div`
 `;
 
 const StyledEmpty = styled.div`
+  align-items: center;
   color: ${themeCssVariables.font.color.tertiary};
+  display: flex;
+  flex-direction: column;
   font-size: ${themeCssVariables.font.size.sm};
+  gap: ${themeCssVariables.spacing[4]};
   padding: ${themeCssVariables.spacing[6]};
   text-align: center;
 `;
@@ -115,11 +129,18 @@ export const MilestonesCard = () => {
     }
 
     if (milestones.length === 0) {
+      const isFilteredOut =
+        isDefined(effectiveStatusValues) &&
+        effectiveStatusValues.length < statusOptions.length;
+
       return (
         <StyledEmpty>
-          {statusOptions.length > 0
+          {isFilteredOut
             ? t`No milestones match the selected statuses.`
             : t`No milestones yet for this deal.`}
+          {!isFilteredOut && (
+            <AddMilestoneButton opportunityId={targetRecord.id} size="medium" />
+          )}
         </StyledEmpty>
       );
     }
@@ -158,8 +179,8 @@ export const MilestonesCard = () => {
 
   return (
     <StyledContainer>
-      {statusOptions.length > 0 && (
-        <StyledFilterBar>
+      <StyledHeaderBar>
+        <StyledStatusFilters>
           {statusOptions.map((option) => {
             const chip = resolveMilestoneSelectChip(
               statusFieldMetadataItem,
@@ -180,8 +201,9 @@ export const MilestonesCard = () => {
               />
             );
           })}
-        </StyledFilterBar>
-      )}
+        </StyledStatusFilters>
+        <AddMilestoneButton opportunityId={targetRecord.id} />
+      </StyledHeaderBar>
       <StyledScrollArea>{renderListContent()}</StyledScrollArea>
     </StyledContainer>
   );
