@@ -732,10 +732,15 @@ export class WorkflowVersionStepOperationsWorkspaceService {
                   { shouldBypassPermissionChecks: true },
                 );
 
+              // Load each relation with its own query: joining them all at once
+              // produces a cartesian product across the object's collection
+              // relations, which exceeds PG_DATABASE_PRIMARY_TIMEOUT_MS on
+              // records with many related rows.
               const record = await repository.findOne({
                 // @ts-expect-error legacy noImplicitAny
                 where: { id: response[key].id },
                 relations: relationFieldsNames,
+                relationLoadStrategy: 'query',
               });
 
               return { key, value: record };
