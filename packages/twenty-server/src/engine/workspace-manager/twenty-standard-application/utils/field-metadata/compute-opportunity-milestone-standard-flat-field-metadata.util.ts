@@ -338,11 +338,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7a01-4d01-8001-1aa0b1ca6101',
           value: 'PENDING',
           label: i18nLabel(
-        msg({
-          message: `Pending`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `Pending`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 0,
           color: 'sky',
         },
@@ -350,11 +350,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7a02-4d02-8002-1aa0b1ca6102',
           value: 'IN_PROGRESS',
           label: i18nLabel(
-        msg({
-          message: `In progress`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `In progress`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 1,
           color: 'purple',
         },
@@ -362,11 +362,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7a03-4d03-8003-1aa0b1ca6103',
           value: 'DONE',
           label: i18nLabel(
-        msg({
-          message: `Done`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `Done`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 2,
           color: 'green',
         },
@@ -374,11 +374,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7a04-4d04-8004-1aa0b1ca6104',
           value: 'CANCELLED',
           label: i18nLabel(
-        msg({
-          message: `Cancelled`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `Cancelled`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 3,
           color: 'gray',
         },
@@ -415,11 +415,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7b01-4d01-8001-1bb0b1ca6201',
           value: 'NONE',
           label: i18nLabel(
-        msg({
-          message: `Not blocked`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `Not blocked`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 0,
           color: 'gray',
         },
@@ -427,11 +427,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7b02-4d02-8002-1bb0b1ca6202',
           value: 'CLIENT',
           label: i18nLabel(
-        msg({
-          message: `Client`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `Client`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 1,
           color: 'orange',
         },
@@ -439,11 +439,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7b03-4d03-8003-1bb0b1ca6203',
           value: 'INTERNAL',
           label: i18nLabel(
-        msg({
-          message: `Internal`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `Internal`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 2,
           color: 'red',
         },
@@ -451,11 +451,11 @@ export const buildOpportunityMilestoneStandardFlatFieldMetadatas = ({
           id: '20202020-7b04-4d04-8004-1bb0b1ca6204',
           value: 'EXTERNAL_VENDOR',
           label: i18nLabel(
-        msg({
-          message: `External vendor`,
-          context: 'fieldMetadata.label',
-        }),
-      ),
+            msg({
+              message: `External vendor`,
+              context: 'fieldMetadata.label',
+            }),
+          ),
           position: 3,
           color: 'purple',
         },

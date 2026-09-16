@@ -18,9 +18,7 @@ export class CyclicDependencyError extends Error {
 
 @Injectable()
 export class CyclicDependencyValidatorService {
-  constructor(
-    private readonly workspaceOrmManager: WorkspaceOrmManager,
-  ) {}
+  constructor(private readonly workspaceOrmManager: WorkspaceOrmManager) {}
 
   // Validates that adding the edge `dependent → required` would not
   // create a cycle. A cycle exists if `required` already (transitively)

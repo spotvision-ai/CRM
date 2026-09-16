@@ -199,9 +199,13 @@ export class ViewEntity
   @JoinColumn({ name: 'calendarEndFieldMetadataId' })
   calendarEndFieldMetadata: Relation<FieldMetadataEntity> | null;
 
+  // enumName pins the type to the one the Fase 1 migration created; without it
+  // TypeORM derives "view_roadmapdefaultzoom_enum" from the column and reports
+  // permanent drift against every deployed database.
   @Column({
     type: 'enum',
     enum: Object.values(ViewRoadmapZoom),
+    enumName: 'view_roadmap_zoom_enum',
     nullable: true,
     default: null,
   })
@@ -224,7 +228,10 @@ export class ViewEntity
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'roadmapFieldStartId' })
+  @JoinColumn({
+    name: 'roadmapFieldStartId',
+    foreignKeyConstraintName: 'FK_VIEW_ROADMAP_FIELD_START',
+  })
   roadmapFieldStart: Relation<FieldMetadataEntity> | null;
 
   @Column({ nullable: true, type: 'uuid' })
@@ -238,7 +245,10 @@ export class ViewEntity
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'roadmapFieldEndId' })
+  @JoinColumn({
+    name: 'roadmapFieldEndId',
+    foreignKeyConstraintName: 'FK_VIEW_ROADMAP_FIELD_END',
+  })
   roadmapFieldEnd: Relation<FieldMetadataEntity> | null;
 
   @Column({ nullable: true, type: 'uuid' })
@@ -252,7 +262,10 @@ export class ViewEntity
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'roadmapFieldGroupId' })
+  @JoinColumn({
+    name: 'roadmapFieldGroupId',
+    foreignKeyConstraintName: 'FK_VIEW_ROADMAP_FIELD_GROUP',
+  })
   roadmapFieldGroup: Relation<FieldMetadataEntity> | null;
 
   @Column({ nullable: true, type: 'uuid' })
@@ -266,7 +279,10 @@ export class ViewEntity
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'roadmapFieldColorId' })
+  @JoinColumn({
+    name: 'roadmapFieldColorId',
+    foreignKeyConstraintName: 'FK_VIEW_ROADMAP_FIELD_COLOR',
+  })
   roadmapFieldColor: Relation<FieldMetadataEntity> | null;
 
   @Column({ nullable: true, type: 'uuid' })
@@ -280,7 +296,10 @@ export class ViewEntity
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'roadmapFieldLabelId' })
+  @JoinColumn({
+    name: 'roadmapFieldLabelId',
+    foreignKeyConstraintName: 'FK_VIEW_ROADMAP_FIELD_LABEL',
+  })
   roadmapFieldLabel: Relation<FieldMetadataEntity> | null;
 
   @Column({ nullable: true, type: 'uuid' })

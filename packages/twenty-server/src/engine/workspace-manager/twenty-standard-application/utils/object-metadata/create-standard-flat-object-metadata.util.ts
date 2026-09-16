@@ -933,23 +933,23 @@ export const STANDARD_FLAT_OBJECT_METADATA_BUILDERS_BY_OBJECT_NAME = {
         nameSingular: 'opportunityMilestone',
         namePlural: 'opportunityMilestones',
         labelSingular: i18nLabel(
-        msg({
-          message: `Milestone`,
-          context: 'objectMetadata.labelSingular',
-        }),
-      ),
+          msg({
+            message: `Milestone`,
+            context: 'objectMetadata.labelSingular',
+          }),
+        ),
         labelPlural: i18nLabel(
-        msg({
-          message: `Milestones`,
-          context: 'objectMetadata.labelPlural',
-        }),
-      ),
+          msg({
+            message: `Milestones`,
+            context: 'objectMetadata.labelPlural',
+          }),
+        ),
         description: i18nLabel(
-        msg({
-          message: `A milestone of an opportunity`,
-          context: 'objectMetadata.description',
-        }),
-      ),
+          msg({
+            message: `A milestone of an opportunity`,
+            context: 'objectMetadata.description',
+          }),
+        ),
         icon: 'IconFlag',
         labelIdentifierFieldMetadataName: 'name',
       },
@@ -977,17 +977,17 @@ export const STANDARD_FLAT_OBJECT_METADATA_BUILDERS_BY_OBJECT_NAME = {
         nameSingular: 'opportunityMilestoneDependency',
         namePlural: 'opportunityMilestoneDependencies',
         labelSingular: i18nLabel(
-        msg({
-          message: `Milestone Dependency`,
-          context: 'objectMetadata.labelSingular',
-        }),
-      ),
+          msg({
+            message: `Milestone Dependency`,
+            context: 'objectMetadata.labelSingular',
+          }),
+        ),
         labelPlural: i18nLabel(
-        msg({
-          message: `Milestone Dependencies`,
-          context: 'objectMetadata.labelPlural',
-        }),
-      ),
+          msg({
+            message: `Milestone Dependencies`,
+            context: 'objectMetadata.labelPlural',
+          }),
+        ),
         description: i18nLabel(
           msg({
             message: `A precedence edge between two opportunity milestones`,

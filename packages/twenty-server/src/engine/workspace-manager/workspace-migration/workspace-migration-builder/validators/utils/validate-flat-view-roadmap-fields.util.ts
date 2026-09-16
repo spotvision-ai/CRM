@@ -8,7 +8,6 @@ import { ViewExceptionCode } from 'src/engine/metadata-modules/view/exceptions/v
 import { type UniversalFlatView } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-view.type';
 import { type FlatEntityValidationError } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-builder/builders/types/failed-flat-entity-validation.type';
 
-
 const ROADMAP_GROUP_ALLOWED_FIELD_TYPES: FieldMetadataType[] = [
   FieldMetadataType.SELECT,
   FieldMetadataType.RELATION,

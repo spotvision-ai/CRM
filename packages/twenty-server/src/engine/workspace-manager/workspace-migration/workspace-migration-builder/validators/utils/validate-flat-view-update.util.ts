@@ -167,7 +167,8 @@ export const validateFlatViewUpdate = ({
       flatEntityUpdate.roadmapFieldLabelUniversalIdentifier !== undefined ||
       flatEntityUpdate.roadmapFieldPlannedStartUniversalIdentifier !==
         undefined ||
-      flatEntityUpdate.roadmapFieldPlannedEndUniversalIdentifier !== undefined ||
+      flatEntityUpdate.roadmapFieldPlannedEndUniversalIdentifier !==
+        undefined ||
       flatEntityUpdate.roadmapFieldStatusUniversalIdentifier !== undefined ||
       flatEntityUpdate.roadmapFieldBlockedByUniversalIdentifier !== undefined);
 
