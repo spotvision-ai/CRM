@@ -762,6 +762,19 @@ type View {
   workspaceId: UUID!
   anyFieldFilterValue: String
   calendarLayout: ViewCalendarLayout
+  roadmapDefaultZoom: ViewRoadmapZoom
+  roadmapShowToday: Boolean!
+  roadmapShowWeekends: Boolean!
+  roadmapFieldStartId: UUID
+  roadmapFieldEndId: UUID
+  roadmapFieldGroupId: UUID
+  roadmapFieldColorId: UUID
+  roadmapFieldLabelId: UUID
+  roadmapFieldPlannedStartId: UUID
+  roadmapFieldPlannedEndId: UUID
+  roadmapFieldStatusId: UUID
+  roadmapFieldBlockedById: UUID
+  roadmapShowDeviation: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
   deletedAt: DateTime
@@ -781,6 +794,7 @@ enum ViewType {
   KANBAN
   CALENDAR
   LIST
+  ROADMAP
   FIELDS_WIDGET
   TABLE_WIDGET
   KANBAN_WIDGET
@@ -801,6 +815,13 @@ enum ViewCalendarLayout {
   DAY
   WEEK
   MONTH
+}
+
+enum ViewRoadmapZoom {
+  DAY
+  WEEK
+  MONTH
+  QUARTER
 }
 
 enum ViewVisibility {
@@ -1021,6 +1042,8 @@ enum WidgetType {
   MESSAGE_CAMPAIGN_BODY
   MESSAGE_CAMPAIGN_DETAILS
   FORM_FIELD
+  MILESTONES
+  MARKDOWN
 }
 
 union PageLayoutWidgetPosition = PageLayoutWidgetGridPosition | PageLayoutWidgetVerticalListPosition | PageLayoutWidgetCanvasPosition
@@ -1054,7 +1077,7 @@ type PageLayoutWidgetCanvasPosition {
   layoutMode: PageLayoutTabLayoutMode!
 }
 
-union WidgetConfiguration = AggregateChartConfiguration | StandaloneRichTextConfiguration | PieChartConfiguration | LineChartConfiguration | IframeConfiguration | BarChartConfiguration | CalendarConfiguration | FrontComponentConfiguration | EmailsConfiguration | EmailThreadConfiguration | CallRecordingSummaryConfiguration | CallRecordingTranscriptConfiguration | MessageCampaignBodyConfiguration | MessageCampaignDetailsConfiguration | FieldConfiguration | FieldRichTextConfiguration | FieldsConfiguration | FormFieldConfiguration | FilesConfiguration | NotesConfiguration | TasksConfiguration | TimelineConfiguration | ViewConfiguration | RecordTableConfiguration | WorkflowConfiguration | WorkflowRunConfiguration | WorkflowVersionConfiguration
+union WidgetConfiguration = AggregateChartConfiguration | StandaloneRichTextConfiguration | PieChartConfiguration | LineChartConfiguration | IframeConfiguration | BarChartConfiguration | CalendarConfiguration | FrontComponentConfiguration | EmailsConfiguration | EmailThreadConfiguration | CallRecordingSummaryConfiguration | CallRecordingTranscriptConfiguration | MessageCampaignBodyConfiguration | MessageCampaignDetailsConfiguration | FieldConfiguration | FieldRichTextConfiguration | FieldsConfiguration | FormFieldConfiguration | FilesConfiguration | NotesConfiguration | MilestonesConfiguration | MarkdownConfiguration | TasksConfiguration | TimelineConfiguration | ViewConfiguration | RecordTableConfiguration | WorkflowConfiguration | WorkflowRunConfiguration | WorkflowVersionConfiguration
 
 type AggregateChartConfiguration {
   configurationType: WidgetConfigurationType!
@@ -1100,6 +1123,8 @@ enum WidgetConfigurationType {
   MESSAGE_CAMPAIGN_BODY
   MESSAGE_CAMPAIGN_DETAILS
   FORM_FIELD
+  MILESTONES
+  MARKDOWN
 }
 
 """Format used to display the chart value"""
@@ -1323,6 +1348,15 @@ type FilesConfiguration {
 
 type NotesConfiguration {
   configurationType: WidgetConfigurationType!
+}
+
+type MilestonesConfiguration {
+  configurationType: WidgetConfigurationType!
+}
+
+type MarkdownConfiguration {
+  configurationType: WidgetConfigurationType!
+  markdown: String
 }
 
 type TasksConfiguration {
@@ -1961,6 +1995,7 @@ enum FeatureFlagKey {
   IS_RECORD_CREATION_FORM_ENABLED
   IS_RECORD_SHARING_ENABLED
   IS_WEBHOOK_RATE_LIMIT_ENABLED
+  IS_ROADMAP_VIEW_ENABLED
 }
 
 type WorkspaceUrls {
@@ -3562,6 +3597,19 @@ type MinimalView {
   type: ViewType!
   key: ViewKey
   objectMetadataId: UUID!
+  roadmapFieldStartId: UUID
+  roadmapFieldEndId: UUID
+  roadmapFieldGroupId: UUID
+  roadmapFieldColorId: UUID
+  roadmapFieldLabelId: UUID
+  roadmapFieldPlannedStartId: UUID
+  roadmapFieldPlannedEndId: UUID
+  roadmapFieldStatusId: UUID
+  roadmapFieldBlockedById: UUID
+  roadmapDefaultZoom: ViewRoadmapZoom
+  roadmapShowToday: Boolean
+  roadmapShowWeekends: Boolean
+  roadmapShowDeviation: Boolean
 }
 
 type MinimalMetadata {
@@ -4213,6 +4261,19 @@ input CreateViewInput {
   calendarFieldMetadataId: UUID
   calendarEndFieldMetadataId: UUID
   mainGroupByFieldMetadataId: UUID
+  roadmapDefaultZoom: ViewRoadmapZoom
+  roadmapShowToday: Boolean = true
+  roadmapShowWeekends: Boolean = true
+  roadmapFieldStartId: UUID
+  roadmapFieldEndId: UUID
+  roadmapFieldGroupId: UUID
+  roadmapFieldColorId: UUID
+  roadmapFieldLabelId: UUID
+  roadmapFieldPlannedStartId: UUID
+  roadmapFieldPlannedEndId: UUID
+  roadmapFieldStatusId: UUID
+  roadmapFieldBlockedById: UUID
+  roadmapShowDeviation: Boolean = false
   visibility: ViewVisibility
 }
 
@@ -4237,6 +4298,19 @@ input UpdateViewInput {
   visibility: ViewVisibility
   mainGroupByFieldMetadataId: UUID
   shouldHideEmptyGroups: Boolean
+  roadmapDefaultZoom: ViewRoadmapZoom
+  roadmapShowToday: Boolean
+  roadmapShowWeekends: Boolean
+  roadmapFieldStartId: UUID
+  roadmapFieldEndId: UUID
+  roadmapFieldGroupId: UUID
+  roadmapFieldColorId: UUID
+  roadmapFieldLabelId: UUID
+  roadmapFieldPlannedStartId: UUID
+  roadmapFieldPlannedEndId: UUID
+  roadmapFieldStatusId: UUID
+  roadmapFieldBlockedById: UUID
+  roadmapShowDeviation: Boolean
   kanbanColumnWidth: Int
 }
 

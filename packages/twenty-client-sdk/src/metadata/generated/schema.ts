@@ -525,6 +525,19 @@ export interface View {
     workspaceId: Scalars['UUID']
     anyFieldFilterValue?: Scalars['String']
     calendarLayout?: ViewCalendarLayout
+    roadmapDefaultZoom?: ViewRoadmapZoom
+    roadmapShowToday: Scalars['Boolean']
+    roadmapShowWeekends: Scalars['Boolean']
+    roadmapFieldStartId?: Scalars['UUID']
+    roadmapFieldEndId?: Scalars['UUID']
+    roadmapFieldGroupId?: Scalars['UUID']
+    roadmapFieldColorId?: Scalars['UUID']
+    roadmapFieldLabelId?: Scalars['UUID']
+    roadmapFieldPlannedStartId?: Scalars['UUID']
+    roadmapFieldPlannedEndId?: Scalars['UUID']
+    roadmapFieldStatusId?: Scalars['UUID']
+    roadmapFieldBlockedById?: Scalars['UUID']
+    roadmapShowDeviation: Scalars['Boolean']
     createdAt: Scalars['DateTime']
     updatedAt: Scalars['DateTime']
     deletedAt?: Scalars['DateTime']
@@ -540,13 +553,15 @@ export interface View {
     __typename: 'View'
 }
 
-export type ViewType = 'TABLE' | 'KANBAN' | 'CALENDAR' | 'LIST' | 'FIELDS_WIDGET' | 'TABLE_WIDGET' | 'KANBAN_WIDGET' | 'LIST_WIDGET' | 'CALENDAR_WIDGET'
+export type ViewType = 'TABLE' | 'KANBAN' | 'CALENDAR' | 'LIST' | 'ROADMAP' | 'FIELDS_WIDGET' | 'TABLE_WIDGET' | 'KANBAN_WIDGET' | 'LIST_WIDGET' | 'CALENDAR_WIDGET'
 
 export type ViewKey = 'INDEX'
 
 export type ViewOpenRecordIn = 'SIDE_PANEL' | 'RECORD_PAGE'
 
 export type ViewCalendarLayout = 'DAY' | 'WEEK' | 'MONTH'
+
+export type ViewRoadmapZoom = 'DAY' | 'WEEK' | 'MONTH' | 'QUARTER'
 
 export type ViewVisibility = 'WORKSPACE' | 'UNLISTED'
 
@@ -719,7 +734,7 @@ export interface PageLayoutWidget {
     __typename: 'PageLayoutWidget'
 }
 
-export type WidgetType = 'VIEW' | 'IFRAME' | 'FIELD' | 'FIELDS' | 'GRAPH' | 'STANDALONE_RICH_TEXT' | 'TIMELINE' | 'TASKS' | 'NOTES' | 'FILES' | 'EMAILS' | 'CALENDAR' | 'FIELD_RICH_TEXT' | 'WORKFLOW' | 'WORKFLOW_VERSION' | 'WORKFLOW_RUN' | 'FRONT_COMPONENT' | 'RECORD_TABLE' | 'EMAIL_THREAD' | 'CALL_RECORDING_SUMMARY' | 'CALL_RECORDING_TRANSCRIPT' | 'MESSAGE_CAMPAIGN_BODY' | 'MESSAGE_CAMPAIGN_DETAILS' | 'FORM_FIELD'
+export type WidgetType = 'VIEW' | 'IFRAME' | 'FIELD' | 'FIELDS' | 'GRAPH' | 'STANDALONE_RICH_TEXT' | 'TIMELINE' | 'TASKS' | 'NOTES' | 'FILES' | 'EMAILS' | 'CALENDAR' | 'FIELD_RICH_TEXT' | 'WORKFLOW' | 'WORKFLOW_VERSION' | 'WORKFLOW_RUN' | 'FRONT_COMPONENT' | 'RECORD_TABLE' | 'EMAIL_THREAD' | 'CALL_RECORDING_SUMMARY' | 'CALL_RECORDING_TRANSCRIPT' | 'MESSAGE_CAMPAIGN_BODY' | 'MESSAGE_CAMPAIGN_DETAILS' | 'FORM_FIELD' | 'MILESTONES' | 'MARKDOWN'
 
 export type PageLayoutWidgetPosition = (PageLayoutWidgetGridPosition | PageLayoutWidgetVerticalListPosition | PageLayoutWidgetCanvasPosition) & { __isUnion?: true }
 
@@ -748,7 +763,7 @@ export interface PageLayoutWidgetCanvasPosition {
     __typename: 'PageLayoutWidgetCanvasPosition'
 }
 
-export type WidgetConfiguration = (AggregateChartConfiguration | StandaloneRichTextConfiguration | PieChartConfiguration | LineChartConfiguration | IframeConfiguration | BarChartConfiguration | CalendarConfiguration | FrontComponentConfiguration | EmailsConfiguration | EmailThreadConfiguration | CallRecordingSummaryConfiguration | CallRecordingTranscriptConfiguration | MessageCampaignBodyConfiguration | MessageCampaignDetailsConfiguration | FieldConfiguration | FieldRichTextConfiguration | FieldsConfiguration | FormFieldConfiguration | FilesConfiguration | NotesConfiguration | TasksConfiguration | TimelineConfiguration | ViewConfiguration | RecordTableConfiguration | WorkflowConfiguration | WorkflowRunConfiguration | WorkflowVersionConfiguration) & { __isUnion?: true }
+export type WidgetConfiguration = (AggregateChartConfiguration | StandaloneRichTextConfiguration | PieChartConfiguration | LineChartConfiguration | IframeConfiguration | BarChartConfiguration | CalendarConfiguration | FrontComponentConfiguration | EmailsConfiguration | EmailThreadConfiguration | CallRecordingSummaryConfiguration | CallRecordingTranscriptConfiguration | MessageCampaignBodyConfiguration | MessageCampaignDetailsConfiguration | FieldConfiguration | FieldRichTextConfiguration | FieldsConfiguration | FormFieldConfiguration | FilesConfiguration | NotesConfiguration | MilestonesConfiguration | MarkdownConfiguration | TasksConfiguration | TimelineConfiguration | ViewConfiguration | RecordTableConfiguration | WorkflowConfiguration | WorkflowRunConfiguration | WorkflowVersionConfiguration) & { __isUnion?: true }
 
 export interface AggregateChartConfiguration {
     configurationType: WidgetConfigurationType
@@ -767,7 +782,7 @@ export interface AggregateChartConfiguration {
     __typename: 'AggregateChartConfiguration'
 }
 
-export type WidgetConfigurationType = 'AGGREGATE_CHART' | 'PIE_CHART' | 'BAR_CHART' | 'LINE_CHART' | 'IFRAME' | 'STANDALONE_RICH_TEXT' | 'VIEW' | 'FIELD' | 'FIELDS' | 'TIMELINE' | 'TASKS' | 'NOTES' | 'FILES' | 'EMAILS' | 'CALENDAR' | 'FIELD_RICH_TEXT' | 'WORKFLOW' | 'WORKFLOW_VERSION' | 'WORKFLOW_RUN' | 'FRONT_COMPONENT' | 'RECORD_TABLE' | 'EMAIL_THREAD' | 'CALL_RECORDING_SUMMARY' | 'CALL_RECORDING_TRANSCRIPT' | 'MESSAGE_CAMPAIGN_BODY' | 'MESSAGE_CAMPAIGN_DETAILS' | 'FORM_FIELD'
+export type WidgetConfigurationType = 'AGGREGATE_CHART' | 'PIE_CHART' | 'BAR_CHART' | 'LINE_CHART' | 'IFRAME' | 'STANDALONE_RICH_TEXT' | 'VIEW' | 'FIELD' | 'FIELDS' | 'TIMELINE' | 'TASKS' | 'NOTES' | 'FILES' | 'EMAILS' | 'CALENDAR' | 'FIELD_RICH_TEXT' | 'WORKFLOW' | 'WORKFLOW_VERSION' | 'WORKFLOW_RUN' | 'FRONT_COMPONENT' | 'RECORD_TABLE' | 'EMAIL_THREAD' | 'CALL_RECORDING_SUMMARY' | 'CALL_RECORDING_TRANSCRIPT' | 'MESSAGE_CAMPAIGN_BODY' | 'MESSAGE_CAMPAIGN_DETAILS' | 'FORM_FIELD' | 'MILESTONES' | 'MARKDOWN'
 
 
 /** Format used to display the chart value */
@@ -976,6 +991,17 @@ export interface FilesConfiguration {
 export interface NotesConfiguration {
     configurationType: WidgetConfigurationType
     __typename: 'NotesConfiguration'
+}
+
+export interface MilestonesConfiguration {
+    configurationType: WidgetConfigurationType
+    __typename: 'MilestonesConfiguration'
+}
+
+export interface MarkdownConfiguration {
+    configurationType: WidgetConfigurationType
+    markdown?: Scalars['String']
+    __typename: 'MarkdownConfiguration'
 }
 
 export interface TasksConfiguration {
@@ -1565,7 +1591,7 @@ export interface FeatureFlag {
     __typename: 'FeatureFlag'
 }
 
-export type FeatureFlagKey = 'IS_APP_CLAIMING_ENABLED' | 'IS_UNIQUE_INDEXES_ENABLED' | 'IS_CONFIGURABLE_SEARCH_FIELDS_ENABLED' | 'IS_JSON_FILTER_ENABLED' | 'IS_EMAIL_GROUP_ENABLED' | 'IS_JUNCTION_RELATIONS_ENABLED' | 'IS_REST_METADATA_API_NEW_FORMAT_DIRECT' | 'IS_LOGIC_FUNCTION_PREBUILT_MODE_ENABLED' | 'IS_WORKFLOW_CORE_INDEX_PAGE_ENABLED' | 'IS_API_RATE_LIMIT_V2_ENABLED' | 'IS_MESSAGE_CALENDAR_TARGET_READ_ENABLED' | 'IS_QUOTA_ENGINE_CREDIT_BOUND_ENABLED' | 'IS_RECORD_CREATION_FORM_ENABLED' | 'IS_RECORD_SHARING_ENABLED' | 'IS_WEBHOOK_RATE_LIMIT_ENABLED'
+export type FeatureFlagKey = 'IS_APP_CLAIMING_ENABLED' | 'IS_UNIQUE_INDEXES_ENABLED' | 'IS_CONFIGURABLE_SEARCH_FIELDS_ENABLED' | 'IS_JSON_FILTER_ENABLED' | 'IS_EMAIL_GROUP_ENABLED' | 'IS_JUNCTION_RELATIONS_ENABLED' | 'IS_REST_METADATA_API_NEW_FORMAT_DIRECT' | 'IS_LOGIC_FUNCTION_PREBUILT_MODE_ENABLED' | 'IS_WORKFLOW_CORE_INDEX_PAGE_ENABLED' | 'IS_API_RATE_LIMIT_V2_ENABLED' | 'IS_MESSAGE_CALENDAR_TARGET_READ_ENABLED' | 'IS_QUOTA_ENGINE_CREDIT_BOUND_ENABLED' | 'IS_RECORD_CREATION_FORM_ENABLED' | 'IS_RECORD_SHARING_ENABLED' | 'IS_WEBHOOK_RATE_LIMIT_ENABLED' | 'IS_ROADMAP_VIEW_ENABLED'
 
 export interface WorkspaceUrls {
     customUrl?: Scalars['String']
@@ -3111,6 +3137,19 @@ export interface MinimalView {
     type: ViewType
     key?: ViewKey
     objectMetadataId: Scalars['UUID']
+    roadmapFieldStartId?: Scalars['UUID']
+    roadmapFieldEndId?: Scalars['UUID']
+    roadmapFieldGroupId?: Scalars['UUID']
+    roadmapFieldColorId?: Scalars['UUID']
+    roadmapFieldLabelId?: Scalars['UUID']
+    roadmapFieldPlannedStartId?: Scalars['UUID']
+    roadmapFieldPlannedEndId?: Scalars['UUID']
+    roadmapFieldStatusId?: Scalars['UUID']
+    roadmapFieldBlockedById?: Scalars['UUID']
+    roadmapDefaultZoom?: ViewRoadmapZoom
+    roadmapShowToday?: Scalars['Boolean']
+    roadmapShowWeekends?: Scalars['Boolean']
+    roadmapShowDeviation?: Scalars['Boolean']
     __typename: 'MinimalView'
 }
 
@@ -4059,6 +4098,19 @@ export interface ViewGenqlSelection{
     workspaceId?: boolean | number
     anyFieldFilterValue?: boolean | number
     calendarLayout?: boolean | number
+    roadmapDefaultZoom?: boolean | number
+    roadmapShowToday?: boolean | number
+    roadmapShowWeekends?: boolean | number
+    roadmapFieldStartId?: boolean | number
+    roadmapFieldEndId?: boolean | number
+    roadmapFieldGroupId?: boolean | number
+    roadmapFieldColorId?: boolean | number
+    roadmapFieldLabelId?: boolean | number
+    roadmapFieldPlannedStartId?: boolean | number
+    roadmapFieldPlannedEndId?: boolean | number
+    roadmapFieldStatusId?: boolean | number
+    roadmapFieldBlockedById?: boolean | number
+    roadmapShowDeviation?: boolean | number
     createdAt?: boolean | number
     updatedAt?: boolean | number
     deletedAt?: boolean | number
@@ -4294,6 +4346,8 @@ export interface WidgetConfigurationGenqlSelection{
     on_FormFieldConfiguration?:FormFieldConfigurationGenqlSelection,
     on_FilesConfiguration?:FilesConfigurationGenqlSelection,
     on_NotesConfiguration?:NotesConfigurationGenqlSelection,
+    on_MilestonesConfiguration?:MilestonesConfigurationGenqlSelection,
+    on_MarkdownConfiguration?:MarkdownConfigurationGenqlSelection,
     on_TasksConfiguration?:TasksConfigurationGenqlSelection,
     on_TimelineConfiguration?:TimelineConfigurationGenqlSelection,
     on_ViewConfiguration?:ViewConfigurationGenqlSelection,
@@ -4518,6 +4572,19 @@ export interface FilesConfigurationGenqlSelection{
 
 export interface NotesConfigurationGenqlSelection{
     configurationType?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MilestonesConfigurationGenqlSelection{
+    configurationType?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MarkdownConfigurationGenqlSelection{
+    configurationType?: boolean | number
+    markdown?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -6755,6 +6822,19 @@ export interface MinimalViewGenqlSelection{
     type?: boolean | number
     key?: boolean | number
     objectMetadataId?: boolean | number
+    roadmapFieldStartId?: boolean | number
+    roadmapFieldEndId?: boolean | number
+    roadmapFieldGroupId?: boolean | number
+    roadmapFieldColorId?: boolean | number
+    roadmapFieldLabelId?: boolean | number
+    roadmapFieldPlannedStartId?: boolean | number
+    roadmapFieldPlannedEndId?: boolean | number
+    roadmapFieldStatusId?: boolean | number
+    roadmapFieldBlockedById?: boolean | number
+    roadmapDefaultZoom?: boolean | number
+    roadmapShowToday?: boolean | number
+    roadmapShowWeekends?: boolean | number
+    roadmapShowDeviation?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -7241,11 +7321,11 @@ id: Scalars['UUID']}
 
 export interface CreateViewInput {id?: (Scalars['UUID'] | null),name: Scalars['String'],objectMetadataId: Scalars['UUID'],type?: (ViewType | null),key?: (ViewKey | null),icon: Scalars['String'],position?: (Scalars['Float'] | null),isCompact?: (Scalars['Boolean'] | null),shouldHideEmptyGroups?: (Scalars['Boolean'] | null),kanbanColumnWidth?: (Scalars['Int'] | null),
 /** Deprecated: Superseded by objectMetadata.openRecordIn and the workspace member preference; kept one release for API compatibility, no longer read by the frontend. */
-openRecordIn?: (ViewOpenRecordIn | null),kanbanAggregateOperation?: (AggregateOperations | null),kanbanAggregateOperationFieldMetadataId?: (Scalars['UUID'] | null),anyFieldFilterValue?: (Scalars['String'] | null),calendarLayout?: (ViewCalendarLayout | null),calendarFieldMetadataId?: (Scalars['UUID'] | null),calendarEndFieldMetadataId?: (Scalars['UUID'] | null),mainGroupByFieldMetadataId?: (Scalars['UUID'] | null),visibility?: (ViewVisibility | null)}
+openRecordIn?: (ViewOpenRecordIn | null),kanbanAggregateOperation?: (AggregateOperations | null),kanbanAggregateOperationFieldMetadataId?: (Scalars['UUID'] | null),anyFieldFilterValue?: (Scalars['String'] | null),calendarLayout?: (ViewCalendarLayout | null),calendarFieldMetadataId?: (Scalars['UUID'] | null),calendarEndFieldMetadataId?: (Scalars['UUID'] | null),mainGroupByFieldMetadataId?: (Scalars['UUID'] | null),roadmapDefaultZoom?: (ViewRoadmapZoom | null),roadmapShowToday?: (Scalars['Boolean'] | null),roadmapShowWeekends?: (Scalars['Boolean'] | null),roadmapFieldStartId?: (Scalars['UUID'] | null),roadmapFieldEndId?: (Scalars['UUID'] | null),roadmapFieldGroupId?: (Scalars['UUID'] | null),roadmapFieldColorId?: (Scalars['UUID'] | null),roadmapFieldLabelId?: (Scalars['UUID'] | null),roadmapFieldPlannedStartId?: (Scalars['UUID'] | null),roadmapFieldPlannedEndId?: (Scalars['UUID'] | null),roadmapFieldStatusId?: (Scalars['UUID'] | null),roadmapFieldBlockedById?: (Scalars['UUID'] | null),roadmapShowDeviation?: (Scalars['Boolean'] | null),visibility?: (ViewVisibility | null)}
 
 export interface UpdateViewInput {id?: (Scalars['UUID'] | null),name?: (Scalars['String'] | null),type?: (ViewType | null),icon?: (Scalars['String'] | null),position?: (Scalars['Float'] | null),isCompact?: (Scalars['Boolean'] | null),
 /** Deprecated: Superseded by objectMetadata.openRecordIn and the workspace member preference; kept one release for API compatibility, no longer read by the frontend. */
-openRecordIn?: (ViewOpenRecordIn | null),kanbanAggregateOperation?: (AggregateOperations | null),kanbanAggregateOperationFieldMetadataId?: (Scalars['UUID'] | null),anyFieldFilterValue?: (Scalars['String'] | null),calendarLayout?: (ViewCalendarLayout | null),calendarFieldMetadataId?: (Scalars['UUID'] | null),calendarEndFieldMetadataId?: (Scalars['UUID'] | null),visibility?: (ViewVisibility | null),mainGroupByFieldMetadataId?: (Scalars['UUID'] | null),shouldHideEmptyGroups?: (Scalars['Boolean'] | null),kanbanColumnWidth?: (Scalars['Int'] | null)}
+openRecordIn?: (ViewOpenRecordIn | null),kanbanAggregateOperation?: (AggregateOperations | null),kanbanAggregateOperationFieldMetadataId?: (Scalars['UUID'] | null),anyFieldFilterValue?: (Scalars['String'] | null),calendarLayout?: (ViewCalendarLayout | null),calendarFieldMetadataId?: (Scalars['UUID'] | null),calendarEndFieldMetadataId?: (Scalars['UUID'] | null),visibility?: (ViewVisibility | null),mainGroupByFieldMetadataId?: (Scalars['UUID'] | null),shouldHideEmptyGroups?: (Scalars['Boolean'] | null),roadmapDefaultZoom?: (ViewRoadmapZoom | null),roadmapShowToday?: (Scalars['Boolean'] | null),roadmapShowWeekends?: (Scalars['Boolean'] | null),roadmapFieldStartId?: (Scalars['UUID'] | null),roadmapFieldEndId?: (Scalars['UUID'] | null),roadmapFieldGroupId?: (Scalars['UUID'] | null),roadmapFieldColorId?: (Scalars['UUID'] | null),roadmapFieldLabelId?: (Scalars['UUID'] | null),roadmapFieldPlannedStartId?: (Scalars['UUID'] | null),roadmapFieldPlannedEndId?: (Scalars['UUID'] | null),roadmapFieldStatusId?: (Scalars['UUID'] | null),roadmapFieldBlockedById?: (Scalars['UUID'] | null),roadmapShowDeviation?: (Scalars['Boolean'] | null),kanbanColumnWidth?: (Scalars['Int'] | null)}
 
 export interface UpsertViewWidgetInput {
 /** The id of the view widget (page layout widget). */
@@ -7995,7 +8075,7 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     
 
 
-    const WidgetConfiguration_possibleTypes: string[] = ['AggregateChartConfiguration','StandaloneRichTextConfiguration','PieChartConfiguration','LineChartConfiguration','IframeConfiguration','BarChartConfiguration','CalendarConfiguration','FrontComponentConfiguration','EmailsConfiguration','EmailThreadConfiguration','CallRecordingSummaryConfiguration','CallRecordingTranscriptConfiguration','MessageCampaignBodyConfiguration','MessageCampaignDetailsConfiguration','FieldConfiguration','FieldRichTextConfiguration','FieldsConfiguration','FormFieldConfiguration','FilesConfiguration','NotesConfiguration','TasksConfiguration','TimelineConfiguration','ViewConfiguration','RecordTableConfiguration','WorkflowConfiguration','WorkflowRunConfiguration','WorkflowVersionConfiguration']
+    const WidgetConfiguration_possibleTypes: string[] = ['AggregateChartConfiguration','StandaloneRichTextConfiguration','PieChartConfiguration','LineChartConfiguration','IframeConfiguration','BarChartConfiguration','CalendarConfiguration','FrontComponentConfiguration','EmailsConfiguration','EmailThreadConfiguration','CallRecordingSummaryConfiguration','CallRecordingTranscriptConfiguration','MessageCampaignBodyConfiguration','MessageCampaignDetailsConfiguration','FieldConfiguration','FieldRichTextConfiguration','FieldsConfiguration','FormFieldConfiguration','FilesConfiguration','NotesConfiguration','MilestonesConfiguration','MarkdownConfiguration','TasksConfiguration','TimelineConfiguration','ViewConfiguration','RecordTableConfiguration','WorkflowConfiguration','WorkflowRunConfiguration','WorkflowVersionConfiguration']
     export const isWidgetConfiguration = (obj?: { __typename?: any } | null): obj is WidgetConfiguration => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isWidgetConfiguration"')
       return WidgetConfiguration_possibleTypes.includes(obj.__typename)
@@ -8159,6 +8239,22 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     export const isNotesConfiguration = (obj?: { __typename?: any } | null): obj is NotesConfiguration => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isNotesConfiguration"')
       return NotesConfiguration_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MilestonesConfiguration_possibleTypes: string[] = ['MilestonesConfiguration']
+    export const isMilestonesConfiguration = (obj?: { __typename?: any } | null): obj is MilestonesConfiguration => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMilestonesConfiguration"')
+      return MilestonesConfiguration_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MarkdownConfiguration_possibleTypes: string[] = ['MarkdownConfiguration']
+    export const isMarkdownConfiguration = (obj?: { __typename?: any } | null): obj is MarkdownConfiguration => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMarkdownConfiguration"')
+      return MarkdownConfiguration_possibleTypes.includes(obj.__typename)
     }
     
 
@@ -10223,6 +10319,7 @@ export const enumViewType = {
    KANBAN: 'KANBAN' as const,
    CALENDAR: 'CALENDAR' as const,
    LIST: 'LIST' as const,
+   ROADMAP: 'ROADMAP' as const,
    FIELDS_WIDGET: 'FIELDS_WIDGET' as const,
    TABLE_WIDGET: 'TABLE_WIDGET' as const,
    KANBAN_WIDGET: 'KANBAN_WIDGET' as const,
@@ -10243,6 +10340,13 @@ export const enumViewCalendarLayout = {
    DAY: 'DAY' as const,
    WEEK: 'WEEK' as const,
    MONTH: 'MONTH' as const
+}
+
+export const enumViewRoadmapZoom = {
+   DAY: 'DAY' as const,
+   WEEK: 'WEEK' as const,
+   MONTH: 'MONTH' as const,
+   QUARTER: 'QUARTER' as const
 }
 
 export const enumViewVisibility = {
@@ -10308,7 +10412,9 @@ export const enumWidgetType = {
    CALL_RECORDING_TRANSCRIPT: 'CALL_RECORDING_TRANSCRIPT' as const,
    MESSAGE_CAMPAIGN_BODY: 'MESSAGE_CAMPAIGN_BODY' as const,
    MESSAGE_CAMPAIGN_DETAILS: 'MESSAGE_CAMPAIGN_DETAILS' as const,
-   FORM_FIELD: 'FORM_FIELD' as const
+   FORM_FIELD: 'FORM_FIELD' as const,
+   MILESTONES: 'MILESTONES' as const,
+   MARKDOWN: 'MARKDOWN' as const
 }
 
 export const enumPageLayoutTabLayoutMode = {
@@ -10349,7 +10455,9 @@ export const enumWidgetConfigurationType = {
    CALL_RECORDING_TRANSCRIPT: 'CALL_RECORDING_TRANSCRIPT' as const,
    MESSAGE_CAMPAIGN_BODY: 'MESSAGE_CAMPAIGN_BODY' as const,
    MESSAGE_CAMPAIGN_DETAILS: 'MESSAGE_CAMPAIGN_DETAILS' as const,
-   FORM_FIELD: 'FORM_FIELD' as const
+   FORM_FIELD: 'FORM_FIELD' as const,
+   MILESTONES: 'MILESTONES' as const,
+   MARKDOWN: 'MARKDOWN' as const
 }
 
 export const enumChartNumberFormat = {
@@ -10529,7 +10637,8 @@ export const enumFeatureFlagKey = {
    IS_QUOTA_ENGINE_CREDIT_BOUND_ENABLED: 'IS_QUOTA_ENGINE_CREDIT_BOUND_ENABLED' as const,
    IS_RECORD_CREATION_FORM_ENABLED: 'IS_RECORD_CREATION_FORM_ENABLED' as const,
    IS_RECORD_SHARING_ENABLED: 'IS_RECORD_SHARING_ENABLED' as const,
-   IS_WEBHOOK_RATE_LIMIT_ENABLED: 'IS_WEBHOOK_RATE_LIMIT_ENABLED' as const
+   IS_WEBHOOK_RATE_LIMIT_ENABLED: 'IS_WEBHOOK_RATE_LIMIT_ENABLED' as const,
+   IS_ROADMAP_VIEW_ENABLED: 'IS_ROADMAP_VIEW_ENABLED' as const
 }
 
 export const enumIdentityProviderType = {
