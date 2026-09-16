@@ -710,3 +710,57 @@ imports at their deep paths. After the cherry-pick,
 > **Caching caveat worth remembering**: the first `database:reset` in this
 > sync appeared to pass, but nx had served 7 of its 8 tasks from cache.
 > Always pass `--skip-nx-cache` when a reset is being used as verification.
+
+### Upstream enum rebuilds drop the fork's widget types (recurring rebase hazard)
+
+Validating the upgrade against a **real prod copy** caught a failure that no
+fresh-install test can reach:
+
+```
+2.25.0_AddMessageCampaignWidgetTypeFastInstanceCommand failed
+QueryFailedError: invalid input value for enum
+  core."pageLayoutWidget_type_enum": "MILESTONES"
+```
+
+Three upstream instance commands in the 2.23→2.40 range do **not** use
+`ALTER TYPE … ADD VALUE`. They rename the enum, `CREATE TYPE … AS ENUM(<hardcoded list>)`
+and cast the column across:
+
+- `2-25/…-add-message-campaign-widget-type.ts`
+- `2-29/…-add-call-recording-widget-types.ts`
+- `2-38/…-add-record-form-page-layout-and-form-field-widget.ts` (via the
+  `WIDGET_TYPES_BEFORE` constant)
+
+Each hardcoded list is upstream's own, so it omits the fork's `MILESTONES`
+and `MARKDOWN`. The cast then fails on any existing row holding them — and
+prod holds **1 MILESTONES widget and 9 MARKDOWN widgets**.
+
+**Resolution**: `'MILESTONES', 'MARKDOWN'` were appended to every widget-type
+enum list in those three commands, in both `up` and `down` (a `down` without
+them fails the same way on rollback). This is safe because none of the three
+has ever run on our instance — prod sits at 2.22.3 and these are 2.25+. The
+fork's own already-released `2-5` commands were **not** touched.
+
+> **Standing hazard**: every future sync must re-check any upstream instance
+> command that rebuilds `pageLayoutWidget_type_enum` (or any other enum the
+> fork extends) and re-append the fork's values. Grep the new upgrade-command
+> directories for `AS ENUM(` before running an upgrade.
+>
+> **Why this was only caught late**: the entrypoint runs
+> `yarn command:prod upgrade` but **swallows its failure** and boots anyway
+> (`Warning: Upgrade completed with errors… continuing startup`). A broken
+> upgrade therefore surfaces as a half-migrated schema at runtime, not as a
+> failed deploy — exactly the 2.16 incident shape.
+
+### Prod-copy upgrade validation (2.22.3 → 2.40.2)
+
+Run against a `pg_dump` of the live `crm` database restored locally:
+
+| Check | Result |
+| --- | --- |
+| `command:prod upgrade` | **30 workspaces succeeded, 0 failed**, exit 0 |
+| New `upgradeMigration` failures introduced by this run | **0** (the 13 `failed` rows in the table are pre-existing, dated 2026-04-20 → 2026-06-26, and arrived with the dump) |
+| `pageLayoutWidget_type_enum` after upgrade | still carries `MILESTONES` + `MARKDOWN` |
+| Fork widget rows after upgrade | 1 `MILESTONES`, 9 `MARKDOWN` preserved |
+| Fork tables after upgrade | 62 `opportunityMilestone` + 1 `opportunityMilestoneDependency` preserved |
+| v2.40 server booted against the upgraded copy | `/healthz` 200, `/client-config` serves auth providers, `/metadata` GraphQL responds, 0 boot errors |
