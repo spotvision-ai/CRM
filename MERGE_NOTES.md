@@ -677,3 +677,36 @@ These auto-merged cleanly and only failed at typecheck. Watch for the same class
 - `oxlint` ✅ 0 warnings / 0 errors over the 337 touched source files.
 - `database:reset` ✅ full migration + metadata sync + seed on a fresh DB, and the server boots clean against it (`/healthz` 200, `graphql:generate` served off it).
 - ⚠️ **Not verified: the production upgrade path.** `database:reset` exercises a *fresh* install. Prod runs `DISABLE_DB_MIGRATIONS=true`, so the 2.23→2.40 instance commands (321 new upgrade-command files across 18 versions) must be validated against a prod-snapshot copy before deploying — see the 2.16 incident above.
+
+### Upstream defect hit by this sync (fixed by cherry-pick)
+
+`twenty/v2.40.2` cannot run `nx database:init` / `database:reset` at all:
+
+```
+database:init → database:migrate → run-instance-commands --force --include-slow
+  → packages/twenty-client-sdk/dist/application-*.js
+     Error: Module "" has been externalized for browser compatibility.
+            Cannot access ".custom" in client code.
+```
+
+`twenty-shared/src/application/normalizePageLayoutTabManifest.ts` reached for
+the whole `@/utils` barrel, which drags **handlebars** (and its
+`object-inspect` dependency, which touches `util.inspect.custom`) into
+`twenty-client-sdk`. The SDK is built with `vite build --lib` with no Node
+platform, so Node builtins become browser stubs that throw on property
+access — and the server requires that build at boot.
+
+**Verified as an upstream defect, not a merge artifact**: a clean
+`git worktree` at `twenty/v2.40.2` with its own `yarn install` reproduces the
+identical error with zero fork code in the tree. Our `yarn.lock` is
+consistent (`yarn install --immutable` passes).
+
+Fixed by cherry-picking upstream **`6fadcee289`** (`fix(shared): stop the
+utils barrel dragging handlebars into twenty-client-sdk`, #25846), which
+lands on upstream `main` after the v2.40.2 tag and only re-points four
+imports at their deep paths. After the cherry-pick,
+`database:reset --skip-nx-cache` completes with 0 SDK errors.
+
+> **Caching caveat worth remembering**: the first `database:reset` in this
+> sync appeared to pass, but nx had served 7 of its 8 tasks from cache.
+> Always pass `--skip-nx-cache` when a reset is being used as verification.
