@@ -8,7 +8,7 @@ import { computeMessageDirection } from 'src/modules/messaging/message-import-ma
 import { parseGmailMessage } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/parse-gmail-message.util';
 import { type MessageWithParticipants } from 'src/modules/messaging/message-import-manager/types/message';
 import { buildReplyToParticipants } from 'src/modules/messaging/message-import-manager/utils/build-reply-to-participants.util';
-import { extractMessageBodyText } from 'src/modules/messaging/message-import-manager/utils/extract-message-body-text.util';
+import { extractMessageTextWithoutQuotedHistory } from 'src/modules/messaging/message-import-manager/utils/extract-message-text-without-quoted-history.util';
 import { formatAddressObjectAsParticipants } from 'src/modules/messaging/message-import-manager/utils/format-address-object-as-participants.util';
 
 export const parseAndFormatGmailMessage = (
@@ -31,6 +31,7 @@ export const parseAndFormatGmailMessage = (
     attachments,
     deliveredTo,
     labelIds,
+    messageHeaders,
   } = parseGmailMessage(message);
 
   const isDraft = (labelIds ?? []).includes('DRAFT');
@@ -81,10 +82,13 @@ export const parseAndFormatGmailMessage = (
     receivedAt: new Date(parseInt(internalDate)),
     direction: computeMessageDirection(from.address || '', connectedAccount),
     participants,
-    text: extractMessageBodyText(isHtml ? { html: body } : { text: body }),
+    text: extractMessageTextWithoutQuotedHistory(
+      isHtml ? { html: body } : { text: body },
+    ),
     attachments,
     messageFolderExternalIds: labelIds,
     labelIds,
     isDraft,
+    messageHeaders,
   };
 };

@@ -24,7 +24,13 @@ export class CreateRecordService {
   ) {}
 
   async execute(params: CreateRecordParams): Promise<ToolOutput> {
-    const { objectName, objectRecord, authContext } = params;
+    const {
+      objectName,
+      objectRecord,
+      authContext,
+      rolePermissionConfig,
+      shareWith,
+    } = params;
 
     try {
       const {
@@ -35,6 +41,7 @@ export class CreateRecordService {
       } = await this.commonApiContextBuilder.build({
         authContext,
         objectName,
+        rolePermissionConfig,
       });
 
       if (
@@ -64,6 +71,7 @@ export class CreateRecordService {
         await this.commonCreateOneRunner.execute(
           {
             data: dataWithActor,
+            shareWith,
             selectedFields,
           },
           queryRunnerContext,

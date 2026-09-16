@@ -1,10 +1,13 @@
 import { useQuery } from '@apollo/client/react';
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useDeleteEmailGroupChannel } from '@/settings/accounts/hooks/useDeleteEmailGroupChannel';
 import { useMyMessageChannels } from '@/settings/accounts/hooks/useMyMessageChannels';
+import { useUpdateEmailGroupChannel } from '@/settings/accounts/hooks/useUpdateEmailGroupChannel';
+import { SettingsEditableTitle } from '@/settings/components/SettingsEditableTitle';
 
 import { getEmailChannelDomain } from '@/settings/accounts/utils/getEmailChannelDomain';
 import { SettingsDnsRecordsTable } from '@/settings/components/SettingsDnsRecordsTable';
@@ -17,17 +20,19 @@ import { SettingsTextInput } from '@/ui/input/components/SettingsTextInput';
 import { SettingsPageLayout } from '@/settings/components/layout/SettingsPageLayout';
 import { ConfirmationModal } from '@/ui/layout/modal/components/ConfirmationModal';
 import { useModal } from '@/ui/layout/modal/hooks/useModal';
-import { getDocumentationUrl } from '@/support/utils/getDocumentationUrl';
+import { isNonEmptyString } from '@sniptt/guards';
 import { MessageChannelType, SettingsPath } from 'twenty-shared/types';
 import { getSettingsPath, isDefined } from 'twenty-shared/utils';
-import { GetEmailingDomainsDocument } from '~/generated-metadata/graphql';
+import {
+  EmailingDomainStatus,
+  GetEmailingDomainsDocument,
+} from '~/generated-metadata/graphql';
 import { Status } from 'twenty-ui/data-display';
 import { IconCopy, IconTrash } from 'twenty-ui/icon';
 import { H2Title } from 'twenty-ui/typography';
 import { Button } from 'twenty-ui/input';
-import { InlineBanner } from 'twenty-ui/feedback';
 import { Section } from 'twenty-ui/layout';
-import { Card } from 'twenty-ui/surfaces';
+import { type ThemeColor } from 'twenty-ui/theme';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { NotFound } from '~/pages/not-found/NotFound';
 import { getColorByEmailingDomainStatus } from '~/pages/settings/emailing-domains/utils/getEmailingDomainStatusColor';
@@ -47,20 +52,17 @@ const StyledForwardingInputContainer = styled.div`
   margin-right: ${themeCssVariables.spacing[2]};
 `;
 
-const StyledDomainStatusRow = styled.div`
+const StyledSendingDomainAdornment = styled.div`
   align-items: center;
   display: flex;
   gap: ${themeCssVariables.spacing[2]};
-  justify-content: space-between;
-  padding: ${themeCssVariables.spacing[2]} ${themeCssVariables.spacing[3]};
 `;
 
-const StyledDomainName = styled.div`
-  color: ${themeCssVariables.font.color.secondary};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
+const RECORD_STATUS_TO_COLOR: Partial<Record<string, ThemeColor>> = {
+  success: 'green',
+  pending: 'yellow',
+  error: 'red',
+};
 
 export const SettingsWorkspaceCommunicationGroupChannelDetail = () => {
   const { t } = useLingui();
@@ -72,7 +74,11 @@ export const SettingsWorkspaceCommunicationGroupChannelDetail = () => {
   const { enqueueErrorSnackBar } = useSnackBar();
   const { deleteEmailGroupChannel, loading: deleting } =
     useDeleteEmailGroupChannel();
+  const { updateEmailGroupChannel, loading: updatingDisplayName } =
+    useUpdateEmailGroupChannel();
   const { data: emailingDomainsData } = useQuery(GetEmailingDomainsDocument);
+
+  const [displayNameDraft, setDisplayNameDraft] = useState<string | null>(null);
 
   if (loading) {
     return <SettingsSkeletonLoader />;
@@ -96,6 +102,45 @@ export const SettingsWorkspaceCommunicationGroupChannelDetail = () => {
     (domain) => domain.domain.toLowerCase() === channelDomain,
   );
 
+  const verificationRecords = (emailingDomain?.verificationRecords ?? []).map(
+    (record) => ({
+      ...record,
+      status: record.status ?? undefined,
+      statusColor: isDefined(record.status)
+        ? (RECORD_STATUS_TO_COLOR[record.status] ?? 'gray')
+        : undefined,
+    }),
+  );
+
+  const domainStatus = emailingDomain?.status ?? EmailingDomainStatus.PENDING;
+
+  const isDomainVerified = domainStatus === EmailingDomainStatus.VERIFIED;
+
+  const displayName = channel.displayName ?? '';
+
+  const handleDisplayNameSave = async () => {
+    if (!isDefined(displayNameDraft) || displayNameDraft === displayName) {
+      setDisplayNameDraft(null);
+
+      return;
+    }
+
+    const nextDisplayName = displayNameDraft.trim();
+
+    try {
+      await updateEmailGroupChannel(
+        channel.id,
+        isNonEmptyString(nextDisplayName) ? nextDisplayName : null,
+      );
+    } catch {
+      enqueueErrorSnackBar({
+        message: t`Failed to update sender name.`,
+      });
+    } finally {
+      setDisplayNameDraft(null);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       await deleteEmailGroupChannel(channel.id);
@@ -109,16 +154,30 @@ export const SettingsWorkspaceCommunicationGroupChannelDetail = () => {
 
   return (
     <SettingsPageLayout
-      title={sourceHandle}
+      pageTitle={displayNameDraft ?? displayName}
+      title={
+        <SettingsEditableTitle
+          instanceId="email-group-display-name"
+          value={displayNameDraft ?? displayName}
+          placeholder={t`Sender name`}
+          disabled={updatingDisplayName}
+          onChange={setDisplayNameDraft}
+          onEnter={handleDisplayNameSave}
+          onTab={handleDisplayNameSave}
+          onClickOutside={handleDisplayNameSave}
+          onEscape={() => setDisplayNameDraft(null)}
+        />
+      }
       links={[
         {
           children: t`Workspace`,
           href: getSettingsPath(SettingsPath.General),
         },
         {
-          children: t`Communications`,
+          children: t`Communication`,
           href: getSettingsPath(SettingsPath.WorkspaceCommunications),
         },
+        { children: sourceHandle },
       ]}
       actionButton={
         <Button
@@ -133,18 +192,6 @@ export const SettingsWorkspaceCommunicationGroupChannelDetail = () => {
       }
     >
       <SettingsPageContainer>
-        <InlineBanner
-          message={t`Need help to configure your shared mailbox?`}
-          button={{
-            title: t`Go to documentation`,
-            onClick: () =>
-              window.open(
-                getDocumentationUrl({}),
-                '_blank',
-                'noopener,noreferrer',
-              ),
-          }}
-        />
         <Section>
           <H2Title
             title={t`Shared email`}
@@ -183,31 +230,41 @@ export const SettingsWorkspaceCommunicationGroupChannelDetail = () => {
             />
           </StyledForwardingRow>
         </Section>
+        {isNonEmptyString(channel.displayName) && (
+          <Section>
+            <H2Title
+              title={t`Sender name`}
+              description={t`The name recipients see next to your address. It is set when the channel is created.`}
+            />
+            <SettingsTextInput
+              instanceId="message-channel-sender-name"
+              value={channel.displayName}
+              disabled
+              fullWidth
+            />
+          </Section>
+        )}
         {isDefined(emailingDomain) && (
           <Section>
             <H2Title
               title={t`Sending domain`}
               description={t`Outbound mail from this channel is sent through this domain. It must be verified before email can be delivered.`}
               adornment={
-                <SettingsEmailingDomainVerifyButton
-                  emailingDomainId={emailingDomain.id}
-                />
+                <StyledSendingDomainAdornment>
+                  <Status color={getColorByEmailingDomainStatus(domainStatus)}>
+                    {getTextByEmailingDomainStatus(domainStatus)}
+                  </Status>
+                  {!isDomainVerified && (
+                    <SettingsEmailingDomainVerifyButton
+                      emailingDomainId={emailingDomain.id}
+                    />
+                  )}
+                </StyledSendingDomainAdornment>
               }
             />
-            {isDefined(emailingDomain.verificationRecords) && (
-              <SettingsDnsRecordsTable
-                records={emailingDomain.verificationRecords}
-              />
+            {!isDomainVerified && (
+              <SettingsDnsRecordsTable records={verificationRecords} />
             )}
-            <Card rounded>
-              <StyledDomainStatusRow>
-                <StyledDomainName>{emailingDomain.domain}</StyledDomainName>
-                <Status
-                  color={getColorByEmailingDomainStatus(emailingDomain.status)}
-                  text={getTextByEmailingDomainStatus(emailingDomain.status)}
-                />
-              </StyledDomainStatusRow>
-            </Card>
           </Section>
         )}
       </SettingsPageContainer>

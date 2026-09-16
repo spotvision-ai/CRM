@@ -411,8 +411,7 @@ export const IconPicker = ({
       );
 
   const iconColorPickerDropdownId = `${dropdownId}-icon-color-picker`;
-
-  const selectableListInstanceId = 'icon-list';
+  const selectableListInstanceId = `${dropdownId}-icon-list`;
 
   const focusedIconKey =
     useAtomComponentStateValue(

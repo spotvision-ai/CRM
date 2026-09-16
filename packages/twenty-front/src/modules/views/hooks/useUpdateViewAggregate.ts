@@ -1,13 +1,14 @@
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
-import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
 import { useLoadRecordIndexStates } from '@/object-record/record-index/hooks/useLoadRecordIndexStates';
+import { RecordTableWidgetContext } from '@/object-record/record-table-widget/contexts/RecordTableWidgetContext';
+import { getViewPersistTarget } from '@/object-record/record-table-widget/utils/getViewPersistTarget';
 import { type ExtendedAggregateOperations } from '@/object-record/record-table/types/ExtendedAggregateOperations';
 import { convertExtendedAggregateOperationToAggregateOperation } from '@/object-record/utils/convertExtendedAggregateOperationToAggregateOperation';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
-import { usePerformViewAPIUpdate } from '@/views/hooks/internal/usePerformViewAPIUpdate';
+import { usePerformViewApiUpdate } from '@/views/hooks/internal/usePerformViewApiUpdate';
 import { useCanPersistViewChanges } from '@/views/hooks/useCanPersistViewChanges';
-import { useCallback } from 'react';
+import { useCallback, useContext } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 import { type View as GqlView } from '~/generated-metadata/graphql';
 
@@ -16,9 +17,10 @@ export const useUpdateViewAggregate = () => {
   const contextStoreCurrentViewId = useAtomComponentStateValue(
     contextStoreCurrentViewIdComponentState,
   );
-  const { performViewAPIUpdate } = usePerformViewAPIUpdate();
+  const { performViewApiUpdate } = usePerformViewApiUpdate();
   const { loadRecordIndexStates } = useLoadRecordIndexStates();
-  const { invalidateMetadataStore } = useInvalidateMetadataStore();
+
+  const recordTableWidgetContext = useContext(RecordTableWidgetContext);
 
   const updateViewAggregate = useCallback(
     async ({
@@ -30,10 +32,6 @@ export const useUpdateViewAggregate = () => {
       kanbanAggregateOperation: ExtendedAggregateOperations | null;
       objectMetadataItem: EnrichedObjectMetadataItem;
     }) => {
-      if (!canPersistChanges) {
-        return;
-      }
-
       const convertedKanbanAggregateOperation = isDefined(
         kanbanAggregateOperation,
       )
@@ -42,11 +40,29 @@ export const useUpdateViewAggregate = () => {
           )
         : null;
 
+      const persistTarget = getViewPersistTarget(recordTableWidgetContext);
+
+      if (persistTarget.target === 'none') {
+        return;
+      }
+
+      if (persistTarget.target === 'pageLayoutDraft') {
+        persistTarget.widgetContext.updateViewDraft({
+          kanbanAggregateOperationFieldMetadataId,
+          kanbanAggregateOperation: convertedKanbanAggregateOperation,
+        });
+        return;
+      }
+
+      if (!canPersistChanges) {
+        return;
+      }
+
       if (!isDefined(contextStoreCurrentViewId)) {
         return;
       }
 
-      const updatedViewResult = await performViewAPIUpdate({
+      const updatedViewResult = await performViewApiUpdate({
         id: contextStoreCurrentViewId,
         input: {
           kanbanAggregateOperationFieldMetadataId,
@@ -64,14 +80,13 @@ export const useUpdateViewAggregate = () => {
 
         loadRecordIndexStates(updatedView, objectMetadataItem);
       }
-      invalidateMetadataStore();
     },
     [
       canPersistChanges,
       contextStoreCurrentViewId,
-      invalidateMetadataStore,
-      performViewAPIUpdate,
+      performViewApiUpdate,
       loadRecordIndexStates,
+      recordTableWidgetContext,
     ],
   );
 

@@ -121,6 +121,9 @@
               "label": "How-Tos",
               "pages": [
                 "user-guide/calendar-emails/how-tos/connect-several-mailboxes-per-user",
+                "user-guide/calendar-emails/how-tos/forward-a-shared-inbox-from-microsoft-365",
+                "user-guide/calendar-emails/how-tos/forward-a-shared-inbox-from-google-workspace",
+                "user-guide/calendar-emails/how-tos/forward-a-shared-inbox-from-any-mail-provider",
                 "user-guide/calendar-emails/how-tos/limit-emails-imported",
                 "user-guide/calendar-emails/how-tos/can-i-track-email-activity-on-all-objects",
                 "user-guide/calendar-emails/how-tos/can-i-send-emails-from-twenty",
@@ -345,13 +348,26 @@
                 "user-guide/settings/capabilities/profile-settings",
                 "user-guide/settings/capabilities/experience-settings",
                 "user-guide/settings/capabilities/domains-settings",
-                "user-guide/settings/capabilities/updates-settings"
+                "user-guide/settings/capabilities/community-settings"
               ]
             },
             {
               "key": "settingsHowTos",
               "label": "How-Tos",
               "pages": ["user-guide/settings/how-tos/settings-faq"]
+            }
+          ]
+        },
+        {
+          "key": "legal",
+          "label": "Legal",
+          "icon": "book",
+          "pages": [
+            "user-guide/legal/overview",
+            {
+              "key": "legalHowTos",
+              "label": "How-Tos",
+              "pages": ["user-guide/legal/how-tos/legal-faq"]
             }
           ]
         }
@@ -414,7 +430,8 @@
                 "developers/extend/apps/data/objects",
                 "developers/extend/apps/data/extending-objects",
                 "developers/extend/apps/data/system-fields",
-                "developers/extend/apps/data/relations"
+                "developers/extend/apps/data/relations",
+                "developers/extend/apps/data/timeline-activity-types"
               ]
             },
             {
@@ -424,8 +441,10 @@
                 "developers/extend/apps/logic/overview",
                 "developers/extend/apps/logic/logic-functions",
                 "developers/extend/apps/logic/key-value-store",
+                "developers/extend/apps/logic/background-jobs",
                 "developers/extend/apps/logic/skills-and-agents",
-                "developers/extend/apps/logic/connections"
+                "developers/extend/apps/logic/connections",
+                "developers/extend/apps/logic/credits"
               ]
             },
             {

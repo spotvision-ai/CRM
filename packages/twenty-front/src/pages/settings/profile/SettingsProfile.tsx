@@ -3,6 +3,7 @@ import { SettingsCard } from '@/settings/components/SettingsCard';
 import { SettingsPageContainer } from '@/settings/components/SettingsPageContainer';
 import { SetOrChangePassword } from '@/settings/profile/components/SetOrChangePassword';
 import { DeleteAccount } from '@/settings/profile/components/DeleteAccount';
+import { SettingsProfileDevicesSection } from '@/settings/profile/devices/components/SettingsProfileDevicesSection';
 import { EmailField } from '@/settings/profile/components/EmailField';
 import { NameFields } from '@/settings/profile/components/NameFields';
 import { WorkspaceMemberPictureUploader } from '@/settings/workspace-member/components/WorkspaceMemberPictureUploader';
@@ -84,9 +85,9 @@ export const SettingsProfile = () => {
               Icon={<IconShield />}
               Status={
                 has2FAMethod ? (
-                  <Status text={t`Active`} color="turquoise" />
+                  <Status color="turquoise">{t`Active`}</Status>
                 ) : (
-                  <Status text={t`Deactivated`} color="gray" />
+                  <Status color="gray">{t`Deactivated`}</Status>
                 )
               }
             />
@@ -97,6 +98,7 @@ export const SettingsProfile = () => {
             <SetOrChangePassword />
           </Section>
         )}
+        <SettingsProfileDevicesSection />
         <Section>
           <DeleteAccount />
         </Section>

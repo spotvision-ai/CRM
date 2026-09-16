@@ -148,10 +148,10 @@ export const SettingsAdminServerAdminAccess = ({
         {hasAnyAccess ? (
           <StyledChips>
             {canAccessFullAdminPanel && (
-              <Status color="green" text={t`Admin panel`} weight="medium" />
+              <Status color="green" weight="medium">{t`Admin panel`}</Status>
             )}
             {canImpersonate && (
-              <Status color="blue" text={t`Impersonation`} weight="medium" />
+              <Status color="blue" weight="medium">{t`Impersonation`}</Status>
             )}
           </StyledChips>
         ) : (
@@ -239,6 +239,7 @@ export const SettingsAdminServerAdminAccess = ({
               maxLength={6}
               value={otp}
               onChange={setOtp}
+              autoFocus
               render={({ slots }) => (
                 <StyledOTPContainer>
                   {slots.slice(0, 3).map((slot, index) => (

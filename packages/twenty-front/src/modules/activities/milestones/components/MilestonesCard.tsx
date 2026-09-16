@@ -193,12 +193,13 @@ export const MilestonesCard = () => {
               <Tag
                 key={option.value}
                 color={isSelected ? (chip?.color ?? 'gray') : 'transparent'}
-                variant={isSelected ? 'solid' : 'border'}
+                variant={isSelected ? 'solid' : 'outline'}
                 weight={isSelected ? 'medium' : 'regular'}
-                text={chip?.label ?? option.value}
                 onClick={() => toggleStatusValue(option.value)}
                 preventShrink
-              />
+              >
+                {chip?.label ?? option.value}
+              </Tag>
             );
           })}
         </StyledStatusFilters>

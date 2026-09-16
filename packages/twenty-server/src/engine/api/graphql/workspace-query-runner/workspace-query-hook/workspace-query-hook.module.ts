@@ -12,6 +12,7 @@ import { MessagingQueryHookModule } from 'src/modules/messaging/common/query-hoo
 import { NoteQueryHookModule } from 'src/modules/note/query-hooks/note-query-hook.module';
 import { OpportunityMilestoneQueryHookModule } from 'src/modules/opportunity/query-hooks/opportunity-milestone-query-hook.module';
 import { TaskQueryHookModule } from 'src/modules/task/query-hooks/task-query-hook.module';
+import { TimelineQueryHookModule } from 'src/modules/timeline/query-hooks/timeline-query-hook.module';
 import { WorkspaceMemberQueryHookModule } from 'src/modules/workspace-member/query-hooks/workspace-member-query-hook.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { WorkspaceMemberQueryHookModule } from 'src/modules/workspace-member/que
     NoteQueryHookModule,
     OpportunityMilestoneQueryHookModule,
     TaskQueryHookModule,
+    TimelineQueryHookModule,
     DiscoveryModule,
   ],
   providers: [

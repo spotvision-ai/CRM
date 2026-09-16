@@ -43,7 +43,7 @@ const buildCustomerSyncCallRecordingId = (
   startsAt: string = FUTURE_STARTS_AT,
 ): string =>
   computeCallRecordingIdForMeeting(
-    `link:meet.example.com/customer-sync:${startsAt}`,
+    `link:meet.google.com/customer-sync:${startsAt}`,
   );
 
 type CalendarEventNode = {
@@ -67,6 +67,7 @@ type CallRecordingNode = {
   calendarEventId?: string | null;
   externalBotId?: string | null;
   externalRecordingId?: string | null;
+  callRecorderFailureReason?: string | null;
 };
 
 type FakeCoreApiClientFixture = {
@@ -167,6 +168,29 @@ class FakeCoreApiClient {
       };
     }
 
+    if (mutation.updateCalendarEvents !== undefined) {
+      const { filter, data } = mutation.updateCalendarEvents.__args;
+      const updatedCalendarEvents = this.calendarEvents.filter(
+        (calendarEvent) =>
+          filter.id.in.includes(calendarEvent.id) &&
+          filter.callRecorderPreference.is === 'NULL' &&
+          (calendarEvent.callRecorderPreference ?? null) === null,
+      );
+
+      for (const calendarEvent of updatedCalendarEvents) {
+        Object.assign(calendarEvent, data);
+      }
+
+      this.mutations.push({
+        name: 'updateCalendarEvents',
+        args: { filter, data },
+      });
+
+      return {
+        updateCalendarEvents: updatedCalendarEvents.map(({ id }) => ({ id })),
+      };
+    }
+
     throw new Error(`Unhandled mutation: ${JSON.stringify(mutation)}`);
   }
 
@@ -207,7 +231,7 @@ const buildCalendarEvent = (
   endsAt: FUTURE_ENDS_AT,
   iCalUid: 'calendar-event-uid',
   conferenceLink: {
-    primaryLinkUrl: 'https://meet.example.com/customer-sync',
+    primaryLinkUrl: 'https://meet.google.com/customer-sync',
   },
   callRecorderPreference: 'ON',
   ...overrides,
@@ -219,6 +243,8 @@ const buildFakeCoreApiClient = (
 
 describe('reconcileCallRecorderForCalendarEventIds', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.stubGlobal('fetch', fetchMock);
@@ -279,6 +305,8 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
         recordingRequestStatus: 'REQUESTED',
         calendarEventId: 'calendar-event-1',
         externalBotId: 'recall-bot-1',
+        botScheduleAttemptedAt: NOW.toISOString(),
+        botScheduleIdempotencyKey: expect.any(String),
       },
     ]);
     expect(recallBotCreateCalls()).toHaveLength(1);
@@ -289,7 +317,7 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
     );
     expect(JSON.parse(createBotInit.body ?? '')).toEqual(
       expect.objectContaining({
-        meeting_url: 'https://meet.example.com/customer-sync',
+        meeting_url: 'https://meet.google.com/customer-sync',
         join_at: FUTURE_RECALL_BOT_JOIN_AT,
         metadata: {
           twentyWorkspaceId: WORKSPACE_ID,
@@ -467,7 +495,7 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
     expect(updateBotUrl).toBe(`${RECALL_API_BASE_URL}/bot/recall-bot-1/`);
     expect(JSON.parse(updateBotInit.body ?? '')).toEqual(
       expect.objectContaining({
-        meeting_url: 'https://meet.example.com/customer-sync',
+        meeting_url: 'https://meet.google.com/customer-sync',
         join_at: FUTURE_RECALL_BOT_JOIN_AT,
         metadata: {
           twentyWorkspaceId: WORKSPACE_ID,
@@ -655,6 +683,45 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
     ]);
   });
 
+  it('resets a NOT_RECORDED recording to SCHEDULED and clears its reason for an upcoming meeting', async () => {
+    const client = buildFakeCoreApiClient({
+      calendarEvents: [buildCalendarEvent()],
+      callRecordings: [
+        {
+          id: buildCustomerSyncCallRecordingId(),
+          title: 'Customer Sync',
+          status: 'NOT_RECORDED',
+          recordingRequestStatus: 'REQUESTED',
+          startedAt: FUTURE_STARTS_AT,
+          endedAt: FUTURE_ENDS_AT,
+          calendarEventId: 'calendar-event-1',
+          externalBotId: 'recall-bot-1',
+          callRecorderFailureReason: 'timeout_exceeded_noone_joined',
+        },
+      ],
+    });
+
+    const result = await reconcileCallRecorderForCalendarEventIds({
+      client: client as unknown as CoreApiClient,
+      calendarEventIds: ['calendar-event-1'],
+      now: NOW,
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        action: 'UPDATED',
+        callRecordingId: buildCustomerSyncCallRecordingId(),
+      }),
+    ]);
+    expect(client.callRecordings).toEqual([
+      expect.objectContaining({
+        id: buildCustomerSyncCallRecordingId(),
+        status: 'SCHEDULED',
+        callRecorderFailureReason: null,
+      }),
+    ]);
+  });
+
   it('creates a single recording when duplicate synced rows share the same real meeting', async () => {
     const client = buildFakeCoreApiClient({
       calendarEvents: [
@@ -738,7 +805,7 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
       removedOccurrences: [
         {
           calendarEventId: 'calendar-event-1',
-          realMeetingKey: `link:meet.example.com/customer-sync:${FUTURE_STARTS_AT}`,
+          realMeetingKey: `link:meet.google.com/customer-sync:${FUTURE_STARTS_AT}`,
           startsAt: FUTURE_STARTS_AT,
         },
       ],
@@ -794,7 +861,7 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
       removedOccurrences: [
         {
           calendarEventId: 'calendar-event-1',
-          realMeetingKey: `link:meet.example.com/customer-sync:${FUTURE_STARTS_AT}`,
+          realMeetingKey: `link:meet.google.com/customer-sync:${FUTURE_STARTS_AT}`,
           startsAt: FUTURE_STARTS_AT,
         },
       ],
@@ -856,7 +923,7 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
           id: 'calendar-event-2',
           iCalUid: 'other-meeting-uid',
           conferenceLink: {
-            primaryLinkUrl: 'https://meet.example.com/other-sync',
+            primaryLinkUrl: 'https://meet.google.com/other-sync',
           },
         }),
       ],
@@ -883,7 +950,7 @@ describe('reconcileCallRecorderForCalendarEventIds', () => {
     expect(result).toEqual([
       expect.objectContaining({
         action: 'FAILED',
-        realMeetingKey: `link:meet.example.com/customer-sync:${FUTURE_STARTS_AT}`,
+        realMeetingKey: `link:meet.google.com/customer-sync:${FUTURE_STARTS_AT}`,
         errorMessage: 'recall exploded',
       }),
       expect.objectContaining({ action: 'CREATED' }),

@@ -13,6 +13,7 @@ import { OnboardingStepAnimatedItem } from '@/onboarding/components/OnboardingSt
 import { OnboardingCreditsRewardTag } from '@/onboarding/components/import-contacts/OnboardingCreditsRewardTag';
 import { OnboardingPlanCard } from '@/onboarding/components/upgrade-free-trial/OnboardingPlanCard';
 import { OnboardingTrialExtensionTag } from '@/onboarding/components/upgrade-free-trial/OnboardingTrialExtensionTag';
+import { isOnboardingCheckoutPendingState } from '@/onboarding/states/isOnboardingCheckoutPendingState';
 import { useBaseLicensedPriceByPlanKeyAndInterval } from '@/settings/billing/hooks/useBaseLicensedPriceByPlanKeyAndInterval';
 import { useHandleCheckoutSession } from '@/settings/billing/hooks/useHandleCheckoutSession';
 import { useStripeAppearance } from '@/settings/billing/hooks/useStripeAppearance';
@@ -20,13 +21,14 @@ import { useStripePromise } from '@/settings/billing/hooks/useStripePromise';
 import { useSubmitSubscriptionPayment } from '@/settings/billing/hooks/useSubmitSubscriptionPayment';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { styled } from '@linaria/react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Elements, PaymentElement } from '@stripe/react-stripe-js';
 import { AppPath } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { Info, Loader } from 'twenty-ui/feedback';
-import { MainButton } from 'twenty-ui/input';
+import { MainButton, RadioGroup } from 'twenty-ui/input';
 import { CAL_LINK, ClickToActionLink } from 'twenty-ui/navigation';
 import { MOBILE_VIEWPORT, themeCssVariables } from 'twenty-ui/theme-constants';
 import {
@@ -89,10 +91,19 @@ const UpgradeFreeTrialSubmitButton = ({
     recurringInterval,
   });
 
+  const setIsOnboardingCheckoutPending = useSetAtomState(
+    isOnboardingCheckoutPendingState,
+  );
+
+  const handleSubmit = () => {
+    setIsOnboardingCheckoutPending(true);
+    void submit();
+  };
+
   return (
     <MainButton
       title={t`Continue`}
-      onClick={submit}
+      onClick={handleSubmit}
       fullWidth
       Icon={() => (isSubmitting ? <Loader /> : null)}
       disabled={!isStripeReady || isSubmitting}
@@ -142,7 +153,16 @@ const UpgradeFreeTrialContent = ({
       successUrlPath: AppPath.PlanRequiredSuccess,
     });
 
-  const selectTrialPeriod = (withCreditCard: boolean) => () => {
+  const setIsOnboardingCheckoutPending = useSetAtomState(
+    isOnboardingCheckoutPendingState,
+  );
+
+  const handleCheckoutSessionClick = () => {
+    setIsOnboardingCheckoutPending(true);
+    void handleCheckoutSession();
+  };
+
+  const selectTrialPeriod = (withCreditCard: boolean) => {
     if (
       isDefined(baseProductPrice) &&
       billingCheckoutSession.requirePaymentMethod !== withCreditCard
@@ -160,13 +180,17 @@ const UpgradeFreeTrialContent = ({
   return (
     <>
       <OnboardingStepAnimatedItem index={3}>
-        <StyledCards>
+        <RadioGroup
+          render={<StyledCards />}
+          aria-label={t`Trial plan`}
+          value={requirePaymentMethod}
+          onValueChange={selectTrialPeriod}
+        >
           <OnboardingPlanCard
             title={t`Upgraded`}
             titleSuffix={t`· FREE`}
             note={t`No charge will be made. You'll receive an email reminder 7 days before it ends.`}
-            selected={requirePaymentMethod}
-            onSelect={selectTrialPeriod(true)}
+            value={true}
           >
             {requirePaymentMethod &&
               (isPaymentAvailable ? (
@@ -192,11 +216,10 @@ const UpgradeFreeTrialContent = ({
               title={t`Basic`}
               titleSuffix={t`without credit card`}
               badge={t`${withoutCreditCardTrialPeriod.duration} days`}
-              selected={!requirePaymentMethod}
-              onSelect={selectTrialPeriod(false)}
+              value={false}
             />
           )}
-        </StyledCards>
+        </RadioGroup>
       </OnboardingStepAnimatedItem>
 
       <OnboardingStepAnimatedItem index={4}>
@@ -213,7 +236,7 @@ const UpgradeFreeTrialContent = ({
           ) : (
             <MainButton
               title={t`Continue`}
-              onClick={handleCheckoutSession}
+              onClick={handleCheckoutSessionClick}
               fullWidth
               Icon={() => (isCheckoutSubmitting ? <Loader /> : null)}
               disabled={isCheckoutSubmitting}
@@ -301,7 +324,7 @@ export const UpgradeFreeTrial = ({
             mode: 'subscription',
             amount: baseProductPrice.unitAmount,
             currency: 'usd',
-            paymentMethodTypes: ['card'],
+            paymentMethodTypes: ['card', 'link'],
             appearance,
           }}
         >

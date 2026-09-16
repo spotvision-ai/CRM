@@ -1,6 +1,6 @@
 import { STANDARD_OBJECTS } from 'twenty-shared/metadata';
+import { PageLayoutType } from 'twenty-shared/types';
 
-import { PageLayoutType } from 'src/engine/metadata-modules/page-layout/enums/page-layout-type.enum';
 import {
   TAB_PROPS,
   WIDGET_PROPS,

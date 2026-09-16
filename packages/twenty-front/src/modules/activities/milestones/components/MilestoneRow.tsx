@@ -210,20 +210,18 @@ export const MilestoneRow = ({
           {(isDefined(statusChip) || isDefined(blockedByChip)) && (
             <StyledTagRow>
               {isDefined(statusChip) && (
-                <Tag
-                  color={statusChip.color}
-                  text={statusChip.label}
-                  weight="medium"
-                  preventShrink
-                />
+                <Tag color={statusChip.color} weight="medium" preventShrink>
+                  {statusChip.label}
+                </Tag>
               )}
               {isDefined(blockedByChip) && (
                 <Tag
                   color={blockedByChip.color}
-                  text={blockedByChip.label}
-                  Icon={IconLock}
+                  startIcon={<IconLock />}
                   preventShrink
-                />
+                >
+                  {blockedByChip.label}
+                </Tag>
               )}
             </StyledTagRow>
           )}
@@ -273,15 +271,14 @@ export const MilestoneRow = ({
           {isDefined(deviation) && deviation.deviationDays > 0 && (
             <Tag
               color={deviation.isOverdue ? 'red' : 'orange'}
-              text={
-                deviation.isOverdue
-                  ? t`${deviation.deviationDays}d overdue`
-                  : t`${deviation.deviationDays}d late`
-              }
-              Icon={IconAlertTriangle}
+              startIcon={<IconAlertTriangle />}
               weight="medium"
               preventShrink
-            />
+            >
+              {deviation.isOverdue
+                ? t`${deviation.deviationDays}d overdue`
+                : t`${deviation.deviationDays}d late`}
+            </Tag>
           )}
         </StyledRightSide>
       </ActivityRow>

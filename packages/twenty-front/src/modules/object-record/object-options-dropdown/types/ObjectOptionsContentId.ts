@@ -1,6 +1,5 @@
 export type ObjectOptionsContentId =
   | 'layout'
-  | 'layoutOpenIn'
   | 'fields'
   | 'hiddenFields'
   | 'recordGroups'
@@ -9,7 +8,6 @@ export type ObjectOptionsContentId =
   | 'recordGroupSort'
   | 'addRecordGroup'
   | 'calendarFields'
-  | 'calendarEndFields'
   | 'calendarView'
   | 'roadmapStartField'
   | 'roadmapEndField'

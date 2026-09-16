@@ -1,5 +1,5 @@
 import { useStore } from 'jotai';
-import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
+import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
 import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 
 import { useContextStoreObjectMetadataItemOrThrow } from '@/context-store/hooks/useContextStoreObjectMetadataItemOrThrow';
@@ -27,7 +27,9 @@ export const useUpdateCurrentView = () => {
   );
   const { objectMetadataItem } = useContextStoreObjectMetadataItemOrThrow();
   const { loadRecordIndexStates } = useLoadRecordIndexStates();
-  const setRecordIndexViewType = useSetAtomState(recordIndexViewTypeState);
+  const setRecordIndexViewType = useSetAtomComponentState(
+    recordIndexViewTypeState,
+  );
 
   const store = useStore();
 

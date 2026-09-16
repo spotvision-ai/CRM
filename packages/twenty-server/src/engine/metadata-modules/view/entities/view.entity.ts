@@ -75,7 +75,7 @@ export type ViewOverrides = {
 @Index('IDX_VIEW_ROADMAP_FIELD_END', ['roadmapFieldEndId'])
 @Check(
   'CHK_VIEW_CALENDAR_INTEGRITY',
-  `("type" != 'CALENDAR' OR ("calendarLayout" IS NOT NULL AND "calendarFieldMetadataId" IS NOT NULL))`,
+  `("type" NOT IN ('CALENDAR', 'CALENDAR_WIDGET') OR ("calendarLayout" IS NOT NULL AND "calendarFieldMetadataId" IS NOT NULL))`,
 )
 @Check(
   'CHK_VIEW_ROADMAP_INTEGRITY',
@@ -128,6 +128,7 @@ export class ViewEntity
   @Column({ nullable: false, default: false, type: 'boolean' })
   isCustom: boolean;
 
+  // Deprecated: superseded by objectMetadata.openRecordIn and the member preference.
   @Column({
     type: 'enum',
     enum: Object.values(ViewOpenRecordIn),

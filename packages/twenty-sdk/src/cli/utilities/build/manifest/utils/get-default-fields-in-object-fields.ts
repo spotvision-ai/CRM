@@ -1,7 +1,6 @@
-import { getDefaultRelationObjectFields } from '@/cli/utilities/build/manifest/utils/get-default-relation-object-fields';
+import { isEngineDerivedLabelIdentifier } from '@/sdk/define/objects/is-engine-derived-label-identifier';
 import type { ObjectConfig } from '@/sdk/define/objects/object-config';
 import {
-  type FieldManifest,
   getFieldUniversalIdentifier,
   type ObjectFieldManifest,
 } from 'twenty-shared/application';
@@ -34,13 +33,7 @@ export const getDefaultFieldsInObjectFields = ({
 }: {
   objectConfig: ObjectConfig;
   applicationUniversalIdentifier: string;
-}): { objectFields: ObjectFieldManifest[]; fields: FieldManifest[] } => {
-  const { objectFields: defaultRelationObjectFields, fields: reverseFields } =
-    getDefaultRelationObjectFields({
-      objectConfig,
-      applicationUniversalIdentifier,
-    });
-
+}): { objectFields: ObjectFieldManifest[] } => {
   const objectConfigFieldNames = (objectConfig.fields ?? []).map(
     (field) => field.name,
   );
@@ -52,15 +45,18 @@ export const getDefaultFieldsInObjectFields = ({
     applicationUniversalIdentifier,
   });
 
-  if (!objectConfigFieldNames.includes(defaultNameObjectField.name)) {
+  const labelIdentifiesAnEngineDerivedField = isEngineDerivedLabelIdentifier({
+    fields: objectConfig.fields,
+    labelIdentifierFieldMetadataUniversalIdentifier:
+      objectConfig.labelIdentifierFieldMetadataUniversalIdentifier,
+  });
+
+  if (
+    !objectConfigFieldNames.includes(defaultNameObjectField.name) &&
+    !labelIdentifiesAnEngineDerivedField
+  ) {
     objectFieldsWithDefaults.push(defaultNameObjectField);
   }
 
-  for (const defaultRelationField of defaultRelationObjectFields) {
-    if (!objectConfigFieldNames.includes(defaultRelationField.name)) {
-      objectFieldsWithDefaults.push(defaultRelationField);
-    }
-  }
-
-  return { objectFields: objectFieldsWithDefaults, fields: reverseFields };
+  return { objectFields: objectFieldsWithDefaults };
 };

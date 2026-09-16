@@ -2,6 +2,7 @@ import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { FIND_MANY_FRONT_COMPONENTS } from '@/front-components/graphql/queries/findManyFrontComponents';
 import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
 import { useInsertCreatedWidgetAtContext } from '@/page-layout/hooks/useInsertCreatedWidgetAtContext';
+import { useCreateRecordPageNoteWidget } from '@/page-layout/hooks/useCreateRecordPageNoteWidget';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
 import { widgetCreationTargetTabIdComponentState } from '@/page-layout/states/widgetCreationTargetTabIdComponentState';
@@ -31,7 +32,14 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { SidePanelPages } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
-import { IconApps, IconCode, IconFlag, IconList } from 'twenty-ui/icon';
+import {
+  IconApps,
+  IconCode,
+  IconFlag,
+  IconListDetails,
+  IconListSearch,
+  IconNotes,
+} from 'twenty-ui/icon';
 import { v4 as uuidv4 } from 'uuid';
 import {
   type FrontComponent,
@@ -45,6 +53,8 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
     usePageLayoutIdFromContextStore();
 
   const { closeSidePanelMenu } = useSidePanelMenu();
+  const { createRecordPageNoteWidget } =
+    useCreateRecordPageNoteWidget(pageLayoutId);
 
   const { navigatePageLayoutSidePanel } = useNavigatePageLayoutSidePanel();
 
@@ -173,7 +183,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
     }));
 
     setPageLayoutEditingWidgetId(widgetId);
-    insertCreatedWidgetAtContext(widgetId);
+    insertCreatedWidgetAtContext({ newWidgetId: widgetId });
 
     navigatePageLayoutSidePanel({
       sidePanelPage: SidePanelPages.RecordPageFieldsSettings,
@@ -244,7 +254,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
     }));
 
     setPageLayoutEditingWidgetId(widgetId);
-    insertCreatedWidgetAtContext(widgetId);
+    insertCreatedWidgetAtContext({ newWidgetId: widgetId });
 
     navigatePageLayoutSidePanel({
       sidePanelPage: SidePanelPages.RecordPageFieldSettings,
@@ -264,6 +274,18 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
     tabId,
   ]);
 
+  const handleCreateNoteWidget = () => {
+    const replacePositionIndex = getExistingWidgetPositionIndex();
+    removeExistingWidgetIfReplacing();
+
+    const newWidget = createRecordPageNoteWidget({
+      tabId,
+      positionIndex: replacePositionIndex,
+    });
+
+    insertCreatedWidgetAtContext({ newWidgetId: newWidget.id });
+  };
+
   const handleCreateFrontComponentWidget = useCallback(
     (frontComponent: FrontComponent) => {
       const replacePositionIndex = getExistingWidgetPositionIndex();
@@ -279,6 +301,8 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
         __typename: 'PageLayoutWidget',
         id: widgetId,
         applicationId: '',
+        universalIdentifier: widgetId,
+        isSystemSideEffect: false,
         isActive: true,
         pageLayoutTabId: tabId,
         title: frontComponent.name,
@@ -287,13 +311,6 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
           __typename: 'FrontComponentConfiguration',
           configurationType: WidgetConfigurationType.FRONT_COMPONENT,
           frontComponentId: frontComponent.id,
-        },
-        gridPosition: {
-          __typename: 'GridPosition',
-          row: 0,
-          column: 0,
-          rowSpan: 1,
-          columnSpan: 12,
         },
         position: {
           __typename: 'PageLayoutWidgetVerticalListPosition',
@@ -312,7 +329,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
       }));
 
       setPageLayoutEditingWidgetId(widgetId);
-      insertCreatedWidgetAtContext(widgetId);
+      insertCreatedWidgetAtContext({ newWidgetId: widgetId });
 
       closeSidePanelMenu();
     },
@@ -344,6 +361,8 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
       __typename: 'PageLayoutWidget',
       id: widgetId,
       applicationId: '',
+      universalIdentifier: widgetId,
+      isSystemSideEffect: false,
       isActive: true,
       pageLayoutTabId: tabId,
       title: t`Markdown`,
@@ -352,13 +371,6 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
         __typename: 'MarkdownConfiguration',
         configurationType: WidgetConfigurationType.MARKDOWN,
         markdown: null,
-      },
-      gridPosition: {
-        __typename: 'GridPosition',
-        row: 0,
-        column: 0,
-        rowSpan: 1,
-        columnSpan: 12,
       },
       position: {
         __typename: 'PageLayoutWidgetVerticalListPosition',
@@ -377,7 +389,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
     }));
 
     setPageLayoutEditingWidgetId(widgetId);
-    insertCreatedWidgetAtContext(widgetId);
+    insertCreatedWidgetAtContext({ newWidgetId: widgetId });
 
     navigatePageLayoutSidePanel({
       sidePanelPage: SidePanelPages.RecordPageMarkdownSettings,
@@ -409,6 +421,8 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
       __typename: 'PageLayoutWidget',
       id: widgetId,
       applicationId: '',
+      universalIdentifier: widgetId,
+      isSystemSideEffect: false,
       isActive: true,
       pageLayoutTabId: tabId,
       title: t`Milestones`,
@@ -416,13 +430,6 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
       configuration: {
         __typename: 'MilestonesConfiguration',
         configurationType: WidgetConfigurationType.MILESTONES,
-      },
-      gridPosition: {
-        __typename: 'GridPosition',
-        row: 0,
-        column: 0,
-        rowSpan: 1,
-        columnSpan: 12,
       },
       position: {
         __typename: 'PageLayoutWidgetVerticalListPosition',
@@ -441,7 +448,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
     }));
 
     setPageLayoutEditingWidgetId(widgetId);
-    insertCreatedWidgetAtContext(widgetId);
+    insertCreatedWidgetAtContext({ newWidgetId: widgetId });
 
     closeSidePanelMenu();
   }, [
@@ -458,6 +465,7 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
   const selectableItemIds = [
     'fields',
     'field',
+    'note',
     'markdown',
     ...(isOpportunityPageLayout ? ['milestones'] : []),
     ...frontComponentsWithSelectItemId.map(({ selectItemId }) => selectItemId),
@@ -465,21 +473,30 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
 
   return (
     <SidePanelList selectableItemIds={selectableItemIds}>
-      <SidePanelGroup heading={t`Widget type`}>
+      <SidePanelGroup heading={t`Standard widgets`}>
         <SelectableListItem itemId="fields" onEnter={handleCreateFieldsWidget}>
           <CommandMenuItem
-            Icon={IconList}
-            label={t`Fields`}
+            Icon={IconListDetails}
+            label={t`Fields group`}
             id="fields"
             onClick={handleCreateFieldsWidget}
           />
         </SelectableListItem>
         <SelectableListItem itemId="field" onEnter={handleCreateFieldWidget}>
           <CommandMenuItem
-            Icon={IconList}
+            Icon={IconListSearch}
             label={t`Field`}
             id="field"
             onClick={handleCreateFieldWidget}
+          />
+        </SelectableListItem>
+        <SelectableListItem itemId="note" onEnter={handleCreateNoteWidget}>
+          <CommandMenuItem
+            Icon={IconNotes}
+            label={t`Note`}
+            description={t`Static text shared across all record pages`}
+            id="note"
+            onClick={handleCreateNoteWidget}
           />
         </SelectableListItem>
         <SelectableListItem

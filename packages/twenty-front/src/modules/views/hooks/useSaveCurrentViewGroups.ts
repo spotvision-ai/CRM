@@ -2,9 +2,8 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
-import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
-import { usePerformViewGroupAPIPersist } from '@/views/hooks/internal/usePerformViewGroupAPIPersist';
+import { usePerformViewGroupApiPersist } from '@/views/hooks/internal/usePerformViewGroupApiPersist';
 import { useCanPersistViewChanges } from '@/views/hooks/useCanPersistViewChanges';
 import { useGetViewFromState } from '@/views/hooks/useGetViewFromState';
 import { type ViewGroup } from '@/views/types/ViewGroup';
@@ -14,8 +13,7 @@ import { isUndefinedOrNull } from '~/utils/isUndefinedOrNull';
 
 export const useSaveCurrentViewGroups = () => {
   const { canPersistChanges } = useCanPersistViewChanges();
-  const { performViewGroupAPIUpdate } = usePerformViewGroupAPIPersist();
-  const { invalidateMetadataStore } = useInvalidateMetadataStore();
+  const { performViewGroupApiUpdate } = usePerformViewGroupApiPersist();
 
   const { getViewFromState } = useGetViewFromState();
 
@@ -69,7 +67,7 @@ export const useSaveCurrentViewGroups = () => {
         return;
       }
 
-      await performViewGroupAPIUpdate({
+      await performViewGroupApiUpdate({
         inputs: [
           {
             id: existingField.id,
@@ -81,15 +79,13 @@ export const useSaveCurrentViewGroups = () => {
           },
         ],
       });
-      invalidateMetadataStore();
     },
     [
       store,
       canPersistChanges,
       currentViewIdCallbackState,
       getViewFromState,
-      invalidateMetadataStore,
-      performViewGroupAPIUpdate,
+      performViewGroupApiUpdate,
     ],
   );
 
@@ -154,16 +150,14 @@ export const useSaveCurrentViewGroups = () => {
         throw new Error('mainGroupByFieldMetadataId is required');
       }
 
-      await performViewGroupAPIUpdate({ inputs: viewGroupInputsToUpdate });
-      invalidateMetadataStore();
+      await performViewGroupApiUpdate({ inputs: viewGroupInputsToUpdate });
     },
     [
       store,
       canPersistChanges,
       currentViewIdCallbackState,
       getViewFromState,
-      invalidateMetadataStore,
-      performViewGroupAPIUpdate,
+      performViewGroupApiUpdate,
     ],
   );
 

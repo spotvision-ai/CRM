@@ -4,6 +4,7 @@ import { type AiSdkPackage } from 'twenty-shared/ai';
 
 import {
   AI_SDK_ANTHROPIC,
+  AI_SDK_AZURE,
   AI_SDK_BEDROCK,
   AI_SDK_OPENAI,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
@@ -31,12 +32,24 @@ export const getCallLevelProviderOptions = ({
     case AI_SDK_ANTHROPIC:
       return {
         ...(providerOptions ?? {}),
-        anthropic: { cacheControl: { type: 'ephemeral' } },
+        anthropic: {
+          ...(providerOptions?.anthropic ?? {}),
+          cacheControl: { type: 'ephemeral' },
+        },
       };
     case AI_SDK_OPENAI:
       return {
         ...(providerOptions ?? {}),
-        openai: { store: false, ...(promptCacheKey ? { promptCacheKey } : {}) },
+        openai: {
+          ...(providerOptions?.openai ?? {}),
+          store: false,
+          ...(promptCacheKey ? { promptCacheKey } : {}),
+        },
+      };
+    case AI_SDK_AZURE:
+      return {
+        ...(providerOptions ?? {}),
+        azure: { ...(providerOptions?.azure ?? {}), store: false },
       };
     default:
       return providerOptions;

@@ -5,6 +5,7 @@ import {
 } from 'src/engine/metadata-modules/ai/ai-chat/utils/provider-options.util';
 import {
   AI_SDK_ANTHROPIC,
+  AI_SDK_AZURE,
   AI_SDK_BEDROCK,
   AI_SDK_OPENAI,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
@@ -18,6 +19,47 @@ describe('provider-options.util', () => {
         anthropic: {
           cacheControl: { type: 'ephemeral' },
         },
+      });
+    });
+
+    it('keeps the thinking config the executor passes for Anthropic', () => {
+      expect(
+        getCallLevelProviderOptions({
+          sdkPackage: AI_SDK_ANTHROPIC,
+          providerOptions: { anthropic: { thinking: { type: 'adaptive' } } },
+        }),
+      ).toEqual({
+        anthropic: {
+          thinking: { type: 'adaptive' },
+          cacheControl: { type: 'ephemeral' },
+        },
+      });
+    });
+
+    it('keeps existing OpenAI options alongside store false', () => {
+      expect(
+        getCallLevelProviderOptions({
+          sdkPackage: AI_SDK_OPENAI,
+          providerOptions: { openai: { reasoningEffort: 'high' } },
+          promptCacheKey: 'thread-123',
+        }),
+      ).toEqual({
+        openai: {
+          reasoningEffort: 'high',
+          store: false,
+          promptCacheKey: 'thread-123',
+        },
+      });
+    });
+
+    it('keeps existing Azure options alongside store false', () => {
+      expect(
+        getCallLevelProviderOptions({
+          sdkPackage: AI_SDK_AZURE,
+          providerOptions: { azure: { reasoningEffort: 'high' } },
+        }),
+      ).toEqual({
+        azure: { reasoningEffort: 'high', store: false },
       });
     });
 
@@ -61,6 +103,36 @@ describe('provider-options.util', () => {
         openai: {
           store: false,
           promptCacheKey: 'thread-123',
+        },
+      });
+    });
+
+    it('returns store false for Azure models', () => {
+      expect(getCallLevelProviderOptions({ sdkPackage: AI_SDK_AZURE })).toEqual(
+        {
+          azure: {
+            store: false,
+          },
+        },
+      );
+    });
+
+    it('merges existing provider options with Azure store false', () => {
+      expect(
+        getCallLevelProviderOptions({
+          sdkPackage: AI_SDK_AZURE,
+          providerOptions: {
+            xai: {
+              searchParameters: { mode: 'auto' },
+            },
+          },
+        }),
+      ).toEqual({
+        xai: {
+          searchParameters: { mode: 'auto' },
+        },
+        azure: {
+          store: false,
         },
       });
     });
