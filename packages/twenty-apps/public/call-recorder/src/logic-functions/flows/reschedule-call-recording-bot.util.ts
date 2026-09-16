@@ -42,6 +42,7 @@ export const rescheduleCallRecordingBot = async (
   const rescheduleResult = await rescheduleRecallBot({
     externalBotId,
     meetingUrl,
+    meetingStartsAt,
     joinAt,
     metadata: buildRecallRoutingMetadata({
       callRecordingId: callRecording.id,
@@ -53,11 +54,18 @@ export const rescheduleCallRecordingBot = async (
     return;
   }
 
-  // The bot vanished externally; drop the id so the stale-state cron re-creates it as the single writer.
+  // The bot vanished externally; drop the id so recovery re-creates it as the
+  // single writer. The recorded attempt state is resolved (its bot is
+  // confirmed gone), so clearing it lets recovery schedule directly instead
+  // of treating the row as an ambiguous attempt.
   if (rescheduleResult.status === RECALL_BOT_NOT_FOUND_STATUS) {
     await updateCallRecording(client, {
       id: callRecording.id,
-      data: { externalBotId: null },
+      data: {
+        externalBotId: null,
+        botScheduleAttemptedAt: null,
+        botScheduleIdempotencyKey: null,
+      },
     });
 
     return;

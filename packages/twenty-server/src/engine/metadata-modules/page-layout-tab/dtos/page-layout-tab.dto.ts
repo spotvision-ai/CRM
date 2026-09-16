@@ -13,12 +13,24 @@ import { PageLayoutWidgetDTO } from 'src/engine/metadata-modules/page-layout-wid
 
 registerEnumType(PageLayoutTabLayoutMode, {
   name: 'PageLayoutTabLayoutMode',
+  valuesMap: {
+    CANVAS: {
+      deprecationReason:
+        'Use VERTICAL_LIST with TAB_VIEWPORT widget height behavior.',
+    },
+  },
 });
 
 @ObjectType('PageLayoutTab')
 export class PageLayoutTabDTO {
   @Field(() => UUIDScalarType)
   id: string;
+
+  @Field(() => UUIDScalarType, { nullable: false })
+  universalIdentifier: string;
+
+  @Field({ nullable: false })
+  isSystemSideEffect: boolean;
 
   @Field(() => UUIDScalarType, { nullable: false })
   applicationId: string;

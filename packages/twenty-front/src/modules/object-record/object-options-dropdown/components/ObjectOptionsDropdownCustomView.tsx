@@ -1,9 +1,8 @@
 import { ObjectOptionsDropdownMenuViewName } from '@/object-record/object-options-dropdown/components/ObjectOptionsDropdownMenuViewName';
-import { OBJECT_OPTIONS_DROPDOWN_ID } from '@/object-record/object-options-dropdown/constants/ObjectOptionsDropdownId';
 import { useObjectOptionsDropdown } from '@/object-record/object-options-dropdown/hooks/useObjectOptionsDropdown';
 import { useObjectOptionsForBoard } from '@/object-record/object-options-dropdown/hooks/useObjectOptionsForBoard';
-import { getSupportedRecordCalendarLayout } from '@/object-record/record-calendar/utils/getSupportedRecordCalendarLayout';
-import { recordIndexCalendarLayoutState } from '@/object-record/record-index/states/recordIndexCalendarLayoutState';
+import { recordIndexCalendarLayoutComponentState } from '@/object-record/record-index/states/recordIndexCalendarLayoutComponentState';
+import { recordIndexCalendarFieldMetadataIdComponentState } from '@/object-record/record-index/states/recordIndexCalendarFieldMetadataIdComponentState';
 import { recordIndexGroupFieldMetadataItemComponentState } from '@/object-record/record-index/states/recordIndexGroupFieldMetadataComponentState';
 import { DropdownContent } from '@/ui/layout/dropdown/components/DropdownContent';
 import { DropdownMenuItemsContainer } from '@/ui/layout/dropdown/components/DropdownMenuItemsContainer';
@@ -23,9 +22,7 @@ import {
   viewTypeIconMapping,
 } from '@/views/types/ViewType';
 import { useDestroyViewFromCurrentState } from '@/views/view-picker/hooks/useDestroyViewFromCurrentState';
-import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { viewPickerReferenceViewIdComponentState } from '@/views/view-picker/states/viewPickerReferenceViewIdComponentState';
-import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useAtomFamilySelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomFamilySelectorValue';
 import { useLingui } from '@lingui/react/macro';
 import { isDefined } from 'twenty-shared/utils';
@@ -39,10 +36,7 @@ import {
 } from 'twenty-ui/icon';
 import { AppTooltip } from 'twenty-ui/surfaces';
 import { MenuItem } from 'twenty-ui/navigation';
-import {
-  FeatureFlagKey,
-  ViewCalendarLayout,
-} from '~/generated-metadata/graphql';
+import { ViewCalendarLayout } from '~/generated-metadata/graphql';
 
 interface ObjectOptionsDropdownCustomViewProps {
   onBackToDefault?: () => void;
@@ -52,8 +46,13 @@ export const ObjectOptionsDropdownCustomView = ({
   onBackToDefault,
 }: ObjectOptionsDropdownCustomViewProps) => {
   const { t } = useLingui();
-  const { recordIndexId, objectMetadataItem, onContentChange, closeDropdown } =
-    useObjectOptionsDropdown();
+  const {
+    recordIndexId,
+    objectMetadataItem,
+    onContentChange,
+    closeDropdown,
+    dropdownId,
+  } = useObjectOptionsDropdown();
 
   const { currentView } = useGetCurrentViewOnly();
 
@@ -68,16 +67,13 @@ export const ObjectOptionsDropdownCustomView = ({
   const recordIndexGroupFieldMetadataItem = useAtomComponentStateValue(
     recordIndexGroupFieldMetadataItemComponentState,
   );
+  const recordIndexCalendarFieldMetadataId = useAtomComponentStateValue(
+    recordIndexCalendarFieldMetadataIdComponentState,
+  );
 
-  const calendarFieldMetadata = currentView?.calendarFieldMetadataId
+  const calendarFieldMetadata = recordIndexCalendarFieldMetadataId
     ? objectMetadataItem.fields.find(
-        (field) => field.id === currentView.calendarFieldMetadataId,
-      )
-    : undefined;
-
-  const calendarEndFieldMetadata = currentView?.calendarEndFieldMetadataId
-    ? objectMetadataItem.fields.find(
-        (field) => field.id === currentView.calendarEndFieldMetadataId,
+        (field) => field.id === recordIndexCalendarFieldMetadataId,
       )
     : undefined;
 
@@ -89,16 +85,9 @@ export const ObjectOptionsDropdownCustomView = ({
   const isDefaultView = currentView?.key === ViewKey.INDEX;
   const isLastView = viewsOnCurrentObject.length <= 1;
 
-  const recordIndexCalendarLayout = useAtomStateValue(
-    recordIndexCalendarLayoutState,
+  const recordIndexCalendarLayout = useAtomComponentStateValue(
+    recordIndexCalendarLayoutComponentState,
   );
-  const isCalendarWeekViewEnabled = useIsFeatureEnabled(
-    FeatureFlagKey.IS_CALENDAR_WEEK_VIEW_ENABLED,
-  );
-  const supportedCalendarLayout = getSupportedRecordCalendarLayout({
-    calendarLayout: recordIndexCalendarLayout,
-    isCalendarWeekViewEnabled,
-  });
 
   const { visibleBoardFields } = useObjectOptionsForBoard({
     objectNameSingular: objectMetadataItem.nameSingular,
@@ -129,11 +118,7 @@ export const ObjectOptionsDropdownCustomView = ({
     'Visibility',
     'Fields',
     ...(customViewData?.type === ViewType.CALENDAR
-      ? [
-          'CalendarDateField',
-          ...(isCalendarWeekViewEnabled ? ['CalendarEndDateField'] : []),
-          'CalendarView',
-        ]
+      ? ['CalendarDateField', 'CalendarView']
       : []),
     ...(customViewData?.type !== ViewType.CALENDAR ? ['Group'] : []),
     'Delete view',
@@ -141,7 +126,7 @@ export const ObjectOptionsDropdownCustomView = ({
 
   const selectedItemId = useAtomComponentStateValue(
     selectedItemIdComponentState,
-    OBJECT_OPTIONS_DROPDOWN_ID,
+    dropdownId,
   );
 
   if (!customViewData) {
@@ -153,8 +138,8 @@ export const ObjectOptionsDropdownCustomView = ({
       <ObjectOptionsDropdownMenuViewName currentView={customViewData} />
       <DropdownMenuSeparator />
       <SelectableList
-        selectableListInstanceId={OBJECT_OPTIONS_DROPDOWN_ID}
-        focusId={OBJECT_OPTIONS_DROPDOWN_ID}
+        selectableListInstanceId={dropdownId}
+        focusId={dropdownId}
         selectableItemIdArray={selectableItemIdArray}
       >
         <DropdownMenuItemsContainer scrollable={false}>
@@ -218,29 +203,6 @@ export const ObjectOptionsDropdownCustomView = ({
                   />
                 </SelectableListItem>
               </div>
-              {isCalendarWeekViewEnabled && (
-                <div id="calendar-end-date-field-picker-menu-item">
-                  <SelectableListItem
-                    itemId="CalendarEndDateField"
-                    onEnter={() => onContentChange('calendarEndFields')}
-                  >
-                    <MenuItem
-                      focused={selectedItemId === 'CalendarEndDateField'}
-                      onClick={() => onContentChange('calendarEndFields')}
-                      LeftIcon={IconCalendar}
-                      text={t`End date field`}
-                      contextualText={
-                        isDefaultView
-                          ? t`Not available on Default View`
-                          : (calendarEndFieldMetadata?.label ?? t`None`)
-                      }
-                      contextualTextPosition="right"
-                      hasSubMenu
-                      disabled={isDefaultView}
-                    />
-                  </SelectableListItem>
-                </div>
-              )}
               <SelectableListItem
                 itemId="CalendarView"
                 onEnter={() => onContentChange('calendarView')}
@@ -251,9 +213,9 @@ export const ObjectOptionsDropdownCustomView = ({
                   LeftIcon={IconCalendarWeek}
                   text={t`Calendar view`}
                   contextualText={
-                    supportedCalendarLayout === ViewCalendarLayout.MONTH
+                    recordIndexCalendarLayout === ViewCalendarLayout.MONTH
                       ? t`Month`
-                      : supportedCalendarLayout === ViewCalendarLayout.WEEK
+                      : recordIndexCalendarLayout === ViewCalendarLayout.WEEK
                         ? t`Week`
                         : t`Day`
                   }
@@ -271,7 +233,7 @@ export const ObjectOptionsDropdownCustomView = ({
               onClick={() => onContentChange('fields')}
               LeftIcon={IconListDetails}
               text={t`Fields`}
-              contextualText={t`${visibleFieldsCount} shown`}
+              contextualText={t`${visibleFieldsCount} selected`}
               contextualTextPosition="right"
               hasSubMenu
             />
@@ -310,10 +272,10 @@ export const ObjectOptionsDropdownCustomView = ({
           {isDefaultView && (
             <AppTooltip
               anchorSelect={`#group-by-menu-item`}
-              content={t`Not available on Default View`}
+              title={t`Not available on Default View`}
               noArrow
               place="bottom"
-              width="100%"
+              maxWidth="100%"
             />
           )}
         </DropdownMenuItemsContainer>
@@ -337,14 +299,14 @@ export const ObjectOptionsDropdownCustomView = ({
           {(isDefaultView || isLastView) && (
             <AppTooltip
               anchorSelect={`#delete-view-menu-item`}
-              content={
+              title={
                 isDefaultView
                   ? t`Not available on Default View`
                   : t`Cannot delete the only view`
               }
               noArrow
               place="bottom"
-              width="100%"
+              maxWidth="100%"
             />
           )}
         </DropdownMenuItemsContainer>

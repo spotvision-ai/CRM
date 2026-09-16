@@ -1,5 +1,4 @@
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
-import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { currentRecordFilterGroupsComponentState } from '@/object-record/record-filter-group/states/currentRecordFilterGroupsComponentState';
 import { anyFieldFilterValueComponentState } from '@/object-record/record-filter/states/anyFieldFilterValueComponentState';
 import { currentRecordFiltersComponentState } from '@/object-record/record-filter/states/currentRecordFiltersComponentState';
@@ -7,11 +6,11 @@ import { useRecordIndexContextOrThrow } from '@/object-record/record-index/conte
 import { currentRecordSortsComponentState } from '@/object-record/record-sort/states/currentRecordSortsComponentState';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
-import { usePerformViewAPIPersist } from '@/views/hooks/internal/usePerformViewAPIPersist';
-import { usePerformViewFieldAPIPersist } from '@/views/hooks/internal/usePerformViewFieldAPIPersist';
-import { usePerformViewFilterAPIPersist } from '@/views/hooks/internal/usePerformViewFilterAPIPersist';
-import { usePerformViewFilterGroupAPIPersist } from '@/views/hooks/internal/usePerformViewFilterGroupAPIPersist';
-import { usePerformViewSortAPIPersist } from '@/views/hooks/internal/usePerformViewSortAPIPersist';
+import { usePerformViewApiPersist } from '@/views/hooks/internal/usePerformViewApiPersist';
+import { usePerformViewFieldApiPersist } from '@/views/hooks/internal/usePerformViewFieldApiPersist';
+import { usePerformViewFilterApiPersist } from '@/views/hooks/internal/usePerformViewFilterApiPersist';
+import { usePerformViewFilterGroupApiPersist } from '@/views/hooks/internal/usePerformViewFilterGroupApiPersist';
+import { usePerformViewSortApiPersist } from '@/views/hooks/internal/usePerformViewSortApiPersist';
 import { viewFromViewIdFamilySelector } from '@/views/states/selectors/viewFromViewIdFamilySelector';
 import { type GraphQLView } from '@/views/types/GraphQLView';
 import { ViewType } from '@/views/types/ViewType';
@@ -27,7 +26,7 @@ import { ViewCalendarLayout } from '~/generated-metadata/graphql';
 import { isUndefinedOrNull } from '~/utils/isUndefinedOrNull';
 
 export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
-  const { performViewAPICreate } = usePerformViewAPIPersist();
+  const { performViewApiCreate } = usePerformViewApiPersist();
 
   const { objectMetadataItem, recordIndexId } = useRecordIndexContextOrThrow();
 
@@ -41,15 +40,14 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
     recordIndexId,
   );
 
-  const { performViewFieldAPICreate } = usePerformViewFieldAPIPersist();
+  const { performViewFieldApiCreate } = usePerformViewFieldApiPersist();
 
-  const { performViewSortAPICreate } = usePerformViewSortAPIPersist();
+  const { performViewSortApiCreate } = usePerformViewSortApiPersist();
 
-  const { performViewFilterAPICreate } = usePerformViewFilterAPIPersist();
+  const { performViewFilterApiCreate } = usePerformViewFilterApiPersist();
 
-  const { performViewFilterGroupAPICreate } =
-    usePerformViewFilterGroupAPIPersist();
-  const { invalidateMetadataStore } = useInvalidateMetadataStore();
+  const { performViewFilterGroupApiCreate } =
+    usePerformViewFilterGroupApiPersist();
 
   const store = useStore();
 
@@ -116,7 +114,7 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
 
       const viewType = type ?? sourceView.type;
 
-      const result = await performViewAPICreate(
+      const result = await performViewApiCreate(
         {
           input: {
             id: id ?? v4(),
@@ -138,7 +136,6 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
               : mainGroupByFieldMetadataId,
             type: viewType,
             objectMetadataId: sourceView.objectMetadataId,
-            openRecordIn: sourceView.openRecordIn,
             anyFieldFilterValue: anyFieldFilterValue,
             calendarLayout:
               viewType === ViewType.CALENDAR
@@ -172,7 +169,7 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
         throw new Error('Failed to create view');
       }
 
-      const fieldResult = await performViewFieldAPICreate({
+      const fieldResult = await performViewFieldApiCreate({
         inputs: sourceView.viewFields.map((viewField) => ({
           id: v4(),
           fieldMetadataId: viewField.fieldMetadataId,
@@ -217,9 +214,16 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
             id: v4(),
           }));
 
-        await performViewFilterGroupAPICreate(viewFilterGroupsToCreate, {
-          id: newViewId,
-        });
+        const filterGroupResult = await performViewFilterGroupApiCreate(
+          viewFilterGroupsToCreate,
+          {
+            id: newViewId,
+          },
+        );
+
+        if (filterGroupResult.status === 'failed') {
+          return undefined;
+        }
 
         const createViewFilterInputs = viewFiltersToCreate.map(
           (viewFilter) => ({
@@ -238,7 +242,7 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
           }),
         );
 
-        const filterResult = await performViewFilterAPICreate(
+        const filterResult = await performViewFilterApiCreate(
           createViewFilterInputs,
         );
 
@@ -255,30 +259,27 @@ export const useCreateViewFromCurrentView = (viewBarComponentId?: string) => {
           },
         }));
 
-        const sortResult = await performViewSortAPICreate(createViewSortInputs);
+        const sortResult = await performViewSortApiCreate(createViewSortInputs);
 
         if (sortResult.status === 'failed') {
           return undefined;
         }
       }
-
-      invalidateMetadataStore();
       return newViewId;
     },
     [
       currentViewId,
-      invalidateMetadataStore,
-      performViewAPICreate,
+      performViewApiCreate,
       anyFieldFilterValue,
       objectMetadataItem,
-      performViewFieldAPICreate,
+      performViewFieldApiCreate,
       store,
       currentRecordFilterGroups,
       currentRecordFilters,
       currentRecordSorts,
-      performViewFilterGroupAPICreate,
-      performViewFilterAPICreate,
-      performViewSortAPICreate,
+      performViewFilterGroupApiCreate,
+      performViewFilterApiCreate,
+      performViewSortApiCreate,
     ],
   );
 

@@ -2,6 +2,7 @@ import { isUndefined } from '@sniptt/guards';
 
 import { CallRecorderPreference } from 'src/constants/call-recorder-preference';
 import { computeUpcomingCalendarEventHorizonEnd } from 'src/logic-functions/domain/compute-upcoming-calendar-event-horizon-end.util';
+import { isSupportedMeetingPlatformUrl } from 'src/logic-functions/domain/is-supported-meeting-platform-url.util';
 import { type CallRecorderPolicyInput } from 'src/logic-functions/types/call-recorder-policy-input.type';
 import { isNonEmptyString } from 'src/logic-functions/utils/is-non-empty-string.util';
 import { type CallRecorderPolicyNotRequiredReason } from 'src/logic-functions/types/call-recorder-policy-not-required-reason.type';
@@ -17,6 +18,10 @@ export const resolveCallRecorderPolicyResult = ({
   input,
   now,
 }: ResolveCallRecorderPolicyResultArgs): CallRecorderPolicyResult => {
+  if (!input.isCalendarBotSchedulingEnabled) {
+    return botNotRequired('CALENDAR_BOT_SCHEDULING_DISABLED');
+  }
+
   if (input.isCanceled) {
     return botNotRequired('EVENT_CANCELED');
   }
@@ -27,6 +32,10 @@ export const resolveCallRecorderPolicyResult = ({
 
   if (!isNonEmptyString(input.conferenceLinkUrl)) {
     return botNotRequired('MISSING_CONFERENCE_LINK');
+  }
+
+  if (!isSupportedMeetingPlatformUrl(input.conferenceLinkUrl)) {
+    return botNotRequired('UNSUPPORTED_MEETING_PLATFORM');
   }
 
   if (

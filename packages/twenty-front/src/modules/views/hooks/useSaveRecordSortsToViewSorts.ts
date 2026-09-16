@@ -1,7 +1,6 @@
-import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { currentRecordSortsComponentState } from '@/object-record/record-sort/states/currentRecordSortsComponentState';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
-import { usePerformViewSortAPIPersist } from '@/views/hooks/internal/usePerformViewSortAPIPersist';
+import { usePerformViewSortApiPersist } from '@/views/hooks/internal/usePerformViewSortApiPersist';
 import { useCanPersistViewChanges } from '@/views/hooks/useCanPersistViewChanges';
 import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
 import { getViewSortsToCreate } from '@/views/utils/getViewSortsToCreate';
@@ -15,11 +14,10 @@ import { isDefined } from 'twenty-shared/utils';
 export const useSaveRecordSortsToViewSorts = () => {
   const { canPersistChanges } = useCanPersistViewChanges();
   const {
-    performViewSortAPICreate,
-    performViewSortAPIUpdate,
-    performViewSortAPIDestroy,
-  } = usePerformViewSortAPIPersist();
-  const { invalidateMetadataStore } = useInvalidateMetadataStore();
+    performViewSortApiCreate,
+    performViewSortApiUpdate,
+    performViewSortApiDestroy,
+  } = usePerformViewSortApiPersist();
 
   const { currentView } = useGetCurrentViewOnly();
 
@@ -81,30 +79,28 @@ export const useSaveRecordSortsToViewSorts = () => {
       },
     }));
 
-    const createResult = await performViewSortAPICreate(createViewSortInputs);
+    const createResult = await performViewSortApiCreate(createViewSortInputs);
     if (createResult.status === 'failed') {
       return;
     }
 
-    const updateResult = await performViewSortAPIUpdate(updateViewSortInputs);
+    const updateResult = await performViewSortApiUpdate(updateViewSortInputs);
     if (updateResult.status === 'failed') {
       return;
     }
 
-    const deleteResult = await performViewSortAPIDestroy(destroyViewSortInputs);
+    const deleteResult = await performViewSortApiDestroy(destroyViewSortInputs);
     if (deleteResult.status === 'failed') {
       return;
     }
-    invalidateMetadataStore();
   }, [
     canPersistChanges,
     currentView,
-    invalidateMetadataStore,
     store,
     currentRecordSortsCallbackState,
-    performViewSortAPICreate,
-    performViewSortAPIUpdate,
-    performViewSortAPIDestroy,
+    performViewSortApiCreate,
+    performViewSortApiUpdate,
+    performViewSortApiDestroy,
   ]);
 
   return {

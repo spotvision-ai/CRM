@@ -10,16 +10,16 @@ import { Separator } from '@/settings/components/Separator';
 import { SettingsEnterpriseFeatureGateCard } from '@/settings/components/SettingsEnterpriseFeatureGateCard';
 import { SettingsOptionCardContentButton } from '@/settings/components/SettingsOptions/SettingsOptionCardContentButton';
 import { SettingsOptionCardContentCounter } from '@/settings/components/SettingsOptions/SettingsOptionCardContentCounter';
-import { SettingsOptionCardContentToggle } from '@/settings/components/SettingsOptions/SettingsOptionCardContentToggle';
+import { SettingsOptionCardContentSwitch } from '@/settings/components/SettingsOptions/SettingsOptionCardContentSwitch';
 import { SettingsRoleDefaultRole } from '@/settings/roles/components/SettingsRolesDefaultRole';
 import { SettingsRolesQueryEffect } from '@/settings/roles/components/SettingsRolesQueryEffect';
 import { useSettingsAllRoles } from '@/settings/roles/hooks/useSettingsAllRoles';
-import { SettingsSSOIdentitiesProvidersListCard } from '@/settings/security/components/SSO/SettingsSSOIdentitiesProvidersListCard';
+import { SettingsSsoIdentitiesProvidersListCard } from '@/settings/security/components/sso/SettingsSsoIdentitiesProvidersListCard';
 import { SettingsSecurityAuthBypassOptionsList } from '@/settings/security/components/SettingsSecurityAuthBypassOptionsList';
 import { SettingsSecurityAuthProvidersOptionsList } from '@/settings/security/components/SettingsSecurityAuthProvidersOptionsList';
 import { SettingsSecurityEditableProfileFields } from '@/settings/security/components/SettingsSecurityEditableProfileFields';
-import { SSOIdentitiesProvidersState } from '@/settings/security/states/SSOIdentitiesProvidersState';
-import { ToggleImpersonate } from '@/settings/workspace/components/ToggleImpersonate';
+import { ssoIdentitiesProvidersState } from '@/settings/security/states/ssoIdentitiesProvidersState';
+import { ImpersonationSwitch } from '@/settings/workspace/components/ImpersonationSwitch';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
@@ -62,7 +62,7 @@ export const SettingsSecuritySettings = () => {
   );
   const isClickHouseConfigured = useAtomStateValue(isClickHouseConfiguredState);
   const authProviders = useAtomStateValue(authProvidersState);
-  const SSOIdentitiesProviders = useAtomStateValue(SSOIdentitiesProvidersState);
+  const ssoIdentitiesProviders = useAtomStateValue(ssoIdentitiesProvidersState);
   const [currentWorkspace, setCurrentWorkspace] = useAtomState(
     currentWorkspaceState,
   );
@@ -163,7 +163,7 @@ export const SettingsSecuritySettings = () => {
 
   const roles = useSettingsAllRoles();
 
-  const hasSsoIdentityProviders = SSOIdentitiesProviders.length > 0;
+  const hasSsoIdentityProviders = ssoIdentitiesProviders.length > 0;
   const hasDirectAuthEnabled =
     currentWorkspace?.isGoogleAuthEnabled ||
     currentWorkspace?.isMicrosoftAuthEnabled ||
@@ -192,7 +192,7 @@ export const SettingsSecuritySettings = () => {
               description={t`Configure an SSO connection`}
               adornment={<OrganizationAdornment />}
             />
-            <SettingsSSOIdentitiesProvidersListCard />
+            <SettingsSsoIdentitiesProvidersListCard />
           </Section>
         </StyledSectionContainer>
 
@@ -232,7 +232,7 @@ export const SettingsSecuritySettings = () => {
               title={t`Support`}
               description={t`Manage support access settings`}
             />
-            <ToggleImpersonate />
+            <ImpersonationSwitch />
           </Section>
         )}
         <Section>
@@ -283,7 +283,7 @@ export const SettingsSecuritySettings = () => {
               showButtons={false}
             />
             <Separator />
-            <SettingsOptionCardContentToggle
+            <SettingsOptionCardContentSwitch
               Icon={IconMail}
               title={t`Sync Internal Emails`}
               description={t`Include emails where all participants share the same domain.`}

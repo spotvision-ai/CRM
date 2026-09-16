@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 
 import { isManyToOneRelationField } from '@/object-metadata/utils/isManyToOneRelationField';
-import { OBJECT_OPTIONS_DROPDOWN_ID } from '@/object-record/object-options-dropdown/constants/ObjectOptionsDropdownId';
 import { useObjectOptionsDropdown } from '@/object-record/object-options-dropdown/hooks/useObjectOptionsDropdown';
 import { RecordGroupsVisibilityDropdownSection } from '@/object-record/record-group/components/RecordGroupsVisibilityDropdownSection';
 import { useRecordGroupVisibility } from '@/object-record/record-group/hooks/useRecordGroupVisibility';
 import { hiddenRecordGroupIdsComponentSelector } from '@/object-record/record-group/states/selectors/hiddenRecordGroupIdsComponentSelector';
+import { isRecordGroupingOptionalForViewType } from '@/object-record/record-group/utils/isRecordGroupingOptionalForViewType';
 import { visibleRecordGroupIdsComponentFamilySelector } from '@/object-record/record-group/states/selectors/visibleRecordGroupIdsComponentFamilySelector';
 import { recordIndexGroupFieldMetadataItemComponentState } from '@/object-record/record-index/states/recordIndexGroupFieldMetadataComponentState';
 import { recordIndexRecordGroupSortComponentState } from '@/object-record/record-index/states/recordIndexRecordGroupSortComponentState';
@@ -26,17 +26,17 @@ import { useGetAvailableFieldsToGroupRecordsBy } from '@/views/view-picker/hooks
 import { useLingui } from '@lingui/react/macro';
 import { isDefined } from 'twenty-shared/utils';
 import {
+  IconArrowsSort,
   IconChevronLeft,
   IconCircleOff,
   IconEyeOff,
   IconLayoutList,
   IconPlus,
-  IconSortDescending,
 } from 'twenty-ui/icon';
 import {
   MenuItem,
   MenuItemNavigate,
-  MenuItemToggle,
+  MenuItemSwitch,
 } from 'twenty-ui/navigation';
 
 export const ObjectOptionsDropdownRecordGroupsContent = () => {
@@ -47,6 +47,7 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
     onContentChange,
     resetContent,
     handleRecordGroupOrderChangeWithModal,
+    dropdownId,
   } = useObjectOptionsDropdown();
 
   const { currentView } = useGetCurrentViewOnly();
@@ -85,7 +86,9 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
   const { availableFieldsForGrouping } =
     useGetAvailableFieldsToGroupRecordsBy();
 
-  const hasOnlyOneGroupByOption = availableFieldsForGrouping.length <= 1;
+  const isGroupByFieldPickerDisabled =
+    availableFieldsForGrouping.length <= 1 &&
+    !isRecordGroupingOptionalForViewType(viewType);
 
   const isRelationGroupBy =
     isDefined(recordIndexGroupFieldMetadataItem) &&
@@ -102,7 +105,7 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
 
   const selectedItemId = useAtomComponentStateValue(
     selectedItemIdComponentState,
-    OBJECT_OPTIONS_DROPDOWN_ID,
+    dropdownId,
   );
 
   const selectableItemIdArray = [
@@ -110,7 +113,7 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
     'HideEmptyGroups',
   ];
 
-  const hiddenGroupsSelectableListId = `${OBJECT_OPTIONS_DROPDOWN_ID}-hidden-groups`;
+  const hiddenGroupsSelectableListId = `${dropdownId}-hidden-groups`;
 
   return (
     <DropdownContent>
@@ -126,8 +129,8 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
       </DropdownMenuHeader>
       <DropdownMenuItemsContainer>
         <SelectableList
-          selectableListInstanceId={OBJECT_OPTIONS_DROPDOWN_ID}
-          focusId={OBJECT_OPTIONS_DROPDOWN_ID}
+          selectableListInstanceId={dropdownId}
+          focusId={dropdownId}
           selectableItemIdArray={selectableItemIdArray}
         >
           {currentView?.key !== 'INDEX' && (
@@ -135,13 +138,13 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
               <SelectableListItem
                 itemId="GroupBy"
                 onEnter={() =>
-                  !hasOnlyOneGroupByOption &&
+                  !isGroupByFieldPickerDisabled &&
                   onContentChange('recordGroupFields')
                 }
               >
                 <MenuItem
                   focused={selectedItemId === 'GroupBy'}
-                  disabled={hasOnlyOneGroupByOption}
+                  disabled={isGroupByFieldPickerDisabled}
                   onClick={() => onContentChange('recordGroupFields')}
                   LeftIcon={IconLayoutList}
                   text={t`Group by`}
@@ -157,7 +160,7 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
                 <MenuItem
                   focused={selectedItemId === 'Sort'}
                   onClick={() => onContentChange('recordGroupSort')}
-                  LeftIcon={IconSortDescending}
+                  LeftIcon={IconArrowsSort}
                   text={t`Sort`}
                   contextualText={recordIndexRecordGroupSort}
                   contextualTextPosition="right"
@@ -170,13 +173,13 @@ export const ObjectOptionsDropdownRecordGroupsContent = () => {
             itemId="HideEmptyGroups"
             onEnter={() => handleHideEmptyRecordGroupChange()}
           >
-            <MenuItemToggle
+            <MenuItemSwitch
               focused={selectedItemId === 'HideEmptyGroups'}
               LeftIcon={IconCircleOff}
-              onToggleChange={handleHideEmptyRecordGroupChange}
-              toggled={shouldHideEmptyGroups}
+              onCheckedChange={handleHideEmptyRecordGroupChange}
+              checked={shouldHideEmptyGroups}
               text={t`Hide empty groups`}
-              toggleSize="small"
+              size="sm"
             />
           </SelectableListItem>
         </SelectableList>

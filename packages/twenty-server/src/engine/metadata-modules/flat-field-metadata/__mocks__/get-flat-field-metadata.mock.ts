@@ -1,5 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { type FieldMetadataType } from 'twenty-shared/types';
+import {
+  MetadataWritability,
+  type FieldMetadataType,
+} from 'twenty-shared/types';
 
 import { type FlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/types/flat-field-metadata.type';
 
@@ -35,6 +38,7 @@ export const getFlatFieldMetadataMock = <T extends FieldMetadataType>(
     mainGroupByFieldMetadataViewIds: [],
     updatedAt: createdAt,
     defaultValue: null,
+    writability: MetadataWritability.OPEN,
     options: null,
     morphId: null,
     settings: null,
@@ -47,6 +51,8 @@ export const getFlatFieldMetadataMock = <T extends FieldMetadataType>(
     label: 'flat field metadata label',
     isNullable: true,
     isUnique: false,
+    isSearchable: false,
+    isAuditLogged: true,
     isUIEditable: true,
     isLabelSyncedWithName: false,
     isSystem: false,

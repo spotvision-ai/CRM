@@ -13,15 +13,35 @@ const BEYOND_HORIZON_STARTS_AT = '2026-01-10T13:00:00.000Z';
 const BEYOND_HORIZON_ENDS_AT = '2026-01-10T14:00:00.000Z';
 
 describe('resolveCallRecorderPolicyResult', () => {
-  it('requires a bot when preference is ON and the event is upcoming', () => {
+  it('does not request a bot when calendar bot scheduling is disabled, even for an ON event', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: false,
           callRecorderPreference: CallRecorderPreference.ON,
           isCanceled: false,
           startsAt: FUTURE_STARTS_AT,
           endsAt: FUTURE_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
+        },
+        now: NOW,
+      }),
+    ).toEqual({
+      shouldRequestBot: false,
+      reason: 'CALENDAR_BOT_SCHEDULING_DISABLED',
+    });
+  });
+
+  it('requires a bot when preference is ON and the event is upcoming', () => {
+    expect(
+      resolveCallRecorderPolicyResult({
+        input: {
+          isCalendarBotSchedulingEnabled: true,
+          callRecorderPreference: CallRecorderPreference.ON,
+          isCanceled: false,
+          startsAt: FUTURE_STARTS_AT,
+          endsAt: FUTURE_ENDS_AT,
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -35,6 +55,7 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: CallRecorderPreference.ON,
           isCanceled: false,
           startsAt: FUTURE_STARTS_AT,
@@ -49,15 +70,35 @@ describe('resolveCallRecorderPolicyResult', () => {
     });
   });
 
+  it('does not request a bot when the conference link is an unsupported platform', () => {
+    expect(
+      resolveCallRecorderPolicyResult({
+        input: {
+          isCalendarBotSchedulingEnabled: true,
+          callRecorderPreference: CallRecorderPreference.ON,
+          isCanceled: false,
+          startsAt: FUTURE_STARTS_AT,
+          endsAt: FUTURE_ENDS_AT,
+          conferenceLinkUrl: 'https://ro.am/r/#/d/123',
+        },
+        now: NOW,
+      }),
+    ).toEqual({
+      shouldRequestBot: false,
+      reason: 'UNSUPPORTED_MEETING_PLATFORM',
+    });
+  });
+
   it('requires a bot without an event preference override', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: undefined,
           isCanceled: false,
           startsAt: FUTURE_STARTS_AT,
           endsAt: FUTURE_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -71,11 +112,12 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: CallRecorderPreference.OFF,
           isCanceled: false,
           startsAt: FUTURE_STARTS_AT,
           endsAt: FUTURE_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -89,11 +131,12 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: undefined,
           isCanceled: false,
           startsAt: PAST_STARTS_AT,
           endsAt: PAST_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -107,11 +150,12 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: undefined,
           isCanceled: true,
           startsAt: FUTURE_STARTS_AT,
           endsAt: FUTURE_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -125,11 +169,12 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: CallRecorderPreference.ON,
           isCanceled: false,
           startsAt: BEYOND_HORIZON_STARTS_AT,
           endsAt: BEYOND_HORIZON_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -143,11 +188,12 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: CallRecorderPreference.ON,
           isCanceled: false,
           startsAt: FUTURE_STARTS_AT,
           endsAt: BEYOND_HORIZON_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),
@@ -161,11 +207,12 @@ describe('resolveCallRecorderPolicyResult', () => {
     expect(
       resolveCallRecorderPolicyResult({
         input: {
+          isCalendarBotSchedulingEnabled: true,
           callRecorderPreference: CallRecorderPreference.ON,
           isCanceled: false,
           startsAt: '',
           endsAt: FUTURE_ENDS_AT,
-          conferenceLinkUrl: 'https://meet.example.com/team-sync',
+          conferenceLinkUrl: 'https://meet.google.com/abc-defg-hij',
         },
         now: NOW,
       }),

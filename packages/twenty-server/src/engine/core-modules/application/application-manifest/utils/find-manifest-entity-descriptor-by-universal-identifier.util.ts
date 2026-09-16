@@ -1,4 +1,7 @@
-import { type Manifest } from 'twenty-shared/application';
+import {
+  getRoleTargetUniversalIdentifier,
+  type Manifest,
+} from 'twenty-shared/application';
 import { type AllMetadataName } from 'twenty-shared/metadata';
 import { isDefined } from 'twenty-shared/utils';
 
@@ -32,7 +35,7 @@ const toCandidates = <T extends { universalIdentifier?: string }>(
       label: getLabel(entity),
     }));
 
-const MANIFEST_ENTITY_REGISTRY: Record<
+export const MANIFEST_ENTITY_REGISTRY: Record<
   AllMetadataName,
   ManifestEntityRegistryEntry
 > = {
@@ -81,6 +84,14 @@ const MANIFEST_ENTITY_REGISTRY: Record<
         (connectionProvider) => connectionProvider.displayName,
       ),
   },
+  timelineActivityType: {
+    entityKind: 'timeline activity type',
+    getCandidates: (manifest) =>
+      toCandidates(
+        manifest.timelineActivityTypes,
+        (timelineActivityType) => timelineActivityType.label,
+      ),
+  },
   view: {
     entityKind: 'view',
     getCandidates: (manifest) =>
@@ -106,6 +117,7 @@ const MANIFEST_ENTITY_REGISTRY: Record<
   pageLayoutWidget: {
     entityKind: 'page layout widget',
     getCandidates: (manifest) => [
+      ...toCandidates(manifest.pageLayoutWidgets, (widget) => widget.title),
       ...(manifest.pageLayoutTabs ?? []).flatMap((pageLayoutTab) =>
         toCandidates(pageLayoutTab.widgets, (widget) => widget.title),
       ),
@@ -227,7 +239,17 @@ const MANIFEST_ENTITY_REGISTRY: Record<
   },
   roleTarget: {
     entityKind: 'role target',
-    getCandidates: () => NO_MANIFEST_CANDIDATES,
+    getCandidates: (manifest) =>
+      (manifest.agents ?? [])
+        .filter((agent) => isDefined(agent.roleUniversalIdentifier))
+        .map((agent) => ({
+          universalIdentifier: getRoleTargetUniversalIdentifier({
+            applicationUniversalIdentifier:
+              manifest.application.universalIdentifier,
+            agentUniversalIdentifier: agent.universalIdentifier,
+          }),
+          label: agent.label,
+        })),
   },
   rolePermissionFlag: {
     entityKind: 'role permission flag',

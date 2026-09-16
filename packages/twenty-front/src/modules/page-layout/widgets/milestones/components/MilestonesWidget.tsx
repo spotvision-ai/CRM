@@ -2,7 +2,7 @@ import { styled } from '@linaria/react';
 
 import { MilestonesCard } from '@/activities/milestones/components/MilestonesCard';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
-import { useLayoutRenderingContext } from '@/ui/layout/contexts/LayoutRenderingContext';
+import { useWorkspaceSurface } from '@/ui/layout/hooks/useWorkspaceSurface';
 import { SidePanelProvider } from '@/ui/layout/side-panel/contexts/SidePanelContext';
 
 const StyledContainer = styled.div`
@@ -23,7 +23,7 @@ type MilestonesWidgetProps = {
 export const MilestonesWidget = ({
   widget: _widget,
 }: MilestonesWidgetProps) => {
-  const { isInSidePanel } = useLayoutRenderingContext();
+  const isInSidePanel = useWorkspaceSurface().type === 'side-panel';
 
   return (
     <SidePanelProvider value={{ isInSidePanel }}>

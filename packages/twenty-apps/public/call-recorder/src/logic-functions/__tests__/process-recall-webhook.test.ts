@@ -6,6 +6,7 @@ import processRecallWebhookLogicFunction, {
 
 const queryMock = vi.hoisted(() => vi.fn());
 const mutationMock = vi.hoisted(() => vi.fn());
+const enqueueArtifactImportMock = vi.hoisted(() => vi.fn());
 
 vi.mock('twenty-client-sdk/core', () => ({
   CoreApiClient: class {
@@ -13,6 +14,13 @@ vi.mock('twenty-client-sdk/core', () => ({
     mutation = mutationMock;
   },
 }));
+
+vi.mock(
+  'src/logic-functions/data/enqueue-call-recording-artifacts-import.util',
+  () => ({
+    enqueueCallRecordingArtifactsImport: enqueueArtifactImportMock,
+  }),
+);
 
 const buildRecordingDoneWebhookBody = () => ({
   event: 'recording.done',
@@ -60,6 +68,8 @@ describe('process-recall-webhook', () => {
     mutationMock.mockResolvedValue({
       updateCallRecording: { id: 'call-recording-1' },
     });
+    enqueueArtifactImportMock.mockReset();
+    enqueueArtifactImportMock.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -85,7 +95,9 @@ describe('process-recall-webhook', () => {
     expect(queryMock).toHaveBeenCalledWith(
       expect.objectContaining({
         callRecordings: expect.objectContaining({
-          __args: { filter: { id: { eq: 'call-recording-1' } }, first: 1 },
+          __args: expect.objectContaining({
+            filter: { id: { eq: 'call-recording-1' } },
+          }),
         }),
       }),
     );
@@ -103,11 +115,27 @@ describe('process-recall-webhook', () => {
         id: true,
       },
     });
+    expect(enqueueArtifactImportMock).toHaveBeenCalledWith(
+      expect.objectContaining({ callRecordingId: 'call-recording-1' }),
+    );
     expect(result).toEqual({
       status: 'updated',
       event: 'recording.done',
       callRecordingId: 'call-recording-1',
       callRecordingStatus: 'PROCESSING',
+    });
+  });
+
+  it('marks processing failures as retryable so the platform redelivers the job', async () => {
+    enqueueArtifactImportMock.mockRejectedValue(
+      new Error('Service unavailable'),
+    );
+
+    await expect(
+      processRecallWebhookHandler(buildRecordingDoneWebhookBody()),
+    ).rejects.toMatchObject({
+      name: 'RetryableLogicFunctionError',
+      message: expect.stringContaining('Service unavailable'),
     });
   });
 });

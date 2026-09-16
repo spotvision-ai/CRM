@@ -6,10 +6,11 @@ import { useUnsubscribeTopics } from '@/activities/emails/hooks/useUnsubscribeTo
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { SettingsPageContainer } from '@/settings/components/SettingsPageContainer';
 import { SettingsSkeletonLoader } from '@/settings/components/SettingsSkeletonLoader';
-import { SettingsOptionCardContentToggle } from '@/settings/components/SettingsOptions/SettingsOptionCardContentToggle';
+import { SettingsOptionCardContentSwitch } from '@/settings/components/SettingsOptions/SettingsOptionCardContentSwitch';
 import { SettingsPageLayout } from '@/settings/components/layout/SettingsPageLayout';
 import { useDeleteUnsubscribeTopic } from '@/settings/unsubscribe-topics/hooks/useDeleteUnsubscribeTopic';
 import { useUpdateUnsubscribeTopic } from '@/settings/unsubscribe-topics/hooks/useUpdateUnsubscribeTopic';
+import { SETTINGS_UNSUBSCRIBE_TAB_IDS } from '@/settings/unsubscribers/constants/SettingsUnsubscribeTabIds';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { SettingsTextInput } from '@/ui/input/components/SettingsTextInput';
 import { ConfirmationModal } from '@/ui/layout/modal/components/ConfirmationModal';
@@ -104,7 +105,13 @@ export const SettingsWorkspaceUnsubscribeTopicDetail = () => {
   const handleDelete = async () => {
     try {
       await deleteUnsubscribeTopic(unsubscribeTopic.id);
-      navigateSettings(SettingsPath.WorkspaceCommunications);
+      navigateSettings(
+        SettingsPath.Unsubscribe,
+        undefined,
+        undefined,
+        undefined,
+        SETTINGS_UNSUBSCRIBE_TAB_IDS.TOPICS,
+      );
     } catch {
       enqueueErrorSnackBar({
         message: t`Failed to delete unsubscribe topic.`,
@@ -123,8 +130,17 @@ export const SettingsWorkspaceUnsubscribeTopicDetail = () => {
           href: getSettingsPath(SettingsPath.General),
         },
         {
-          children: t`Communications`,
+          children: t`Communication`,
           href: getSettingsPath(SettingsPath.WorkspaceCommunications),
+        },
+        {
+          children: t`Unsubscribe`,
+          href: getSettingsPath(
+            SettingsPath.Unsubscribe,
+            undefined,
+            undefined,
+            SETTINGS_UNSUBSCRIBE_TAB_IDS.TOPICS,
+          ),
         },
         { children: topicName },
       ]}
@@ -175,7 +191,7 @@ export const SettingsWorkspaceUnsubscribeTopicDetail = () => {
             description={t`Control whether recipients can find and manage this topic.`}
           />
           <Card rounded>
-            <SettingsOptionCardContentToggle
+            <SettingsOptionCardContentSwitch
               Icon={IconEye}
               title={t`Listed on the unsubscribe page`}
               description={t`Public topics appear on the recipient preferences page.`}

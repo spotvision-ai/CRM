@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
+import { WorkspaceOrmManager } from 'src/engine/twenty-orm/workspace-orm.manager';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
 import { OpportunityMilestoneDependencyWorkspaceEntity } from 'src/modules/opportunity/standard-objects/opportunity-milestone-dependency.workspace-entity';
 
@@ -18,9 +18,7 @@ export class CyclicDependencyError extends Error {
 
 @Injectable()
 export class CyclicDependencyValidatorService {
-  constructor(
-    private readonly globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
-  ) {}
+  constructor(private readonly workspaceOrmManager: WorkspaceOrmManager) {}
 
   // Validates that adding the edge `dependent → required` would not
   // create a cycle. A cycle exists if `required` already (transitively)
@@ -39,9 +37,8 @@ export class CyclicDependencyValidatorService {
 
     const authContext = buildSystemAuthContext(workspaceId);
 
-    await this.globalWorkspaceOrmManager.executeInWorkspaceContext(async () => {
-      const repository = await this.globalWorkspaceOrmManager.getRepository(
-        workspaceId,
+    await this.workspaceOrmManager.executeInWorkspaceContext(async () => {
+      const repository = this.workspaceOrmManager.getRepository(
         OpportunityMilestoneDependencyWorkspaceEntity,
         {
           shouldBypassPermissionChecks: true,

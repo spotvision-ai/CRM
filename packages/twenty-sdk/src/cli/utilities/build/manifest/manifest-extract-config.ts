@@ -8,6 +8,7 @@ export enum TargetFunction {
   DefineLogicFunction = 'defineLogicFunction',
   DefinePostInstallLogicFunction = 'definePostInstallLogicFunction',
   DefinePreInstallLogicFunction = 'definePreInstallLogicFunction',
+  DefineUninstallLogicFunction = 'defineUninstallLogicFunction',
   DefineObject = 'defineObject',
   DefinePermissionFlag = 'definePermissionFlag',
   DefineRole = 'defineRole',
@@ -15,12 +16,15 @@ export enum TargetFunction {
   DefineAgent = 'defineAgent',
   DefineConnectionProvider = 'defineConnectionProvider',
   DefineFrontComponent = 'defineFrontComponent',
+  DefineSettingsFrontComponent = 'defineSettingsFrontComponent',
   DefineView = 'defineView',
   DefineViewField = 'defineViewField',
   DefineNavigationMenuItem = 'defineNavigationMenuItem',
   DefinePageLayout = 'definePageLayout',
   DefinePageLayoutTab = 'definePageLayoutTab',
+  DefinePageLayoutWidget = 'definePageLayoutWidget',
   DefineCommandMenuItem = 'defineCommandMenuItem',
+  DefineTimelineActivityType = 'defineTimelineActivityType',
 }
 
 export enum ManifestEntityKey {
@@ -41,7 +45,9 @@ export enum ManifestEntityKey {
   NavigationMenuItems = 'navigationMenuItems',
   PageLayouts = 'pageLayouts',
   PageLayoutTabs = 'pageLayoutTabs',
+  PageLayoutWidgets = 'pageLayoutWidgets',
   CommandMenuItems = 'commandMenuItems',
+  TimelineActivityTypes = 'timelineActivityTypes',
 }
 
 export type EntityFilePaths = Record<ManifestEntityKey, string[]>;
@@ -59,6 +65,8 @@ export const TARGET_FUNCTION_TO_ENTITY_KEY_MAPPING: Record<
     ManifestEntityKey.LogicFunctions,
   [TargetFunction.DefinePreInstallLogicFunction]:
     ManifestEntityKey.LogicFunctions,
+  [TargetFunction.DefineUninstallLogicFunction]:
+    ManifestEntityKey.LogicFunctions,
   [TargetFunction.DefineObject]: ManifestEntityKey.Objects,
   [TargetFunction.DefinePermissionFlag]: ManifestEntityKey.PermissionFlags,
   [TargetFunction.DefineRole]: ManifestEntityKey.Roles,
@@ -67,13 +75,18 @@ export const TARGET_FUNCTION_TO_ENTITY_KEY_MAPPING: Record<
   [TargetFunction.DefineConnectionProvider]:
     ManifestEntityKey.ConnectionProviders,
   [TargetFunction.DefineFrontComponent]: ManifestEntityKey.FrontComponents,
+  [TargetFunction.DefineSettingsFrontComponent]:
+    ManifestEntityKey.FrontComponents,
   [TargetFunction.DefineView]: ManifestEntityKey.Views,
   [TargetFunction.DefineViewField]: ManifestEntityKey.ViewFields,
   [TargetFunction.DefineNavigationMenuItem]:
     ManifestEntityKey.NavigationMenuItems,
   [TargetFunction.DefinePageLayout]: ManifestEntityKey.PageLayouts,
   [TargetFunction.DefinePageLayoutTab]: ManifestEntityKey.PageLayoutTabs,
+  [TargetFunction.DefinePageLayoutWidget]: ManifestEntityKey.PageLayoutWidgets,
   [TargetFunction.DefineCommandMenuItem]: ManifestEntityKey.CommandMenuItems,
+  [TargetFunction.DefineTimelineActivityType]:
+    ManifestEntityKey.TimelineActivityTypes,
 };
 
 const computeIsTargetFunctionCall = (node: ts.Node): string | undefined => {

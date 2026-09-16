@@ -1,6 +1,8 @@
+import { msg } from '@lingui/core/macro';
 import { ViewKey, ViewRoadmapZoom, ViewType } from 'twenty-shared/types';
 
 import { type FlatView } from 'src/engine/metadata-modules/flat-view/types/flat-view.type';
+import { i18nLabel } from 'src/engine/workspace-manager/twenty-standard-application/utils/i18n-label.util';
 import {
   createStandardViewFlatMetadata,
   type CreateStandardViewArgs,
@@ -38,7 +40,7 @@ export const computeStandardOpportunityMilestoneViews = (
       objectName: 'opportunityMilestone',
       context: {
         viewName: 'roadmapByOpportunity',
-        name: 'Roadmap',
+        name: i18nLabel(msg({ message: `Roadmap`, context: 'view.name' })),
         type: ViewType.ROADMAP,
         key: null,
         position: 1,

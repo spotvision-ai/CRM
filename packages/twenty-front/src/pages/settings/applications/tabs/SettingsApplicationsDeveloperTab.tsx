@@ -1,3 +1,4 @@
+import { useRefetchOnApplicationRegistrationChange } from '@/applications/hooks/useRefetchOnApplicationRegistrationChange';
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
 import { getDocumentationUrl } from '@/support/utils/getDocumentationUrl';
 import { Table } from '@/ui/layout/table/components/Table';
@@ -18,13 +19,18 @@ import { Button, SearchInput } from 'twenty-ui/input';
 import { Section } from 'twenty-ui/layout';
 import {
   type ApplicationRegistrationListItemFragment,
+  FeatureFlagKey,
   FindManyApplicationRegistrationsDocument,
+  PermissionFlagType,
 } from '~/generated-metadata/graphql';
+import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 import {
   APPLICATION_TABLE_ROW_GRID_TEMPLATE_COLUMNS,
   SettingsApplicationTableRow,
 } from '~/pages/settings/applications/components/SettingsApplicationTableRow';
+import { useHasPermissionFlag } from '@/settings/roles/hooks/useHasPermissionFlag';
+import { SettingsClaimApplicationSection } from '~/pages/settings/applications/components/SettingsClaimApplicationSection';
 
 const StyledButtonContainer = styled.div`
   display: flex;
@@ -48,7 +54,17 @@ export const SettingsApplicationsDeveloperTab = () => {
 
   const { copyToClipboard } = useCopyToClipboard();
 
-  const { data } = useQuery(FindManyApplicationRegistrationsDocument);
+  const { data, refetch } = useQuery(FindManyApplicationRegistrationsDocument);
+
+  useRefetchOnApplicationRegistrationChange({ refetch });
+
+  const canClaimApplications = useHasPermissionFlag(
+    PermissionFlagType.APPLICATIONS,
+  );
+
+  const isAppClaimingEnabled = useIsFeatureEnabled(
+    FeatureFlagKey.IS_APP_CLAIMING_ENABLED,
+  );
 
   const [myAppsSearchTerm, setMyAppsSearchTerm] = useState('');
 
@@ -108,6 +124,10 @@ export const SettingsApplicationsDeveloperTab = () => {
           />
         </StyledButtonContainer>
       </Section>
+
+      {canClaimApplications && isAppClaimingEnabled && (
+        <SettingsClaimApplicationSection />
+      )}
 
       {registrations.length > 0 && (
         <Section>

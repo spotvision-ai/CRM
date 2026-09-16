@@ -16,7 +16,13 @@ const exampleSourcesBuiltPreactDir = path.resolve(
   '../../src/__stories__/example-sources-built-preact',
 );
 
-const SOURCE_SCAN_ROOTS = ['html-tag', 'host-api', 'showcase'];
+const SOURCE_SCAN_ROOTS = [
+  'html-tag',
+  'host-api',
+  'media',
+  'showcase',
+  'twenty-ui-gallery',
+];
 
 const rootNodeModules = path.resolve(dirname, '../../../../node_modules');
 
@@ -77,6 +83,10 @@ const TWENTY_UI_SUBMODULES = [
 ];
 
 const twentyUiAliases = {
+  'twenty-ui/style.css': path.join(
+    path.dirname(twentyUiIndividualIndex),
+    'twenty-ui.css',
+  ),
   'twenty-ui': twentyUiIndividualIndex,
   ...Object.fromEntries(
     TWENTY_UI_SUBMODULES.map((submodule) => [

@@ -17,9 +17,9 @@ import { CLEAR_MAINTENANCE_MODE } from '@/settings/admin-panel/health-status/mai
 import { SET_MAINTENANCE_MODE } from '@/settings/admin-panel/health-status/maintenance-mode/graphql/mutations/setMaintenanceMode';
 import { adminPanelMaintenanceModeState } from '@/settings/admin-panel/health-status/maintenance-mode/states/adminPanelMaintenanceModeState';
 import { SettingsDatePickerInput } from '@/settings/components/SettingsDatePickerInput';
-import { SettingsOptionCardContentToggle } from '@/settings/components/SettingsOptions/SettingsOptionCardContentToggle';
+import { SettingsOptionCardContentSwitch } from '@/settings/components/SettingsOptions/SettingsOptionCardContentSwitch';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
-import { InputHint } from '@/ui/input/components/InputHint';
+import { InputHint } from 'twenty-ui/input';
 import { TextInput } from '@/ui/input/components/TextInput';
 import { useUserTimezone } from '@/ui/input/components/internal/date/hooks/useUserTimezone';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
@@ -197,7 +197,7 @@ export const SettingsAdminMaintenanceMode = () => {
         description={t`Schedule a maintenance window and notify all users`}
       />
       <Card rounded>
-        <SettingsOptionCardContentToggle
+        <SettingsOptionCardContentSwitch
           Icon={IconTool}
           title={t`Maintenance mode`}
           description={toggleDescription}
@@ -241,10 +241,7 @@ export const SettingsAdminMaintenanceMode = () => {
               </div>
               {isScheduled && (
                 <StyledStatusRow>
-                  <Status
-                    color="orange"
-                    text={t`Planned for ${formattedStartDate}`}
-                  />
+                  <Status color="orange">{t`Planned for ${formattedStartDate}`}</Status>
                 </StyledStatusRow>
               )}
             </StyledFormContainer>

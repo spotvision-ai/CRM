@@ -3,6 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { In, IsNull, Repository } from 'typeorm';
 
+import { ConnectedAccountProvider } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
+
+import { ConnectionProviderLifecycleHookService } from 'src/engine/core-modules/application/connection-provider/connection-provider-lifecycle-hook.service';
 import { AppOAuthRevokeService } from 'src/engine/core-modules/application/connection-provider/refresh/services/app-oauth-revoke.service';
 import { CALENDAR_CHANNEL_DELETED_EVENT } from 'src/engine/metadata-modules/calendar-channel/constants/calendar-channel-deleted.constant';
 import { CalendarChannelEntity } from 'src/engine/metadata-modules/calendar-channel/entities/calendar-channel.entity';
@@ -14,6 +18,9 @@ import {
 } from 'src/engine/metadata-modules/connected-account/connected-account.exception';
 import { ConnectedAccountEntity } from 'src/engine/metadata-modules/connected-account/entities/connected-account.entity';
 import { type ConnectedAccountDeletedEvent } from 'src/engine/metadata-modules/connected-account/types/connected-account-deleted.type';
+import { type ConnectedAccountWithoutCredentials } from 'src/engine/metadata-modules/connected-account/types/connected-account-without-credentials.type';
+import { buildConnectedAccountUsableByCallerWhere } from 'src/engine/metadata-modules/connected-account/utils/build-connected-account-usable-by-caller-where.util';
+import { isConnectedAccountUsableByCaller } from 'src/engine/metadata-modules/connected-account/utils/is-connected-account-usable-by-caller.util';
 import { MESSAGE_CHANNEL_DELETED_EVENT } from 'src/engine/metadata-modules/message-channel/constants/message-channel-deleted.constant';
 import { MessageChannelEntity } from 'src/engine/metadata-modules/message-channel/entities/message-channel.entity';
 import { type MessageChannelDeletedEvent } from 'src/engine/metadata-modules/message-channel/types/message-channel-deleted.type';
@@ -31,8 +38,41 @@ export class ConnectedAccountMetadataService {
     @InjectRepository(MessageChannelEntity)
     private readonly messageChannelRepository: Repository<MessageChannelEntity>,
     private readonly appOAuthRevokeService: AppOAuthRevokeService,
+    private readonly connectionProviderLifecycleHookService: ConnectionProviderLifecycleHookService,
     private readonly workspaceEventEmitter: WorkspaceEventEmitter,
   ) {}
+
+  async findUsableByCaller({
+    workspaceId,
+    userWorkspaceId,
+  }: {
+    workspaceId: string;
+    userWorkspaceId?: string;
+  }): Promise<ConnectedAccountWithoutCredentials[]> {
+    const connectedAccounts = await this.repository.find({
+      where: { workspaceId, archivedAt: IsNull() },
+      order: { createdAt: 'ASC', id: 'ASC' },
+      select: {
+        id: true,
+        handle: true,
+        handleAliases: true,
+        provider: true,
+        name: true,
+        visibility: true,
+        userWorkspaceId: true,
+      },
+    });
+
+    if (!isDefined(userWorkspaceId)) {
+      return connectedAccounts.filter(
+        (connectedAccount) => connectedAccount.visibility === 'workspace',
+      );
+    }
+
+    return connectedAccounts.filter((connectedAccount) =>
+      isConnectedAccountUsableByCaller({ connectedAccount, userWorkspaceId }),
+    );
+  }
 
   async findByUserWorkspaceId({
     userWorkspaceId,
@@ -43,6 +83,49 @@ export class ConnectedAccountMetadataService {
   }): Promise<ConnectedAccountEntity[]> {
     return this.repository.find({
       where: { userWorkspaceId, workspaceId },
+    });
+  }
+
+  async findApplicationConnectedAccountsUsableByCaller({
+    applicationId,
+    workspaceId,
+    userWorkspaceId,
+  }: {
+    applicationId: string;
+    workspaceId: string;
+    userWorkspaceId: string;
+  }): Promise<ConnectedAccountEntity[]> {
+    return this.repository.find({
+      where: buildConnectedAccountUsableByCallerWhere({
+        baseWhere: {
+          applicationId,
+          workspaceId,
+          provider: ConnectedAccountProvider.APP,
+          archivedAt: IsNull(),
+        },
+        userWorkspaceId,
+      }),
+      order: { createdAt: 'ASC', id: 'ASC' },
+      select: {
+        id: true,
+        handle: true,
+        provider: true,
+        lastCredentialsRefreshedAt: true,
+        authFailedAt: true,
+        authFailedReason: true,
+        archivedAt: true,
+        handleAliases: true,
+        scopes: true,
+        lastSignedInAt: true,
+        userWorkspaceId: true,
+        connectionProviderId: true,
+        applicationId: true,
+        workspaceId: true,
+        name: true,
+        visibility: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
 
@@ -91,8 +174,7 @@ export class ConnectedAccountMetadataService {
     }
 
     if (
-      connectedAccount.visibility !== 'workspace' &&
-      connectedAccount.userWorkspaceId !== userWorkspaceId
+      !isConnectedAccountUsableByCaller({ connectedAccount, userWorkspaceId })
     ) {
       throw new ConnectedAccountException(
         `Connected account ${id} does not belong to user workspace ${userWorkspaceId}`,
@@ -242,7 +324,23 @@ export class ConnectedAccountMetadataService {
       `WorkspaceId: ${workspaceId} Deleting connected account ${id} with ${messageChannels.length} message channel(s) and ${calendarChannels.length} calendar channel(s)`,
     );
 
-    await this.appOAuthRevokeService.revokeIfApp(connectedAccount);
+    if (isDefined(connectedAccount.connectionProviderId)) {
+      await this.connectionProviderLifecycleHookService.runOnDisconnect({
+        connectionProviderId: connectedAccount.connectionProviderId,
+        workspaceId,
+        connectedAccountId: id,
+      });
+    }
+
+    // The hook may have refreshed the tokens through getConnection, and an
+    // overlapping delete may already have removed the row.
+    const latestConnectedAccount = await this.repository.findOne({
+      where: { id, workspaceId },
+    });
+
+    if (isDefined(latestConnectedAccount)) {
+      await this.appOAuthRevokeService.revokeIfApp(latestConnectedAccount);
+    }
 
     await this.repository.delete({ id, workspaceId });
 

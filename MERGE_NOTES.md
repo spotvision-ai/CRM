@@ -310,16 +310,29 @@ prod.
   first-deploy smoke.
 - `docs/infra/release.md` — how to cut a release (tag), rollback, hotfix.
 
-### Upstream workflows left intact
+### Upstream workflows — disabled via API, files left intact
 
-- `.github/workflows/cd-deploy-main.yaml` and
-  `.github/workflows/cd-deploy-tag.yaml` are upstream's deploy dispatches
-  to the private `twenty-infra` repo. We don't have `TWENTY_INFRA_TOKEN`,
-  so these fail silently on every tag/main push — the `peter-evans/
-  repository-dispatch` step errors out but doesn't block anything else.
-  Keeping them untouched so future rebases against `twentyhq/twenty`
-  stay conflict-free; if they start interfering, delete the files (they're
-  net-remove only, no conflict risk).
+Superseded 2026-07-31. 21 upstream workflows are now **disabled through the
+Actions API** (`gh workflow disable`), not deleted: deleting a file that
+upstream keeps maintaining yields a `deleted by us` conflict on every
+`twenty/v*` merge, while a disabled workflow survives syncs at zero cost.
+No workflow file was edited, so `.github/` stays byte-identical to upstream
+apart from `cd-deploy-spv.yaml`.
+
+Covered: the 11 dispatchers into `twentyhq/twenty-infra` / `ci-privileged` /
+`ci-public` (including `cd-deploy-main.yaml` and `cd-deploy-tag.yaml`, whose
+`twenty/v*` trigger collides with our sync tags), the 6 Crowdin i18n
+workflows, and 4 upstream bot/policy/release workflows (`claude.yml`,
+`ci-app-docs-drift`, `ci-blocked-contributors`, `ci-release-create`).
+
+**Full inventory, rationale, the idempotent re-apply command, and the
+post-sync audit step live in `docs/infra/ci.md`.**
+
+Rebase discipline: after every upstream sync, run
+`gh api "repos/spotvision-ai/CRM/actions/workflows?per_page=100" --jq '.workflows[] | "\(.state)\t\(.path)"' | sort`
+and compare against that document. New or renamed workflows always arrive
+`active`. Never disable `changed-files.yaml` (20 callers),
+`discover-apps.yaml` (2 callers), or `cd-deploy-spv.yaml`.
 
 ### Dockerfile — no change needed
 
@@ -591,3 +604,163 @@ Merge of upstream tag `twenty/v2.22.1` onto `origin/main` (our v2.17.0 line). 44
 ### Environment note
 
 Upstream bumped **Node engine to `^24.5.0`** (`.nvmrc` 24.16.0; prod Dockerfile `node:24.18.0`). Local tooling for this sync ran on Node 24.14.1 (nvm). Node 22 fails the postinstall engine check.
+
+## Sync v2.22.3 → `twenty/v2.40.2` (branch `chore/sync-v2.40.2`)
+
+Merge of upstream tag `twenty/v2.40.2` onto `origin/main` (our v2.22.3 line):
+1735 upstream commits, ~16k files, **45 conflicted files** (40 content, 5
+modify/delete). Three of the conflicts (`cache-storage.service.ts`,
+`workspace-cache.service.ts` + its spec) carried no fork divergence at all —
+they conflicted only because the merge base predates v2.22.1 — and were
+resolved to upstream wholesale.
+
+### Dominant collision patterns
+
+| Pattern | Resolution |
+| --- | --- |
+| Upstream adds enum members / list entries where the fork also adds its own (`ViewType`, `WidgetType`, `WidgetConfigurationType`, `FeatureFlagKey`, view-picker options, widget type select) | **Keep both**, upstream's entries first, ours appended. |
+| Upstream **removed** `calendarEnd*` pickers from the view picker and the options dropdown | Dropped the `calendarEnd*` side, kept our `roadmap*` blocks. `calendarEndFieldMetadataId` is now always written as `null` on create. |
+| Upstream **removed** the `ViewOpenRecordIn` "Open in" menu entry | Dropped it; kept the roadmap field pickers around it. |
+
+### Non-mechanical resolutions (need attention on the next rebase)
+
+| Path | Resolution |
+| --- | --- |
+| `twenty-shared/.../standard-object.constant.ts` | Upstream extracted every inline identifier map into `STANDARD_OBJECT_UNIVERSAL_IDENTIFIERS` + `STANDARD_OBJECT_FIELDS`. Took upstream wholesale and **migrated the 5 fork-only fields** (`attachment.targetOpportunityMilestone`, `opportunity.milestones`, `taskTarget.targetOpportunityMilestone`, `timelineActivity.targetOpportunityMilestone`, `workspaceMember.assignedMilestones`) into `standard-object-fields.constant.ts`, **keeping their hardcoded universal identifiers** — prod has them persisted, and upstream's `getSystemRelationFieldUniversalIdentifier` derivation would re-key them. The 3 `opportunityMilestoneIdIndex` index entries and both fork-only object entries stayed inline in `standard-object.constant.ts`. |
+| `views/hooks/useSaveCurrentView*`, `useCreateViewFromCurrentView`, `useSaveRecordSortsToViewSorts`, `useUpdateViewAggregate` | The fork's `invalidateMetadataStore()` calls (commit `bc1511331b`) were **dropped**: upstream's `usePerformViewEntityApiPersistOperation` now applies each mutation result to the metadata-store draft, which supersedes the blunt invalidation. `useUpdateCurrentView` **keeps** its call — it still fires a raw `useMutation(UpdateViewDocument)` and touches no draft. Upstream also renamed `*API*` → `*Api*` throughout these hooks. |
+| `workspace-migration-builder/validators/services/flat-view-validator.service.ts` | **Deleted upstream** (#24100 split the services into pure utils). Ported the fork's roadmap validation into a new `validators/utils/validate-flat-view-roadmap-fields.util.ts` (mirroring upstream's `validate-flat-view-calendar-fields.util.ts`) and wired it into `validate-flat-view-creation.util.ts` and `validate-flat-view-update.util.ts`, preserving the `viewBecomesRoadmap || roadmapFieldChanged` gate on update. |
+| `object-metadata.service.ts` + `compute-flat-record-page-fields-view-to-create.util.ts` | Upstream deleted the three private `computeFlat*ToCreate` methods and the util (no callers left). Accepted the deletion; the fork's roadmap defaults moved to `metadata-side-effect/handlers/utils/compute-system-view-to-create.util.ts`, which is where upstream now mints system views. |
+| `compute-task-target-standard-flat-index-metadata.util.ts` | Upstream replaced the hand-rolled index list with `buildStandardTargetFlatIndexMetadatas`. Kept upstream's helper + return map and appended our `opportunityMilestoneIdIndex` via `createStandardIndexFlatMetadata({ ...args, context: … })`. |
+| `seed-feature-flags.util.ts` | Upstream switched to a `DEFAULT_SEEDED_FEATURE_FLAGS` map. Registered `IS_ROADMAP_VIEW_ENABLED: true` there. |
+| `instance-commands.constant.ts` | Import-block conflict. Kept our two fork-only 2-5 imports, dropped a duplicate `AddPendingQuestionMessageIdToAgentChatThread…` import upstream already has. Audited: imports and `INSTANCE_COMMANDS` registrations match exactly, no orphans either way. |
+| `view.service.ts` | Upstream dropped the `I18nService` dependency. Kept `FeatureFlagService` + `FeatureFlagKey` (our `assertRoadmapFeatureFlagEnabledIfNeeded` gate), dropped the now-unused i18n imports. |
+| `view-tools.factory.ts` | Upstream introduced `CREATABLE_VIEW_TYPES`; added `ViewType.ROADMAP` to that constant instead of keeping the fork's inline enum list. |
+
+### Upstream API changes that broke fork-only code (no conflict markers)
+
+These auto-merged cleanly and only failed at typecheck. Watch for the same class of breakage next sync:
+
+- **`GlobalWorkspaceOrmManager` → `WorkspaceOrmManager`** (`src/engine/twenty-orm/workspace-orm.manager`). `getRepository` lost its `workspaceId` first argument and is no longer `async`. Fixed in `cyclic-dependency-validator.service.ts`. It is provided by a `@Global()` module, so no module wiring changed.
+- **`PageLayoutType`** moved from `src/engine/metadata-modules/page-layout/enums/page-layout-type.enum` to `twenty-shared/types`. Fixed in both fork page-layout configs.
+- **`MenuItemToggle` was removed** from `twenty-ui/navigation` in favour of `MenuItemSwitch` (`toggled`/`onToggleChange` → `checked`/`onCheckedChange`, no `toggleSize`). Fixed the roadmap "Show deviation badge" item.
+- **`Tag` API changed**: `text` is now children and `Icon` is now `startIcon` (a `ReactNode`, not a component); the `variant` union dropped `'border'` in favour of `'outline'`. Fixed 4 usages in `MilestoneRow`/`MilestonesCard`.
+- **`PageLayoutWidget` shape**: `gridPosition` is gone, and `universalIdentifier` + `isSystemSideEffect` are required. Fixed both fork widget literals.
+- **`useInsertCreatedWidgetAtContext`** now takes `{ newWidgetId }` instead of a positional id.
+- **`isInSidePanel` left `LayoutRenderingContext`**; derive it with `useWorkspaceSurface().type === 'side-panel'`. Fixed in `MilestonesWidget`.
+- **Exhaustive maps that now need a `ROADMAP` entry**: `VIEW_TYPE_DEFAULT_ICONS` (twenty-shared), `getViewLayoutFromViewType`, `getContextStoreViewType` (mapped to `ContextStoreViewType.Table`). `getPageLayoutWidgetHeightBehavior` needs `MARKDOWN`/`MILESTONES` (both `FIT_CONTENT`).
+
+### New upstream guard tests the fork had to satisfy
+
+- **`standard-metadata-label-catalog.spec.ts`** — every standard metadata label must resolve to a catalog entry at `generateMessageId(value, '<metadataName>.<property>')`. The fork authored its labels as bare ``msg`…` `` with no `context`, so the computed ids never matched. Rewrote **91 authoring sites** to the `msg({ message, context })` form, registered the 2 fork page-layout names in `standard-page-layout-names.ts` (the extraction-only file), wrapped the `Roadmap` view name in `i18nLabel(msg({ … context: 'view.name' }))`, and re-ran `lingui:extract` + `lingui:compile`. **Any new fork label must carry an explicit `context` or this spec fails.**
+- **`export-covers-compared-properties.spec.ts`** — every compared property of `view` must be emitted in the application manifest or explicitly accounted for. The fork's 13 roadmap properties have **no manifest slot** (`from-view-manifest-to-universal-flat-view.util.ts` resets them to defaults), so they are declared in a `ROADMAP_VIEW_GAPS` block. **Known limitation: exporting an application manifest loses a roadmap view's configuration.**
+
+### Snapshots regenerated (`jest -u`) — all verified additive
+
+- `standardObjectUniversalIdentifiers.test.ts.snap` (shared) — +229 lines, **0 removals**: no existing upstream identifier changed.
+- `get-standard-object-metadata-related-entity-ids`, `get-standard-page-layout-metadata-related-entity-ids` — the apparent removals are sequential fixture ids shifting by one as our entries are inserted into the counter.
+- `sort-metadata-names-children-first` — `view` now sorts ahead of `fieldMetadata` because the fork's 9 roadmap FKs give `view` the most ManyToOne relations. Correct per the rule the test encodes.
+- `delete-flat-entity-foreign-key-aggregators` — +9 roadmap aggregators.
+
+### Deleted upstream files we had modified (accepted deletion)
+
+- `twenty-orm/entity-manager/workspace-entity-manager.spec.ts` and `twenty-orm/repository/__tests__/workspace.repository.spec.ts` — the fork's only changes were mechanical roadmap-aggregator fixture additions.
+- `workspace-cache/services/__tests__/workspace-cache.service.spec.ts` — no fork divergence.
+
+### Regenerated (not hand-merged)
+
+- `packages/twenty-front/src/generated-metadata/graphql.ts` and `src/generated/graphql.ts` — regenerated via `twenty-front:graphql:generate` against a local server booted on the merged schema. Verified the output carries `ViewType.ROADMAP`, `WidgetType.MARKDOWN`/`MILESTONES`, `IS_ROADMAP_VIEW_ENABLED` and the 9 `roadmapField*Id` FKs.
+
+### Verification run for this sync
+
+- `typecheck` ✅ twenty-shared, twenty-server, twenty-front, twenty-ui.
+- `test` ✅ twenty-server 8708 passed, twenty-front 7128 passed, twenty-shared 1968 passed (15 skipped, 0 failed).
+- `oxlint` ✅ 0 warnings / 0 errors over the 337 touched source files.
+- `database:reset` ✅ full migration + metadata sync + seed on a fresh DB, and the server boots clean against it (`/healthz` 200, `graphql:generate` served off it).
+- ⚠️ **Not verified: the production upgrade path.** `database:reset` exercises a *fresh* install. Prod runs `DISABLE_DB_MIGRATIONS=true`, so the 2.23→2.40 instance commands (321 new upgrade-command files across 18 versions) must be validated against a prod-snapshot copy before deploying — see the 2.16 incident above.
+
+### Upstream defect hit by this sync (fixed by cherry-pick)
+
+`twenty/v2.40.2` cannot run `nx database:init` / `database:reset` at all:
+
+```
+database:init → database:migrate → run-instance-commands --force --include-slow
+  → packages/twenty-client-sdk/dist/application-*.js
+     Error: Module "" has been externalized for browser compatibility.
+            Cannot access ".custom" in client code.
+```
+
+`twenty-shared/src/application/normalizePageLayoutTabManifest.ts` reached for
+the whole `@/utils` barrel, which drags **handlebars** (and its
+`object-inspect` dependency, which touches `util.inspect.custom`) into
+`twenty-client-sdk`. The SDK is built with `vite build --lib` with no Node
+platform, so Node builtins become browser stubs that throw on property
+access — and the server requires that build at boot.
+
+**Verified as an upstream defect, not a merge artifact**: a clean
+`git worktree` at `twenty/v2.40.2` with its own `yarn install` reproduces the
+identical error with zero fork code in the tree. Our `yarn.lock` is
+consistent (`yarn install --immutable` passes).
+
+Fixed by cherry-picking upstream **`6fadcee289`** (`fix(shared): stop the
+utils barrel dragging handlebars into twenty-client-sdk`, #25846), which
+lands on upstream `main` after the v2.40.2 tag and only re-points four
+imports at their deep paths. After the cherry-pick,
+`database:reset --skip-nx-cache` completes with 0 SDK errors.
+
+> **Caching caveat worth remembering**: the first `database:reset` in this
+> sync appeared to pass, but nx had served 7 of its 8 tasks from cache.
+> Always pass `--skip-nx-cache` when a reset is being used as verification.
+
+### Upstream enum rebuilds drop the fork's widget types (recurring rebase hazard)
+
+Validating the upgrade against a **real prod copy** caught a failure that no
+fresh-install test can reach:
+
+```
+2.25.0_AddMessageCampaignWidgetTypeFastInstanceCommand failed
+QueryFailedError: invalid input value for enum
+  core."pageLayoutWidget_type_enum": "MILESTONES"
+```
+
+Three upstream instance commands in the 2.23→2.40 range do **not** use
+`ALTER TYPE … ADD VALUE`. They rename the enum, `CREATE TYPE … AS ENUM(<hardcoded list>)`
+and cast the column across:
+
+- `2-25/…-add-message-campaign-widget-type.ts`
+- `2-29/…-add-call-recording-widget-types.ts`
+- `2-38/…-add-record-form-page-layout-and-form-field-widget.ts` (via the
+  `WIDGET_TYPES_BEFORE` constant)
+
+Each hardcoded list is upstream's own, so it omits the fork's `MILESTONES`
+and `MARKDOWN`. The cast then fails on any existing row holding them — and
+prod holds **1 MILESTONES widget and 9 MARKDOWN widgets**.
+
+**Resolution**: `'MILESTONES', 'MARKDOWN'` were appended to every widget-type
+enum list in those three commands, in both `up` and `down` (a `down` without
+them fails the same way on rollback). This is safe because none of the three
+has ever run on our instance — prod sits at 2.22.3 and these are 2.25+. The
+fork's own already-released `2-5` commands were **not** touched.
+
+> **Standing hazard**: every future sync must re-check any upstream instance
+> command that rebuilds `pageLayoutWidget_type_enum` (or any other enum the
+> fork extends) and re-append the fork's values. Grep the new upgrade-command
+> directories for `AS ENUM(` before running an upgrade.
+>
+> **Why this was only caught late**: the entrypoint runs
+> `yarn command:prod upgrade` but **swallows its failure** and boots anyway
+> (`Warning: Upgrade completed with errors… continuing startup`). A broken
+> upgrade therefore surfaces as a half-migrated schema at runtime, not as a
+> failed deploy — exactly the 2.16 incident shape.
+
+### Prod-copy upgrade validation (2.22.3 → 2.40.2)
+
+Run against a `pg_dump` of the live `crm` database restored locally:
+
+| Check | Result |
+| --- | --- |
+| `command:prod upgrade` | **30 workspaces succeeded, 0 failed**, exit 0 |
+| New `upgradeMigration` failures introduced by this run | **0** (the 13 `failed` rows in the table are pre-existing, dated 2026-04-20 → 2026-06-26, and arrived with the dump) |
+| `pageLayoutWidget_type_enum` after upgrade | still carries `MILESTONES` + `MARKDOWN` |
+| Fork widget rows after upgrade | 1 `MILESTONES`, 9 `MARKDOWN` preserved |
+| Fork tables after upgrade | 62 `opportunityMilestone` + 1 `opportunityMilestoneDependency` preserved |
+| v2.40 server booted against the upgraded copy | `/healthz` 200, `/client-config` serves auth providers, `/metadata` GraphQL responds, 0 boot errors |

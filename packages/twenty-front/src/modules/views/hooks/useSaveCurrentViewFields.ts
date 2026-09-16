@@ -2,9 +2,8 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
-import { useInvalidateMetadataStore } from '@/metadata-store/hooks/useInvalidateMetadataStore';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
-import { usePerformViewFieldAPIPersist } from '@/views/hooks/internal/usePerformViewFieldAPIPersist';
+import { usePerformViewFieldApiPersist } from '@/views/hooks/internal/usePerformViewFieldApiPersist';
 import { useCanPersistViewChanges } from '@/views/hooks/useCanPersistViewChanges';
 import { useGetViewFromState } from '@/views/hooks/useGetViewFromState';
 import { type ViewField } from '@/views/types/ViewField';
@@ -17,9 +16,8 @@ import { isUndefinedOrNull } from '~/utils/isUndefinedOrNull';
 
 export const useSaveCurrentViewFields = () => {
   const { canPersistChanges } = useCanPersistViewChanges();
-  const { performViewFieldAPICreate, performViewFieldAPIUpdate } =
-    usePerformViewFieldAPIPersist();
-  const { invalidateMetadataStore } = useInvalidateMetadataStore();
+  const { performViewFieldApiCreate, performViewFieldApiUpdate } =
+    usePerformViewFieldApiPersist();
 
   const { getViewFromState } = useGetViewFromState();
 
@@ -131,19 +129,17 @@ export const useSaveCurrentViewFields = () => {
         );
 
       await Promise.all([
-        performViewFieldAPICreate({ inputs: viewFieldsToCreate }),
-        performViewFieldAPIUpdate(viewFieldsToUpdate),
+        performViewFieldApiCreate({ inputs: viewFieldsToCreate }),
+        performViewFieldApiUpdate(viewFieldsToUpdate),
       ]);
-      invalidateMetadataStore();
     },
     [
       store,
       canPersistChanges,
-      invalidateMetadataStore,
-      performViewFieldAPICreate,
+      performViewFieldApiCreate,
       currentViewIdCallbackState,
       getViewFromState,
-      performViewFieldAPIUpdate,
+      performViewFieldApiUpdate,
     ],
   );
 

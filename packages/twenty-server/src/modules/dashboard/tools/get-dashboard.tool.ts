@@ -3,12 +3,12 @@ import { z } from 'zod';
 
 import { type FlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/types/flat-field-metadata.type';
 import { WidgetConfigurationType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-configuration-type.type';
-import { WidgetType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-type.enum';
+import { WidgetType } from 'twenty-shared/types';
 import { findActiveFlatFieldMetadataById } from 'src/engine/metadata-modules/page-layout-widget/utils/find-active-flat-field-metadata-by-id.util';
 import { isChartReferencingFieldInConfiguration } from 'src/engine/metadata-modules/page-layout-widget/utils/is-chart-referencing-field-in-configuration.util';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
 import {
-  type DashboardToolContext,
+  type DashboardToolContextWithPermissions,
   type DashboardToolDependencies,
 } from 'src/modules/dashboard/tools/types/dashboard-tool-dependencies.type';
 import { buildResolvedGroupBy } from 'src/modules/dashboard/tools/utils/build-resolved-group-by.util';
@@ -20,11 +20,9 @@ const getDashboardSchema = z.object({
 export const createGetDashboardTool = (
   deps: Pick<
     DashboardToolDependencies,
-    | 'pageLayoutService'
-    | 'globalWorkspaceOrmManager'
-    | 'flatEntityMapsCacheService'
+    'pageLayoutService' | 'workspaceOrmManager' | 'flatEntityMapsCacheService'
   >,
-  context: DashboardToolContext,
+  context: DashboardToolContextWithPermissions,
 ) => ({
   name: 'get_dashboard' as const,
   description: `Get a dashboard with its full layout structure including tabs and widgets.`,
@@ -71,18 +69,14 @@ export const createGetDashboardTool = (
         });
 
       const dashboard =
-        await deps.globalWorkspaceOrmManager.executeInWorkspaceContext(
-          async () => {
-            const repo = await deps.globalWorkspaceOrmManager.getRepository(
-              context.workspaceId,
-              'dashboard',
-              { shouldBypassPermissionChecks: true },
-            );
+        await deps.workspaceOrmManager.executeInWorkspaceContext(async () => {
+          const repo = deps.workspaceOrmManager.getRepository(
+            'dashboard',
+            context.rolePermissionConfig,
+          );
 
-            return repo.findOne({ where: { id: parameters.dashboardId } });
-          },
-          authContext,
-        );
+          return repo.findOne({ where: { id: parameters.dashboardId } });
+        }, authContext);
 
       if (!isDefined(dashboard)) {
         return {
@@ -120,7 +114,7 @@ export const createGetDashboardTool = (
                   id: w.id,
                   title: w.title,
                   type: w.type,
-                  gridPosition: w.gridPosition,
+                  position: w.position,
                   objectMetadataId: w.objectMetadataId,
                   configuration: w.configuration,
                 };
@@ -190,7 +184,7 @@ export const createGetDashboardTool = (
                 id: w.id,
                 title: w.title,
                 type: w.type,
-                gridPosition: w.gridPosition,
+                position: w.position,
                 objectMetadataId: w.objectMetadataId,
                 configuration: enrichedConfiguration,
               };

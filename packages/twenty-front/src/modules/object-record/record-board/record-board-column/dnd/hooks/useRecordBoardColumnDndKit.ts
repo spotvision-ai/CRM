@@ -1,41 +1,28 @@
-import { type DragDropProvider } from '@dnd-kit/react';
-import { type ComponentProps, useState } from 'react';
+import { useState } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 
-import { RECORD_GROUP_REORDER_CONFIRMATION_MODAL_ID } from '@/object-record/record-group/constants/RecordGroupReorderConfirmationModalId';
+import { getRecordGroupReorderConfirmationModalId } from '@/object-record/record-group/utils/getRecordGroupReorderConfirmationModalId';
 import { useReorderRecordGroups } from '@/object-record/record-group/hooks/useReorderRecordGroups';
 import { visibleRecordGroupIdsComponentFamilySelector } from '@/object-record/record-group/states/selectors/visibleRecordGroupIdsComponentFamilySelector';
 import { RecordGroupSort } from '@/object-record/record-group/types/RecordGroupSort';
 import { useRecordIndexIdFromCurrentContextStore } from '@/object-record/record-index/hooks/useRecordIndexIdFromCurrentContextStore';
-import { recordIndexKanbanColumnWidthComponentState } from '@/object-record/record-index/states/recordIndexKanbanColumnWidthComponentState';
 import { recordIndexRecordGroupIsDraggableSortComponentSelector } from '@/object-record/record-index/states/selectors/recordIndexRecordGroupIsDraggableSortComponentSelector';
 import { recordIndexRecordGroupSortComponentState } from '@/object-record/record-index/states/recordIndexRecordGroupSortComponentState';
 import { useModal } from '@/ui/layout/modal/hooks/useModal';
-import { type DragDropColumnData } from '@/ui/utilities/drag-and-drop/types/DragDropColumnData';
-import { resolveDragDropColumnDrop } from '@/ui/utilities/drag-and-drop/utils/resolveDragDropColumnDrop';
+import { type DragDropItemData } from '@/ui/utilities/drag-and-drop/types/DragDropItemData';
+import { resolveDropFromPointer } from '@/ui/utilities/drag-and-drop/utils/resolveDropFromPointer';
 import { useDragSelect } from '@/ui/utilities/drag-select/hooks/useDragSelect';
-import { useScrollWrapperHTMLElement } from '@/ui/utilities/scroll/hooks/useScrollWrapperHTMLElement';
 import { useAtomComponentSelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentSelectorValue';
 import { useAtomComponentFamilySelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentFamilySelectorValue';
 import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
-import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
 import { ViewType } from '@/views/types/ViewType';
+import { type DragDropProviderDragEndEvent } from '@/ui/utilities/drag-and-drop/types/DragDropProviderDragEndEvent';
+import { type DragDropProviderDragMoveEvent } from '@/ui/utilities/drag-and-drop/types/DragDropProviderDragMoveEvent';
+import { type DragDropProviderDragStartEvent } from '@/ui/utilities/drag-and-drop/types/DragDropProviderDragStartEvent';
 
-type DragStartPayload = Parameters<
-  NonNullable<
-    ComponentProps<typeof DragDropProvider<DragDropColumnData>>['onDragStart']
-  >
->[0];
-type DragMovePayload = Parameters<
-  NonNullable<
-    ComponentProps<typeof DragDropProvider<DragDropColumnData>>['onDragMove']
-  >
->[0];
-type DragEndPayload = Parameters<
-  NonNullable<
-    ComponentProps<typeof DragDropProvider<DragDropColumnData>>['onDragEnd']
-  >
->[0];
+type DragStartPayload = DragDropProviderDragStartEvent<DragDropItemData>;
+type DragMovePayload = DragDropProviderDragMoveEvent<DragDropItemData>;
+type DragEndPayload = DragDropProviderDragEndEvent<DragDropItemData>;
 
 type PendingReorder = {
   fromIndex: number;
@@ -62,7 +49,6 @@ export const useRecordBoardColumnDndKit = (): {
     viewType: ViewType.KANBAN,
   });
   const { setDragSelectionStartEnabled } = useDragSelect();
-  const { getScrollWrapperElement } = useScrollWrapperHTMLElement();
 
   const isRecordGroupDraggableSort = useAtomComponentSelectorValue(
     recordIndexRecordGroupIsDraggableSortComponentSelector,
@@ -72,9 +58,6 @@ export const useRecordBoardColumnDndKit = (): {
   const visibleRecordGroupIds = useAtomComponentFamilySelectorValue(
     visibleRecordGroupIdsComponentFamilySelector,
     ViewType.KANBAN,
-  );
-  const recordIndexKanbanColumnWidth = useAtomComponentStateValue(
-    recordIndexKanbanColumnWidthComponentState,
   );
 
   const [, setRecordIndexRecordGroupSort] = useAtomComponentState(
@@ -89,62 +72,32 @@ export const useRecordBoardColumnDndKit = (): {
     null,
   );
 
-  const resolveDropFromPointerX = ({
-    pointerX,
-    sourceIndex,
-  }: {
-    pointerX: number;
-    sourceIndex: number;
-  }) => {
-    const { scrollWrapperElement } = getScrollWrapperElement();
-    if (!isDefined(scrollWrapperElement)) return null;
-
-    const columnWidths = visibleRecordGroupIds.map(
-      () => recordIndexKanbanColumnWidth,
-    );
-
-    if (columnWidths.length === 0) {
-      return null;
-    }
-
-    return resolveDragDropColumnDrop({
-      pointerX,
-      sourceIndex,
-      scrollWrapperElement,
-      columnWidths,
-    });
-  };
+  const lastIndex = visibleRecordGroupIds.length;
 
   const handleDragStart = (_event: DragStartPayload) => {
     setActiveDropTargetIndex(null);
   };
 
   const handleDragMove = (event: DragMovePayload) => {
-    const { operation } = event;
-    const sourceIndex = operation.source?.data.index;
+    const { target, position } = event.operation;
 
-    if (!isDefined(sourceIndex)) {
-      setActiveDropTargetIndex(null);
-      return;
-    }
+    const dropTargetIndex =
+      resolveDropFromPointer({
+        target,
+        pointer: position.current,
+        defaultOrientation: 'vertical',
+        getDroppableItemCount: () => lastIndex,
+      })?.dropTargetIndex ?? null;
 
-    const resolvedDrop = resolveDropFromPointerX({
-      pointerX: operation.position.current.x,
-      sourceIndex,
-    });
-
-    setActiveDropTargetIndex((currentActiveDropTargetIndex) => {
-      const nextActiveDropTargetIndex = resolvedDrop?.dropTargetIndex ?? null;
-
-      return currentActiveDropTargetIndex === nextActiveDropTargetIndex
+    setActiveDropTargetIndex((currentActiveDropTargetIndex) =>
+      currentActiveDropTargetIndex === dropTargetIndex
         ? currentActiveDropTargetIndex
-        : nextActiveDropTargetIndex;
-    });
+        : dropTargetIndex,
+    );
   };
 
   const handleDragEnd = (event: DragEndPayload) => {
-    const { operation } = event;
-    const source = operation.source;
+    const { source, target, position } = event.operation;
 
     setActiveDropTargetIndex(null);
     setDragSelectionStartEnabled(true);
@@ -154,26 +107,33 @@ export const useRecordBoardColumnDndKit = (): {
     }
 
     const sourceIndex = source.data.index;
-    const resolvedDrop = resolveDropFromPointerX({
-      pointerX: operation.position.current.x,
-      sourceIndex,
-    });
 
-    if (!isDefined(resolvedDrop)) return;
-    if (resolvedDrop.sourceIndex === resolvedDrop.destinationIndex) return;
+    const dropTargetIndex = resolveDropFromPointer({
+      target,
+      pointer: position.current,
+      defaultOrientation: 'vertical',
+      getDroppableItemCount: () => lastIndex,
+    })?.dropTargetIndex;
+
+    if (!isDefined(dropTargetIndex)) {
+      return;
+    }
+
+    const destinationIndex =
+      dropTargetIndex > sourceIndex ? dropTargetIndex - 1 : dropTargetIndex;
 
     if (!isRecordGroupDraggableSort) {
       setPendingReorder({
-        fromIndex: resolvedDrop.sourceIndex,
-        toIndex: resolvedDrop.destinationIndex,
+        fromIndex: sourceIndex,
+        toIndex: destinationIndex,
       });
-      openModal(RECORD_GROUP_REORDER_CONFIRMATION_MODAL_ID);
+      openModal(getRecordGroupReorderConfirmationModalId(recordIndexId));
       return;
     }
 
     reorderRecordGroups({
-      fromIndex: resolvedDrop.sourceIndex,
-      toIndex: resolvedDrop.destinationIndex,
+      fromIndex: sourceIndex,
+      toIndex: destinationIndex,
     });
   };
 

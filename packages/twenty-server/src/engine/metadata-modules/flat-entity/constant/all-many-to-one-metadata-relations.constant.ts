@@ -79,6 +79,13 @@ export const ALL_MANY_TO_ONE_METADATA_RELATIONS = {
       isNullable: true,
       universalForeignKey: 'availabilityObjectMetadataUniversalIdentifier',
     },
+    navigationTargetObjectMetadata: {
+      metadataName: 'objectMetadata',
+      foreignKey: 'navigationTargetObjectMetadataId',
+      inverseOneToManyProperty: 'commandMenuItems',
+      isNullable: true,
+      universalForeignKey: 'navigationTargetObjectMetadataUniversalIdentifier',
+    },
     frontComponent: {
       metadataName: 'frontComponent',
       foreignKey: 'frontComponentId',
@@ -366,6 +373,13 @@ export const ALL_MANY_TO_ONE_METADATA_RELATIONS = {
       isNullable: false,
       universalForeignKey: 'roleUniversalIdentifier',
     },
+    agent: {
+      metadataName: 'agent',
+      foreignKey: 'agentId',
+      inverseOneToManyProperty: null,
+      isNullable: true,
+      universalForeignKey: 'agentUniversalIdentifier',
+    },
     apiKey: null,
     workspace: null,
     application: null,
@@ -440,7 +454,7 @@ export const ALL_MANY_TO_ONE_METADATA_RELATIONS = {
     objectMetadata: {
       metadataName: 'objectMetadata',
       foreignKey: 'objectMetadataId',
-      inverseOneToManyProperty: null,
+      inverseOneToManyProperty: 'pageLayouts',
       isNullable: true,
       universalForeignKey: 'objectMetadataUniversalIdentifier',
     },
@@ -598,6 +612,10 @@ export const ALL_MANY_TO_ONE_METADATA_RELATIONS = {
     },
   },
   connectionProvider: {
+    workspace: null,
+    application: null,
+  },
+  timelineActivityType: {
     workspace: null,
     application: null,
   },
